@@ -1,0 +1,9 @@
+allowBuilds:
+  "@prisma/client": true
+  "@tailwindcss/oxide": true
+  bcryptjs: true
+  esbuild: true
+  prisma: true
+  sharp: true
+  unrs-resolver: true
+  workerd: true

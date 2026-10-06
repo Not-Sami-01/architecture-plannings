@@ -15,6 +15,7 @@ A full-stack web app where clients order custom house architecture designs (floo
 | `ABOUT.md` | Business story, copy and brand content |
 | `AGENTS.md` | Rules for AI coding agents working in this repo |
 | `RULES.md` | Mandatory frontend rules (TanStack Query, shadcn/ui, hooks, api util) |
+| `CONTENT.md` | SEO and content rules: keyword-rich genuine content, internal linking |
 
 ## Tech Stack
 
