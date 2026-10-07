@@ -42,17 +42,17 @@ export function OrderFormStepRequirements({ form }: OrderFormStepRequirementsPro
       <div className="grid gap-4 sm:grid-cols-3">
         <Field data-invalid={reqErrors.floors ? true : undefined}>
           <FieldLabel htmlFor="floors">Floors</FieldLabel>
-          <Input id="floors" type="number" min={1} max={4} {...register("requirements.floors")} />
+          <Input id="floors" type="number" min={1} max={4} {...register("requirements.floors", { valueAsNumber: true })} />
           <FieldError>{reqErrors.floors?.message}</FieldError>
         </Field>
         <Field data-invalid={reqErrors.bedrooms ? true : undefined}>
           <FieldLabel htmlFor="bedrooms">Bedrooms</FieldLabel>
-          <Input id="bedrooms" type="number" min={0} max={20} {...register("requirements.bedrooms")} />
+          <Input id="bedrooms" type="number" min={0} max={20} {...register("requirements.bedrooms", { valueAsNumber: true })} />
           <FieldError>{reqErrors.bedrooms?.message}</FieldError>
         </Field>
         <Field data-invalid={reqErrors.bathrooms ? true : undefined}>
           <FieldLabel htmlFor="bathrooms">Bathrooms</FieldLabel>
-          <Input id="bathrooms" type="number" min={0} max={20} {...register("requirements.bathrooms")} />
+          <Input id="bathrooms" type="number" min={0} max={20} {...register("requirements.bathrooms", { valueAsNumber: true })} />
           <FieldError>{reqErrors.bathrooms?.message}</FieldError>
         </Field>
       </div>

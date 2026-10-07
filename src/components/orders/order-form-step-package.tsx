@@ -1,7 +1,6 @@
 "use client";
 
-
-import { CheckIcon } from "lucide-react";
+import { BadgeCheckIcon, CheckIcon } from "lucide-react";
 
 import { formatMoney } from "@/lib/format";
 import {
@@ -28,9 +27,9 @@ export function OrderFormStepPackage({ form, packages, loading }: OrderFormStepP
   if (loading) {
     return (
       <div className="grid gap-4 md:grid-cols-3">
-        <Skeleton className="h-48" />
-        <Skeleton className="h-48" />
-        <Skeleton className="h-48" />
+        <Skeleton className="h-64" />
+        <Skeleton className="h-64" />
+        <Skeleton className="h-64" />
       </div>
     );
   }
@@ -61,21 +60,36 @@ export function OrderFormStepPackage({ form, packages, loading }: OrderFormStepP
               }
             }}
             className={
-              "cursor-pointer transition-colors hover:border-primary" +
-              (isSelected ? " border-primary ring-2 ring-primary/30" : "")
+              "relative cursor-pointer transition-all hover:border-primary hover:shadow-md " +
+              (isSelected
+                ? "border-primary bg-primary/5 shadow-sm ring-2 ring-primary/40"
+                : "")
             }
           >
+            {isSelected ? (
+              <BadgeCheckIcon
+                className="absolute right-3 top-3 size-5 text-primary"
+                aria-label="Selected"
+              />
+            ) : null}
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                {pkg.name}
-                {isSelected ? <CheckIcon className="size-5 text-primary" aria-hidden /> : null}
-              </CardTitle>
+              <CardTitle>{pkg.name}</CardTitle>
               <CardDescription>{pkg.description}</CardDescription>
             </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-semibold">{formatMoney(pkg.price)}</p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {pkg.revisionLimit} free revisions
+            <CardContent className="flex flex-col gap-3">
+              <p className="text-2xl font-semibold tracking-tight">
+                {formatMoney(pkg.price)}
+              </p>
+              <ul className="flex flex-col gap-1.5 text-sm">
+                {pkg.deliverables.map((deliverable) => (
+                  <li key={deliverable} className="flex items-center gap-2">
+                    <CheckIcon className="size-4 shrink-0 text-primary" aria-hidden />
+                    {deliverable}
+                  </li>
+                ))}
+              </ul>
+              <p className="text-xs text-muted-foreground">
+                Includes {pkg.revisionLimit} free revisions
               </p>
             </CardContent>
           </Card>

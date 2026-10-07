@@ -58,13 +58,25 @@ export function OrderFormStepPlot({ form }: OrderFormStepPlotProps) {
       <div className="grid gap-4 sm:grid-cols-3">
         <Field data-invalid={plotErrors.width ? true : undefined}>
           <FieldLabel htmlFor="plot-width">Width</FieldLabel>
-          <Input id="plot-width" type="number" min={0} step="any" {...register("plot.width")} />
+          <Input
+            id="plot-width"
+            type="number"
+            min={0}
+            step="any"
+            {...register("plot.width", { valueAsNumber: true })}
+          />
           <FieldError>{plotErrors.width?.message}</FieldError>
         </Field>
 
         <Field data-invalid={plotErrors.length ? true : undefined}>
           <FieldLabel htmlFor="plot-length">Length</FieldLabel>
-          <Input id="plot-length" type="number" min={0} step="any" {...register("plot.length")} />
+          <Input
+            id="plot-length"
+            type="number"
+            min={0}
+            step="any"
+            {...register("plot.length", { valueAsNumber: true })}
+          />
           <FieldError>{plotErrors.length?.message}</FieldError>
         </Field>
 

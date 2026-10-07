@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useForm, type UseFormReturn } from "react-hook-form";
@@ -9,6 +10,7 @@ import { ROUTES } from "@/config/constants";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { OrderFormStepPackage } from "@/components/orders/order-form-step-package";
+import { OrderFormSelectedPackage } from "@/components/orders/order-form-selected-package";
 import { OrderFormStepPlot } from "@/components/orders/order-form-step-plot";
 import { OrderFormStepRequirements } from "@/components/orders/order-form-step-requirements";
 import { OrderFormStepBudget } from "@/components/orders/order-form-step-budget";
@@ -54,8 +56,8 @@ type OrderFormDraft = {
 const DEFAULTS: OrderFormValues = {
   packageId: "",
   plot: {
-    width: 100,
-    length: 100,
+    width: 0,
+    length: 0,
     unit: "FT",
     facing: "NORTH",
     roadSides: ["FRONT"],
@@ -78,6 +80,7 @@ const DEFAULTS: OrderFormValues = {
 
 export function OrderForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [stepIndex, setStepIndex] = useState(0);
   const [createdOrder, setCreatedOrder] = useState<{
     id: string;
@@ -95,17 +98,29 @@ export function OrderForm() {
   });
 
   // FR-10: persist the draft locally between visits (non-sensitive values only).
+  // Preselect a package when arriving via /order/new?package=slug
+  // (PackageCard CTAs), and restore the autosaved draft otherwise.
   useEffect(() => {
+    const slug = searchParams.get("package");
     const draft = localStorage.getItem(AUTOSAVE_KEY);
-    if (!draft) return;
-    try {
-      const parsed = JSON.parse(draft) as OrderFormDraft;
-      if (parsed) form.reset({ ...DEFAULTS, ...parsed });
-    } catch {
-      localStorage.removeItem(AUTOSAVE_KEY);
+    let restored = false;
+    if (draft) {
+      try {
+        const parsed = JSON.parse(draft) as OrderFormDraft;
+        if (parsed) {
+          form.reset({ ...DEFAULTS, ...parsed });
+          restored = true;
+        }
+      } catch {
+        localStorage.removeItem(AUTOSAVE_KEY);
+      }
+    }
+    if (slug && !restored) {
+      const match = packages.find((pkg) => pkg.slug === slug);
+      if (match) form.setValue("packageId", match.id, { shouldValidate: true });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [packages.length]);
 
   useEffect(() => {
     const subscription = form.watch((values) => {
@@ -177,6 +192,14 @@ export function OrderForm() {
           }
         })}
       >
+        {step.key !== "package" && (
+          <OrderFormSelectedPackage
+            form={form}
+            packages={packages}
+            onChange={() => setStepIndex(0)}
+          />
+        )}
+
         {step.key === "package" && (
           <OrderFormStepPackage
             form={form}

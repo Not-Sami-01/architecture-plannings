@@ -56,7 +56,12 @@ export function OrderFormStepBudget({ form }: OrderFormStepBudgetProps) {
 
       <Field data-invalid={errors.budget ? true : undefined}>
         <FieldLabel htmlFor="budget">Construction budget (optional)</FieldLabel>
-        <Input id="budget" type="number" min={0} {...register("budget", { setValueAs: (v) => (v === "" ? undefined : Number(v)) })} />
+        <Input
+          id="budget"
+          type="number"
+          min={0}
+          {...register("budget", { setValueAs: (v) => (v === "" || v == null ? undefined : Number(v)) })}
+        />
         <FieldError>{errors.budget?.message}</FieldError>
       </Field>
 
