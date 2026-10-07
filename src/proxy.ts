@@ -12,7 +12,7 @@ import { ROUTES } from "@/config/constants";
  */
 const SESSION_COOKIES = ["authjs.session-token", "__Secure-authjs.session-token"];
 
-export function middleware(req: NextRequest) {
+export function proxy(req: NextRequest) {
   const isProtected =
     req.nextUrl.pathname.startsWith(ROUTES.dashboard) ||
     req.nextUrl.pathname.startsWith(ROUTES.admin.root);
