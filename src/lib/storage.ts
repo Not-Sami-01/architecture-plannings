@@ -65,6 +65,18 @@ export async function presignUpload(input: {
   return {uploadUrl: `/api/files/local-upload?${params.toString()}`, method: "LOCAL"};
 }
 
+/** Returns a short-lived read URL. Local backend streams through our API. */
+export async function presignDownload(key: string, ttlSeconds: number): Promise<string> {
+  if (s3) {
+    const {GetObjectCommand} = await import("@aws-sdk/client-s3");
+    return getSignedUrl(s3, new GetObjectCommand({Bucket: config.storage.bucket, Key: key}), {
+      expiresIn: ttlSeconds,
+    });
+  }
+  const params = new URLSearchParams({key, expires: String(Date.now() + ttlSeconds * 1000)});
+  return `/api/files/local-download?${params.toString()}`;
+}
+
 /** Persists a body buffer (local backend only) — never called for S3. */
 export async function putLocalObject(key: string, body: Buffer): Promise<void> {
   if (s3) throw new Error("putLocalObject is not available when S3 storage is configured");

@@ -225,6 +225,7 @@ export const API_ROUTES = {
   },
   packages: "/api/packages",
   adminPackages: "/api/admin/packages",
+  session: "/api/session",
   orders: "/api/orders",
   order: (id: string) => `/api/orders/${id}`,
   acceptQuote: (id: string) => `/api/orders/${id}/accept-quote`,

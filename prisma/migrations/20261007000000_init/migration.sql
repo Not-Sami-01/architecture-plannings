@@ -168,6 +168,7 @@ CREATE TABLE "OrderFile" (
     "kind" "FileKind" NOT NULL,
     "uploadedById" TEXT NOT NULL,
     "revisionId" TEXT,
+    "confirmedAt" TIMESTAMP(3),
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT "OrderFile_pkey" PRIMARY KEY ("id")

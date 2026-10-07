@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/db";
 import { ApiError } from "@/lib/api/response";
-import { buildStorageKey, deleteObject, presignUpload } from "@/lib/storage";
+import { buildStorageKey, deleteObject, getObject, presignUpload } from "@/lib/storage";
 import {
   ADMIN_EXTRA_MIME_TYPES,
   CLIENT_MIME_TYPES,
@@ -100,7 +100,6 @@ export async function confirmUpload(user: ApiUser, input: ConfirmInput) {
 }
 
 async function keyExists(key: string): Promise<boolean> {
-  const { getObject } = await import("@/lib/storage");
   const object = await getObject(key);
   return object !== null;
 }

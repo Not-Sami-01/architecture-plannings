@@ -15,14 +15,19 @@ Derived from `PRD.md`, `API.md`, `RULES.md`, `AGENTS.md`, `README.md`. Follows t
 | 7. Apply migration + seed on a live DB | ⏳ Pending | Local Postgres available but credentials unknown; run `pnpm prisma migrate deploy && pnpm prisma db seed` once `DATABASE_URL` in `.env.local` points at it |
 | 8. Phase 1.5 — Auth (routes, role middleware, pages, hooks) | ✅ Done | register route + Auth.js + login/register pages + hooks; register API verified with curl |
 | 9. Phase 1.6 — Marketing shell | ✅ Done | navbar/footer/WhatsApp/home/services/portfolio/how-it-works/about/contact; all routes 200 |
-| 10. Phase 1.7 — File presign/confirm + upload hooks | 🔄 In progress | storage lib with S3 backend + local dev fallback |
-| 11. Phase 1.8 — Multi-step order form | ⏳ Pending | |
-| 12. Phase 1.9 — Admin orders table + read-only detail | ⏳ Pending | |
-| 13. Phase 1.10 — End-to-end verification | ⏳ Pending | |
+| 10. Phase 1.7 — File presign/confirm + upload hooks | ✅ Done | storage.ts (S3/R2 + local fallback), presign/confirm/download routes with payment gating, useUploadFile |
+| 11. Phase 1.8 — Multi-step order form | ✅ Done | 6 steps (package/plot/requirements/style/uploads/review), RHF + shared Zod, localStorage autosave, guest submit → sign-in prompt |
+| 11b. Files/order APIs | ✅ Done | /api/files/presign+confirm+download (402 gating), /api orders POST+GET, /api/packages, /api/session |
+| 12. Phase 1.9 — Admin orders table + read-only detail | ✅ Done | `/admin/orders` (status/q/search filters, sort, pagination via URL params) + `/admin/orders/[id]` read-only (plot/requirements, uploads w/ download links, timeline); `GET /api/admin/orders` + `/api/admin/orders/:id` with `authenticate` + `requireRole`; admin layout enforces ADMIN server-side (307 → login verified, API 401 verified) |
+| 13. Phase 1.10 — End-to-end verification | ⏳ Pending | Blocked on live DB: cannot register a client or submit an order until migrate + seed run |
 
 **Environment notes:**
-- No Docker daemon access and no preinstalled Postgres at session start → migration was generated offline (machine-generated from the validated schema, not yet applied to a live DB).
-- The user installed PostgreSQL locally during the session (port 5432 open); waiting on credentials to run migrate + seed.
+- Local PostgreSQL 18 (pgdg, data at /var/lib/pgsql/18/data) runs on 5432 but password auth fails for every tested role (`postgres`, `user/password` from .env.local) — pg_hba.conf is root/postgres-owned and sudo needs a password. To unblock, run in a terminal:
+  `sudo -u postgres psql -c "ALTER USER postgres PASSWORD 'archiplan';"`
+  then set `DATABASE_URL="postgresql://postgres:archiplan@localhost:5432/archiplan?sslmode=disable"` (db `archiplan` may also need `CREATE DATABASE archiplan OWNER postgres;`), and run `pnpm prisma migrate deploy && pnpm prisma db seed`.
+- Dev server smoke-tested: `/`, `/order/new`, `/login`, `/services`, `/api/session` → 200; `/api/packages` → 500 (DB auth failure only).
+- `pnpm audit` hardened: 51 vulnerabilities → 1 residual. Same-major pnpm `overrides` in `pnpm-workspace.yaml` (valibot ≥1.4.2, lodash ≥4.18.1, mysql2 ≥3.23.1, braces ≥3.0.3, deepmerge-ts ≥8.0.0 — Prisma CLI re-verified with `validate` + `generate`); deps refreshed (next 16.4.0, eslint pinned back to ^9); fixed a literal placeholder in `allowBuilds`. Remaining 1 high = `braces` via `shadcn` CLI (dev-only, no patched release exists yet).
+- Also fixed: empty-string env vars count as unset in `config.ts` (`optionalUrl`), so `STORAGE_ENDPOINT=""` no longer crashes module load; removed unused `OrderInput` imports from order-form step files.
 - Prisma 7 specifics: `prisma.config.ts` holds the CLI datasource URL; the runtime client uses the `@prisma/adapter-pg` adapter; generated client lives in `src/generated/` (gitignored).
 
 ## Current state

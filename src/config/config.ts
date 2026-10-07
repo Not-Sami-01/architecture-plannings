@@ -10,7 +10,12 @@ import { z } from "zod";
 const postgresUrl = z
   .string()
   .min(1)
-  .refine((v) => /^postgres(ql)?:\/\//.test(v), "Must be a postgres:// or postgresql:// URL");
+  .refine((v) => /^postgres(ql)?:\/\//.test(v), "Must be a postgres:// or postgresql:// URL");// Empty string env vars must count as unset for optional URL fields
+const optionalUrl = () =>
+  z.preprocess(
+    (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+    z.url().optional(),
+  );
 
 const envSchema = z.object({
   // Runtime
@@ -21,12 +26,12 @@ const envSchema = z.object({
 
   // Auth
   AUTH_SECRET: z.string().min(16, "AUTH_SECRET must be at least 16 characters"),
-  AUTH_URL: z.url().optional(),
+  AUTH_URL: optionalUrl(),
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
 
-  // Storage (S3-compatible private bucket)
-  STORAGE_ENDPOINT: z.url().optional(),
+  // Storage (S3-compatible private bucket; empty values = local `.storage/` fallback)
+  STORAGE_ENDPOINT: optionalUrl(),
   STORAGE_REGION: z.string().default("auto"),
   STORAGE_BUCKET: z.string().default("archiplan-private"),
   STORAGE_ACCESS_KEY_ID: z.string().optional(),
