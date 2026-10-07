@@ -12,14 +12,14 @@ Derived from `PRD.md`, `API.md`, `RULES.md`, `AGENTS.md`, `README.md`. Follows t
 | 4. `src/lib/api/` framework + unit tests | ✅ Done | types, response, request, with-middleware, middlewares; **32/32 tests pass** |
 | 5. Prisma 7 schema + seed + baseline migration + generate | ✅ Done | `validate` + `generate` pass; migration SQL generated offline via `migrate diff` |
 | 6. Phase 0 verification (lint / typecheck / test) | ✅ Done | All three pass |
-| 7. Apply migration + seed on a live DB | ⏳ Pending | Local Postgres available but credentials unknown; run `pnpm prisma migrate deploy && pnpm prisma db seed` once `DATABASE_URL` in `.env.local` points at it |
+| 7. Apply migration + seed on a live DB | ✅ Done | Local Postgres 18; `migrate deploy` + `db seed` run (admin `admin@archiplan.local` / `change-me-2026`, 3 packages). Note: `prisma.config.ts` seed runs via `sh prisma/seed.sh` wrapper (Prisma spawns commands without a shell; the seed needs the `react-server` condition for `server-only`) |
 | 8. Phase 1.5 — Auth (routes, role middleware, pages, hooks) | ✅ Done | register route + Auth.js + login/register pages + hooks; register API verified with curl |
 | 9. Phase 1.6 — Marketing shell | ✅ Done | navbar/footer/WhatsApp/home/services/portfolio/how-it-works/about/contact; all routes 200 |
 | 10. Phase 1.7 — File presign/confirm + upload hooks | ✅ Done | storage.ts (S3/R2 + local fallback), presign/confirm/download routes with payment gating, useUploadFile |
 | 11. Phase 1.8 — Multi-step order form | ✅ Done | 6 steps (package/plot/requirements/style/uploads/review), RHF + shared Zod, localStorage autosave, guest submit → sign-in prompt |
 | 11b. Files/order APIs | ✅ Done | /api/files/presign+confirm+download (402 gating), /api orders POST+GET, /api/packages, /api/session |
 | 12. Phase 1.9 — Admin orders table + read-only detail | ✅ Done | `/admin/orders` (status/q/search filters, sort, pagination via URL params) + `/admin/orders/[id]` read-only (plot/requirements, uploads w/ download links, timeline); `GET /api/admin/orders` + `/api/admin/orders/:id` with `authenticate` + `requireRole`; admin layout enforces ADMIN server-side (307 → login verified, API 401 verified) |
-| 13. Phase 1.10 — End-to-end verification | ⏳ Pending | Blocked on live DB: cannot register a client or submit an order until migrate + seed run |
+| 13. Phase 1.10 — End-to-end verification | ✅ Done | Live-tested with curl: register client → sign in (Auth.js credentials) → submit order → `AP-2026-0001` appears in `GET /api/admin/orders` (admin) with full detail; client sees own order (200), unknown order 404, client hitting admin API 403; `/api/packages` serves seeded data; status/q search filters work |
 
 **Environment notes:**
 - Local PostgreSQL 18 (pgdg, data at /var/lib/pgsql/18/data) runs on 5432 but password auth fails for every tested role (`postgres`, `user/password` from .env.local) — pg_hba.conf is root/postgres-owned and sudo needs a password. To unblock, run in a terminal:

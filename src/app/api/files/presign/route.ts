@@ -15,7 +15,7 @@ const presignSchema = z.object({
   size: z.number().int().positive(),
   kind: z.enum(Object.values(FILE_KINDS) as [FileKind, ...FileKind[]]),
   // Optional target order — validated in the service when provided.
-  orderId: z.string().cuid().optional(),
+  orderId: z.string().cuid2().optional(),
 });
 
 const postHandler: Handler = async (req) => {

@@ -8,14 +8,22 @@ import { confirmUpload } from "@/lib/files";
 import type { Handler } from "@/lib/api/types";
 
 const confirmSchema = z.object({
-  fileId: z.string().cuid(),
+  fileId: z.string().cuid2(),
 });
 
 const postHandler: Handler = async (req) => {
   const user = getUser(req);
   const { fileId } = getBody<z.infer<typeof confirmSchema>>(req);
   const file = await confirmUpload(user, { fileId });
-  return ok({ id: file.id, filename: file.filename, size: file.size, mime: file.mime });
+  return ok({
+    id: file.id,
+    filename: file.filename,
+    size: file.size,
+    mime: file.mime,
+  });
 };
 
-export const POST = withMiddleware(postHandler, [authenticate, validateBody(confirmSchema)]);
+export const POST = withMiddleware(postHandler, [
+  authenticate,
+  validateBody(confirmSchema),
+]);

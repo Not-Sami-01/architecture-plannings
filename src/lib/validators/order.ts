@@ -15,18 +15,34 @@ import {
  */
 
 export const plotSchema = z.object({
-  width: z.number({ message: "Plot width is required" }).positive("Plot width must be greater than zero").max(1000),
-  length: z.number({ message: "Plot length is required" }).positive("Plot length must be greater than zero").max(1000),
+  width: z
+    .number({ message: "Plot width is required" })
+    .positive("Plot width must be greater than zero")
+    .max(1000),
+  length: z
+    .number({ message: "Plot length is required" })
+    .positive("Plot length must be greater than zero")
+    .max(1000),
   unit: z.enum(PLOT_UNITS),
   facing: z.enum(DIRECTIONS),
-  roadSides: z.array(z.enum(ROAD_SIDES)).min(1, "Select at least one road side"),
+  roadSides: z
+    .array(z.enum(ROAD_SIDES))
+    .min(1, "Select at least one road side"),
   city: z.string().min(2, "Please enter your city").max(80),
 });
 
 export const requirementsSchema = z.object({
-  floors: z.number({ message: "Floors are required" }).int().min(1, "At least one floor").max(4),
+  floors: z
+    .number({ message: "Floors are required" })
+    .int()
+    .min(1, "At least one floor")
+    .max(4),
   bedrooms: z.number({ message: "Bedrooms are required" }).int().min(0).max(20),
-  bathrooms: z.number({ message: "Bathrooms are required" }).int().min(0).max(20),
+  bathrooms: z
+    .number({ message: "Bathrooms are required" })
+    .int()
+    .min(0)
+    .max(20),
   kitchenType: z.enum(KITCHEN_TYPES),
   garage: z.boolean(),
   lounge: z.boolean(),
@@ -40,13 +56,13 @@ export const styleBudgetSchema = z.object({
 });
 
 export const orderSchema = z.object({
-  packageId: z.string().cuid("Please choose a package"),
+  packageId: z.string().cuid2("Please choose a package"),
   plot: plotSchema,
   requirements: requirementsSchema,
   style: styleBudgetSchema.shape.style,
   budget: styleBudgetSchema.shape.budget,
   notes: styleBudgetSchema.shape.notes,
-  fileIds: z.array(z.string().cuid()).max(FILE_LIMITS.maxClientFiles),
+  fileIds: z.array(z.string().cuid2()).max(FILE_LIMITS.maxClientFiles),
 });
 
 export type PlotInput = z.infer<typeof plotSchema>;

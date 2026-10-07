@@ -18,7 +18,11 @@ import { usePackages } from "@/hooks/packages/use-packages";
 import { useCreateOrder } from "@/hooks/orders/use-create-order";
 import { useSession } from "@/hooks/auth/use-session";
 import { ApiClientError } from "@/lib/api-client/api";
-import { orderSchema, type OrderFormValues, type OrderInput } from "@/lib/validators/order";
+import {
+  orderSchema,
+  type OrderFormValues,
+  type OrderInput,
+} from "@/lib/validators/order";
 
 const STEPS = [
   { key: "package", title: "Package" },
@@ -49,7 +53,14 @@ type OrderFormDraft = {
 
 const DEFAULTS: OrderFormValues = {
   packageId: "",
-  plot: { width: 0, length: 0, unit: "FT", facing: "NORTH", roadSides: ["FRONT"], city: "" },
+  plot: {
+    width: 100,
+    length: 100,
+    unit: "FT",
+    facing: "NORTH",
+    roadSides: ["FRONT"],
+    city: "",
+  },
   requirements: {
     floors: 1,
     bedrooms: 3,
@@ -68,7 +79,10 @@ const DEFAULTS: OrderFormValues = {
 export function OrderForm() {
   const router = useRouter();
   const [stepIndex, setStepIndex] = useState(0);
-  const [createdOrder, setCreatedOrder] = useState<{ id: string; number: string } | null>(null);
+  const [createdOrder, setCreatedOrder] = useState<{
+    id: string;
+    number: string;
+  } | null>(null);
 
   const { data: packages, loadings: packagesLoading } = usePackages();
   const { data: session } = useSession();
@@ -115,9 +129,12 @@ export function OrderForm() {
   if (createdOrder) {
     return (
       <div className="flex flex-col items-center gap-4 rounded-xl border p-10 text-center">
-        <p className="text-lg font-semibold">Order {createdOrder.number} submitted!</p>
+        <p className="text-lg font-semibold">
+          Order {createdOrder.number} submitted!
+        </p>
         <p className="text-sm text-muted-foreground">
-          Sign in or create an account on this browser to see it in your dashboard.
+          Sign in or create an account on this browser to see it in your
+          dashboard.
         </p>
         <Button
           onClick={() => {
@@ -125,7 +142,9 @@ export function OrderForm() {
             router.push(session ? ROUTES.dashboard : ROUTES.register);
           }}
         >
-          {session ? "Go to my orders" : "Create your account to track this order"}
+          {session
+            ? "Go to my orders"
+            : "Create your account to track this order"}
         </Button>
       </div>
     );
@@ -136,7 +155,8 @@ export function OrderForm() {
       <div className="flex flex-col gap-2">
         <div className="flex items-center justify-between text-sm text-muted-foreground">
           <span>
-            Step {stepIndex + 1} of {STEPS.length}: <span className="font-medium text-foreground">{step.title}</span>
+            Step {stepIndex + 1} of {STEPS.length}:{" "}
+            <span className="font-medium text-foreground">{step.title}</span>
           </span>
           <span>{Math.round(((stepIndex + 1) / STEPS.length) * 100)}%</span>
         </div>
@@ -165,11 +185,15 @@ export function OrderForm() {
           />
         )}
         {step.key === "plot" && <OrderFormStepPlot form={form} />}
-        {step.key === "requirements" && <OrderFormStepRequirements form={form} />}
+        {step.key === "requirements" && (
+          <OrderFormStepRequirements form={form} />
+        )}
         {step.key === "style" && <OrderFormStepBudget form={form} />}
         {step.key === "uploads" && <OrderFormStepUploads form={form} />}
 
-        {step.key === "review" && <OrderFormStepReview form={form} packages={packages} />}
+        {step.key === "review" && (
+          <OrderFormStepReview form={form} packages={packages} />
+        )}
 
         <div className="mt-8 flex items-center justify-between gap-4">
           <Button
@@ -186,7 +210,10 @@ export function OrderForm() {
               type="button"
               onClick={async () => {
                 const valid = await stepFieldsValid(form, step.key);
-                if (valid) setStepIndex((index) => Math.min(STEPS.length - 1, index + 1));
+                if (valid)
+                  setStepIndex((index) =>
+                    Math.min(STEPS.length - 1, index + 1),
+                  );
               }}
             >
               Continue
@@ -204,7 +231,7 @@ export function OrderForm() {
 
 async function stepFieldsValid(
   form: OrderFormInstance,
-  step: StepKey
+  step: StepKey,
 ): Promise<boolean> {
   const fieldsByStep: Record<StepKey, Parameters<typeof form.trigger>[0]> = {
     package: ["packageId"],

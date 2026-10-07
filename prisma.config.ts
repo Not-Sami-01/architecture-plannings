@@ -10,7 +10,9 @@ import { defineConfig } from "prisma/config";
 export default defineConfig({
   schema: "prisma/schema.prisma",
   migrations: {
-    seed: "NODE_OPTIONS=--conditions=react-server tsx prisma/seed.ts",
+    // Prisma spawns the command without a shell (no `VAR=... cmd`, no quoting),
+    // so a tiny wrapper script sets up the react-server condition instead.
+    seed: "sh prisma/seed.sh",
   },
   datasource: {
     url: process.env.DATABASE_URL ?? "",
