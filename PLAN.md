@@ -27,6 +27,7 @@ Derived from `PRD.md`, `API.md`, `RULES.md`, `AGENTS.md`, `README.md`. Follows t
   then set `DATABASE_URL="postgresql://postgres:archiplan@localhost:5432/archiplan?sslmode=disable"` (db `archiplan` may also need `CREATE DATABASE archiplan OWNER postgres;`), and run `pnpm prisma migrate deploy && pnpm prisma db seed`.
 - Dev server smoke-tested: `/`, `/order/new`, `/login`, `/services`, `/api/session` → 200; `/api/packages` → 500 (DB auth failure only).
 - `pnpm audit` hardened: 51 vulnerabilities → 1 residual. Same-major pnpm `overrides` in `pnpm-workspace.yaml` (valibot ≥1.4.2, lodash ≥4.18.1, mysql2 ≥3.23.1, braces ≥3.0.3, deepmerge-ts ≥8.0.0 — Prisma CLI re-verified with `validate` + `generate`); deps refreshed (next 16.4.0, eslint pinned back to ^9); fixed a literal placeholder in `allowBuilds`. Remaining 1 high = `braces` via `shadcn` CLI (dev-only, no patched release exists yet).
+- Migrated `src/middleware.ts` → `src/proxy.ts` via the official `middleware-to-proxy` codemod (Next 16 convention); deprecation warning gone, auth gate re-verified (307 → login) on a fresh dev server.
 - Also fixed: empty-string env vars count as unset in `config.ts` (`optionalUrl`), so `STORAGE_ENDPOINT=""` no longer crashes module load; removed unused `OrderInput` imports from order-form step files.
 - Prisma 7 specifics: `prisma.config.ts` holds the CLI datasource URL; the runtime client uses the `@prisma/adapter-pg` adapter; generated client lives in `src/generated/` (gitignored).
 
