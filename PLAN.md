@@ -2,6 +2,29 @@
 
 Derived from `PRD.md`, `API.md`, `RULES.md`, `AGENTS.md`, `README.md`. Follows the PRD release plan: **Phase 1 MVP first** ("a real client can submit an order and the admin sees it"), no features from later phases unless asked.
 
+## Progress
+
+| Step | Status | Notes |
+|------|--------|-------|
+| 1. Scaffold Next.js 16 + TS strict + Tailwind 4 + pnpm | ✅ Done | App Router, src dir, `@/*` alias |
+| 2. Vitest, Prettier, deps, shadcn/ui init + 21 primitives | ✅ Done | pnpm 12 `allowBuilds` set in pnpm-workspace.yaml |
+| 3. `src/config/` + ESLint `process.env` ban + `.env.example` | ✅ Done | constants.ts, config.ts (Zod, server-only), public-config.ts |
+| 4. `src/lib/api/` framework + unit tests | ✅ Done | types, response, request, with-middleware, middlewares; **32/32 tests pass** |
+| 5. Prisma 7 schema + seed + baseline migration + generate | ✅ Done | `validate` + `generate` pass; migration SQL generated offline via `migrate diff` |
+| 6. Phase 0 verification (lint / typecheck / test) | ✅ Done | All three pass |
+| 7. Apply migration + seed on a live DB | ⏳ Pending | Local Postgres available but credentials unknown; run `pnpm prisma migrate deploy && pnpm prisma db seed` once `DATABASE_URL` in `.env.local` points at it |
+| 8. Phase 1.5 — Auth (routes, role middleware, pages, hooks) | ✅ Done | register route + Auth.js + login/register pages + hooks; register API verified with curl |
+| 9. Phase 1.6 — Marketing shell | ✅ Done | navbar/footer/WhatsApp/home/services/portfolio/how-it-works/about/contact; all routes 200 |
+| 10. Phase 1.7 — File presign/confirm + upload hooks | 🔄 In progress | storage lib with S3 backend + local dev fallback |
+| 11. Phase 1.8 — Multi-step order form | ⏳ Pending | |
+| 12. Phase 1.9 — Admin orders table + read-only detail | ⏳ Pending | |
+| 13. Phase 1.10 — End-to-end verification | ⏳ Pending | |
+
+**Environment notes:**
+- No Docker daemon access and no preinstalled Postgres at session start → migration was generated offline (machine-generated from the validated schema, not yet applied to a live DB).
+- The user installed PostgreSQL locally during the session (port 5432 open); waiting on credentials to run migrate + seed.
+- Prisma 7 specifics: `prisma.config.ts` holds the CLI datasource URL; the runtime client uses the `@prisma/adapter-pg` adapter; generated client lives in `src/generated/` (gitignored).
+
 ## Current state
 
 Greenfield: docs only (plus `files.zip` = copies of the docs). No code, no `package.json`.

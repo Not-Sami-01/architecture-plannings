@@ -41,6 +41,7 @@ Session cookie issued by Auth.js. Access levels:
 | 400 | `VALIDATION_ERROR` | Body or query failed Zod validation |
 | 401 | `UNAUTHENTICATED` | Login required |
 | 403 | `FORBIDDEN` | Not allowed (wrong role or not the owner) |
+| 409 | `CONFLICT` | Resource state conflict (e.g. email already registered) |
 | 404 | `NOT_FOUND` | Resource missing (also used to hide others' resources) |
 | 409 | `INVALID_TRANSITION` | Status change not allowed |
 | 409 | `REVISION_LIMIT_REACHED` | Free revisions used up |

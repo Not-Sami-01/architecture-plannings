@@ -1,0 +1,358 @@
+// Data model from PRD.md §9. Money and prices are integers (smallest unit).
+// Indexes follow AGENTS.md "Database Rules" plus fields used in admin filters.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ---------- Auth.js (email/password + optional Google) ----------
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified DateTime?
+  passwordHash  String?
+  phone         String?
+  role          Role      @default(CLIENT)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  accounts     Account[]
+  sessions     Session[]
+  orders       Order[]
+  uploadedFiles OrderFile[] @relation("UploadedFiles")
+  events       OrderEvent[]
+  verifiedPayments Payment[] @relation("VerifiedPayments")
+  messages     Message[]
+  testimonials Testimonial[]
+
+  @@index([role])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ---------- Catalog ----------
+
+model Package {
+  id            String   @id @default(cuid())
+  name          String
+  slug          String   @unique
+  description   String
+  price         Int
+  revisionLimit Int      @default(2)
+  deliverables  String[]
+  active        Boolean  @default(true)
+  sortOrder     Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  orders Order[]
+
+  @@index([active, sortOrder])
+}
+
+model PortfolioProject {
+  id        String     @id @default(cuid())
+  title     String
+  slug      String     @unique
+  category  String
+  plotSize  String
+  style     HouseStyle
+  images    String[]
+  featured  Boolean    @default(false)
+  visible   Boolean    @default(true)
+  sortOrder Int        @default(0)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([visible, sortOrder])
+}
+
+// ---------- Orders ----------
+
+model Order {
+  id            String      @id @default(cuid())
+  number        String      @unique
+  userId        String
+  packageId     String
+  status        OrderStatus @default(SUBMITTED)
+
+  // Plot details (FR-7)
+  plotWidth  Float
+  plotLength Float
+  plotUnit   PlotUnit
+  facing     Direction
+  roadSides  RoadSide[]
+  city       String
+
+  // Requirements (FR-8)
+  floors      Int
+  bedrooms    Int
+  bathrooms   Int
+  kitchenType KitchenType
+  garage      Boolean
+  lounge      Boolean
+  extras      String?
+
+  // Style and budget
+  style  HouseStyle
+  budget Int?
+  notes  String?
+
+  // Quote (FR-22: advance default 40%, configurable per quote)
+  totalPrice     Int?
+  advancePercent Int     @default(40)
+  quoteMessage   String?
+  quotedAt       DateTime?
+
+  revisionCount        Int     @default(0)
+  finalPaymentVerified Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user         User          @relation(fields: [userId], references: [id])
+  package      Package       @relation(fields: [packageId], references: [id])
+  files        OrderFile[]
+  events       OrderEvent[]
+  revisions    Revision[]
+  payments     Payment[]
+  messages     Message[]
+  testimonials Testimonial[]
+
+  @@index([status])
+  @@index([userId])
+  @@index([createdAt])
+}
+
+model OrderFile {
+  id           String   @id @default(cuid())
+  // Null until the file is attached to an order (order creation links fileIds;
+  // revision refs and payment proofs are uploaded with the order known).
+  orderId      String?
+  key          String   @unique
+  filename     String
+  mime         String
+  size         Int
+  kind         FileKind
+  uploadedById String
+  revisionId   String?
+  confirmedAt  DateTime?
+  createdAt    DateTime @default(now())
+
+  order      Order?     @relation(fields: [orderId], references: [id])
+  uploadedBy User       @relation("UploadedFiles", fields: [uploadedById], references: [id])
+  revision   Revision?  @relation(fields: [revisionId], references: [id])
+  paymentProof Payment? @relation("PaymentProof")
+
+  @@index([orderId])
+}
+
+model OrderEvent {
+  id         String       @id @default(cuid())
+  orderId    String
+  actorId    String
+  fromStatus OrderStatus?
+  toStatus   OrderStatus
+  note       String?
+  createdAt  DateTime     @default(now())
+
+  order Order @relation(fields: [orderId], references: [id])
+  actor User  @relation(fields: [actorId], references: [id])
+
+  @@index([orderId])
+}
+
+model Revision {
+  id        String         @id @default(cuid())
+  orderId   String
+  number    Int
+  message   String
+  status    RevisionStatus @default(OPEN)
+  createdAt DateTime       @default(now())
+
+  order Order       @relation(fields: [orderId], references: [id])
+  files OrderFile[]
+
+  @@unique([orderId, number])
+}
+
+model Payment {
+  id              String         @id @default(cuid())
+  orderId         String
+  type            PaymentType
+  amount          Int
+  method          PaymentMethod
+  status          PaymentStatus  @default(PENDING)
+  reference       String?
+  proofFileId     String?        @unique
+  verifiedById    String?
+  providerEventId String?        @unique
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  order      Order      @relation(fields: [orderId], references: [id])
+  proofFile  OrderFile? @relation("PaymentProof", fields: [proofFileId], references: [id])
+  verifiedBy User?      @relation("VerifiedPayments", fields: [verifiedById], references: [id])
+
+  @@index([orderId])
+}
+
+model Message {
+  id        String   @id @default(cuid())
+  orderId   String
+  senderId  String
+  body      String
+  internal  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  order  Order @relation(fields: [orderId], references: [id])
+  sender User  @relation(fields: [senderId], references: [id])
+
+  @@index([orderId])
+}
+
+model Testimonial {
+  id        String   @id @default(cuid())
+  userId    String
+  orderId   String
+  text      String
+  rating    Int
+  approved  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  order Order @relation(fields: [orderId], references: [id])
+
+  @@index([approved])
+}
+
+// ---------- Enums ----------
+
+enum Role {
+  CLIENT
+  ADMIN
+}
+
+enum OrderStatus {
+  SUBMITTED
+  QUOTED
+  AWAITING_ADVANCE
+  IN_DESIGN
+  DRAFT_DELIVERED
+  REVISION_REQUESTED
+  AWAITING_FINAL_PAYMENT
+  COMPLETED
+  CANCELLED
+}
+
+enum FileKind {
+  CLIENT
+  DRAFT_PREVIEW
+  DRAFT_ORIGINAL
+  FINAL
+  PAYMENT_PROOF
+  REVISION_REF
+}
+
+enum PaymentType {
+  ADVANCE
+  FINAL
+  EXTRA_REVISION
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  REJECTED
+}
+
+enum PaymentMethod {
+  BANK_TRANSFER
+  CARD
+  OTHER
+}
+
+enum RevisionStatus {
+  OPEN
+  DONE
+}
+
+enum PlotUnit {
+  FT
+  M
+  MARLA
+  KANAL
+}
+
+enum Direction {
+  NORTH
+  SOUTH
+  EAST
+  WEST
+  CORNER
+}
+
+enum RoadSide {
+  FRONT
+  BACK
+  LEFT
+  RIGHT
+}
+
+enum KitchenType {
+  OPEN
+  CLOSED
+}
+
+enum HouseStyle {
+  MODERN
+  CLASSIC
+  MINIMAL
+  SPANISH
+  ARABIC
+  OTHER
+}

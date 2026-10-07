@@ -1,5 +1,6 @@
 allowBuilds:
   "@prisma/client": true
+  '@prisma/engines': set this to true or false
   "@tailwindcss/oxide": true
   bcryptjs: true
   esbuild: true

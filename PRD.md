@@ -175,6 +175,7 @@ Prices are set in the admin panel. Extra revisions are charged per revision.
 - **Privacy:** Clients' land documents are visible only to the client and admin. Provide a delete-my-data path.
 - **Accessibility:** WCAG 2.1 AA for core flows.
 - **Maintainability:** All fixed values (app name, routes, limits, labels) live in `src/config/constants.ts`; all environment variables are validated and exported from `src/config/config.ts` (no direct `process.env` use). All API routes use the shared `withMiddleware` pattern. UI is built from one-component-per-file, feature-grouped components.
+- **SEO and content:** Public pages follow `CONTENT.md`: keyword-mapped, genuinely useful, long-form content with strong internal linking, metadata, and structured data.
 - **Frontend standards:** TanStack Query for server state, shadcn/ui for components, one hook per API call with a standard return structure, and a single axios-based `api` util. Details in `RULES.md`.
 - **Responsiveness:** Fully usable on phones, since most clients will arrive from social media.
 
