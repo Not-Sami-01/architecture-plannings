@@ -214,10 +214,12 @@ Status changes only happen through `lib/orders/status.ts`. Every change writes a
 
 ## Deployment
 
-1. Push to GitHub and import into Vercel.
-2. Add all environment variables.
-3. Set the build command to `prisma generate && prisma migrate deploy && next build`.
-4. Point your domain and verify the email domain in Resend.
+1. Push to GitHub and import the repository into Vercel. Keep the **Root Directory** set to the repository root and the **Framework Preset** set to **Next.js**.
+2. Use `pnpm build` as the build command. It generates the Prisma client in `src/generated/prisma` before building; that folder is intentionally gitignored and must not be committed.
+3. Leave **Output Directory** unset so Vercel uses Next.js output. Do not set it to `generated` or `src/generated/prisma`—those are not deployment output folders.
+4. Add `DATABASE_URL` and a strong `AUTH_SECRET` in Vercel's Environment Variables for the environments you deploy to. Set `NEXT_PUBLIC_APP_URL` to your deployed URL. Add provider variables (storage, email, Google) when those integrations are configured.
+5. Apply database migrations separately with `pnpm prisma migrate deploy` against the production database before directing users to the deployment. Do not run migrations as part of each Vercel build.
+6. Point your domain and verify the email domain in Resend.
 
 ## License
 
