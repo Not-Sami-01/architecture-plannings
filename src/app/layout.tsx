@@ -5,12 +5,12 @@ import { GeistMono } from "geist/font/mono";
 import { Providers } from "@/components/common/providers";
 import { Toaster } from "@/components/ui/sonner";
 import { APP } from "@/config/constants";
+import { publicConfig } from "@/config/public-config";
 
 import "./globals.css";
 
-
-
 export const metadata: Metadata = {
+  metadataBase: new URL(publicConfig.appUrl),
   title: {
     default: APP.name,
     template: `%s | ${APP.name}`,

@@ -28,6 +28,20 @@ export const ROUTES = {
   howItWorks: "/how-it-works",
   about: "/about",
   contact: "/contact",
+  guides: "/guides",
+  guide: (slug: string) => `/guides/${slug}`,
+  /** One landing page per package (CONTENT.md keyword map). */
+  packagePages: {
+    floorPlan: "/services/floor-plan-design",
+    planElevation: "/services/plan-and-elevation-design",
+    fullPackage: "/services/full-architectural-drawings",
+  },
+  /** Plot-size landing pages (CONTENT.md §4). */
+  plotPages: {
+    marla5: "/5-marla-house-design",
+    marla10: "/10-marla-house-plan",
+    kanal1: "/1-kanal-house-design",
+  },
   login: "/login",
   register: "/register",
   forgotPassword: "/forgot-password",
@@ -212,9 +226,19 @@ export const NAV_LINKS = [
   { label: "Services", href: ROUTES.services },
   { label: "Portfolio", href: ROUTES.portfolio },
   { label: "How It Works", href: ROUTES.howItWorks },
+  { label: "Guides", href: ROUTES.guides },
   { label: "About", href: ROUTES.about },
   { label: "Contact", href: ROUTES.contact },
 ] as const;
+
+/** Primary action label on every page (CONTENT.md §8). */
+export const CTA = {
+  primary: "Start your order",
+} as const;
+
+/** Required on the footer and on every package and guide page (CONTENT.md). */
+export const DISCLAIMER =
+  "Our drawings are design drawings. Local approval requirements (such as society or development authority rules) may apply. Please confirm them before construction.";
 
 export const API_ROUTES = {
   auth: {

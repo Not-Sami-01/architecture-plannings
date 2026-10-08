@@ -1,65 +1,77 @@
 import type { Metadata } from "next";
-import { BellRingIcon, LockIcon, ReceiptIcon } from "lucide-react";
 
 import { ROUTES } from "@/config/constants";
+import {
+  howItWorksBlocks,
+  howItWorksFaq,
+  howItWorksLead,
+  howItWorksSeo,
+  howItWorksSteps,
+} from "@/content/how-it-works";
+import { buildMetadata } from "@/lib/seo/metadata";
+import { howToSchema } from "@/lib/seo/schema";
+import { Breadcrumbs } from "@/components/common/breadcrumbs";
+import { ClosingCta } from "@/components/common/closing-cta";
+import { ContentSections } from "@/components/common/content-sections";
+import { FaqSection } from "@/components/common/faq-section";
+import { JsonLd } from "@/components/common/json-ld";
 import { PageHeader } from "@/components/common/page-header";
-import { HowItWorksSteps } from "@/components/marketing/how-it-works-steps";
-import { Button } from "@/components/ui/button";
+import { ProcessSteps } from "@/components/marketing/process-steps";
 
-export const metadata: Metadata = {
-  title: "How It Works",
-  description: "The process from requirements to final drawing delivery.",
-};
-
-const GUARANTEES = [
-  {
-    icon: ReceiptIcon,
-    title: "Fixed quote first",
-    description: "You approve the total price and the advance share before paying anything.",
-  },
-  {
-    icon: BellRingIcon,
-    title: "Email at every step",
-    description: "Quote ready, payment confirmed, draft delivered — you are never left guessing.",
-  },
-  {
-    icon: LockIcon,
-    title: "Fair file protection",
-    description:
-      "You review watermarked drafts; the full-quality set unlocks immediately after final payment.",
-  },
-] as const;
+export const metadata: Metadata = buildMetadata(howItWorksSeo);
 
 export default function HowItWorksPage() {
   return (
     <main>
-      <PageHeader
-        title="How it works"
-        description="Five clear steps from your requirements to a complete drawing set — with email updates at every status change."
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: ROUTES.home },
+          { label: "How It Works" },
+        ]}
       />
-      <HowItWorksSteps />
+      <PageHeader
+        title="How to Get a House Plan Online: Our Step-by-Step Process"
+        description={howItWorksLead}
+        links={[{ label: "Start your order", href: ROUTES.newOrder }]}
+      />
 
-      <section className="mx-auto mt-16 w-full max-w-6xl px-4 pb-16" aria-labelledby="guarantees">
-        <h2 id="guarantees" className="text-2xl font-semibold tracking-tight">
-          What you can count on
-        </h2>
-        <div className="mt-6 grid gap-6 md:grid-cols-3">
-          {GUARANTEES.map((item) => (
-            <div key={item.title} className="rounded-xl border bg-card p-5">
-              <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <item.icon className="size-5" aria-hidden />
-              </span>
-              <p className="mt-3 font-medium">{item.title}</p>
-              <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
-            </div>
-          ))}
+      <section className="pb-16" aria-labelledby="steps-heading">
+        <div className="mx-auto mb-8 w-full max-w-6xl px-4">
+          <h2 id="steps-heading" className="text-2xl font-semibold tracking-tight">
+            The five steps
+          </h2>
         </div>
-        <div className="mt-10 text-center">
-          <Button size="lg" render={<a href={ROUTES.newOrder} />}>
-            Start your order
-          </Button>
+        <ProcessSteps steps={howItWorksSteps} />
+      </section>
+
+      <section className="border-t bg-muted/30 py-16">
+        <div className="mx-auto w-full max-w-3xl px-4">
+          <ContentSections blocks={howItWorksBlocks} />
         </div>
       </section>
+
+      <section className="py-16">
+        <div className="mx-auto w-full max-w-3xl px-4">
+          <FaqSection items={howItWorksFaq} />
+        </div>
+      </section>
+
+      <JsonLd
+        data={{
+          ...howToSchema({
+            name: howItWorksSeo.title,
+            description: howItWorksSeo.description,
+            path: howItWorksSeo.path,
+            steps: howItWorksSteps.map((step) => ({ name: step.title })),
+          }),
+        }}
+      />
+
+      <ClosingCta
+        heading="Ready to begin?"
+        text="Start an order now, or log in to track an order you have already placed."
+        links={[{ label: "Log in", href: ROUTES.login }]}
+      />
     </main>
   );
 }

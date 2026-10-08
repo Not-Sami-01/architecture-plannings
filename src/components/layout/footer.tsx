@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { APP, NAV_LINKS } from "@/config/constants";
+import { SiteDisclaimer } from "@/components/common/site-disclaimer";
 import { publicConfig } from "@/config/public-config";
 
 export function Footer() {
@@ -40,8 +41,13 @@ export function Footer() {
           )}
         </div>
       </div>
-      <div className="border-t py-4 text-center text-xs text-muted-foreground">
-        © {new Date().getFullYear()} {APP.name}. All rights reserved.
+      <div className="border-t py-4">
+        <div className="mx-auto w-full max-w-6xl px-4">
+          <SiteDisclaimer className="text-center" />
+          <p className="mt-2 text-center text-xs text-muted-foreground">
+            © {new Date().getFullYear()} {APP.name}. All rights reserved.
+          </p>
+        </div>
       </div>
     </footer>
   );

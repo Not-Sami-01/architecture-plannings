@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ROUTES } from "@/config/constants";
@@ -16,6 +17,11 @@ function safeNextPath(next: string | undefined): string | undefined {
   if (!next?.startsWith("/") || next.startsWith("//")) return undefined;
   return next;
 }
+
+export const metadata: Metadata = {
+  title: "Log in",
+  robots: { index: false, follow: false },
+};
 
 export default async function LoginPage({
   searchParams,

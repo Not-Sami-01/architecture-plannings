@@ -1,44 +1,71 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { ClockIcon, MessageCircleIcon, MessagesSquareIcon } from "lucide-react";
 
-import { APP, ROUTES } from "@/config/constants";
+import { CTA, ROUTES, WHATSAPP } from "@/config/constants";
 import { publicConfig } from "@/config/public-config";
+import {
+  contactDescription,
+  contactFaq,
+  contactLead,
+  contactNotSure,
+  contactPrepare,
+  contactSeo,
+} from "@/content/contact";
+import { SITE_FACTS } from "@/content/site-facts";
+import { buildMetadata } from "@/lib/seo/metadata";
+import { localBusinessSchema } from "@/lib/seo/schema";
+import { Breadcrumbs } from "@/components/common/breadcrumbs";
+import { ClosingCta } from "@/components/common/closing-cta";
+import { FaqSection } from "@/components/common/faq-section";
+import { JsonLd } from "@/components/common/json-ld";
 import { PageHeader } from "@/components/common/page-header";
 import { Button } from "@/components/ui/button";
 
-export const metadata: Metadata = {
-  title: "Contact",
-  description: `Contact ${APP.name} for custom house designs.`,
-};
+export const metadata: Metadata = buildMetadata({
+  ...contactSeo,
+  description: contactDescription(),
+});
+
+const whatsappHref = publicConfig.whatsappNumber
+  ? `https://wa.me/${publicConfig.whatsappNumber}?text=${encodeURIComponent(WHATSAPP.prefilledMessage)}`
+  : null;
 
 export default function ContactPage() {
   return (
     <main>
-      <PageHeader
-        title="Contact us"
-        description="Questions about a plot, a package, or the process? Reach the studio directly — we usually reply within a few hours."
+      <Breadcrumbs
+        items={[
+          { label: "Home", href: ROUTES.home },
+          { label: "Contact" },
+        ]}
       />
-      <div className="mx-auto w-full max-w-6xl px-4 pb-16">
-        <div className="grid gap-6 md:grid-cols-2">
+      <PageHeader
+        title={contactSeo.title}
+        description={contactLead}
+        links={[{ label: CTA.primary, href: ROUTES.newOrder }]}
+      />
+
+      <div className="mx-auto w-full max-w-6xl px-4 pb-12">
+        <section aria-labelledby="ways" className="grid gap-6 md:grid-cols-3">
+          <h2 id="ways" className="sr-only">
+            Ways to reach us
+          </h2>
+
           <div className="flex flex-col gap-3 rounded-xl border bg-card p-6">
             <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
               <MessageCircleIcon className="size-5" aria-hidden />
             </span>
             <p className="font-medium">WhatsApp (fastest)</p>
-            {publicConfig.whatsappNumber ? (
+            {whatsappHref ? (
               <>
                 <p className="text-sm text-muted-foreground">
-                  Chat directly with the studio — best for quick questions about plot sizes and
-                  packages.
+                  Quick questions and sharing plot photos — the fastest way to reach the studio.
                 </p>
                 <Button
                   className="w-fit"
                   render={
-                    <a
-                      href={`https://wa.me/${publicConfig.whatsappNumber}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    />
+                    <a href={whatsappHref} target="_blank" rel="noopener noreferrer" />
                   }
                 >
                   Start a chat
@@ -46,7 +73,7 @@ export default function ContactPage() {
               </>
             ) : (
               <p className="text-sm text-muted-foreground">
-                WhatsApp chat is being configured. Please use an order message thread in the
+                WhatsApp chat is being configured. Please use your order message thread in the
                 meantime.
               </p>
             )}
@@ -62,20 +89,87 @@ export default function ContactPage() {
               specifics, revision notes, and payment questions. Submit an order and the thread opens
               automatically.
             </p>
-            <Button variant="outline" className="w-fit" render={<a href={ROUTES.newOrder} />}>
-              Start an order
+            <Button variant="outline" className="w-fit" render={<Link href={ROUTES.newOrder} />}>
+              {CTA.primary}
             </Button>
           </div>
-        </div>
 
-        <div className="mt-8 flex items-start gap-3 rounded-xl border border-dashed p-5 text-sm text-muted-foreground">
-          <ClockIcon className="mt-0.5 size-4 shrink-0" aria-hidden />
-          <p>
-            Studio hours: Saturday–Thursday, 10:00–19:00 (PKT). Quotes are usually sent within 24
-            hours of an order.
+          <div className="flex flex-col gap-3 rounded-xl border bg-card p-6">
+            <span className="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <ClockIcon className="size-5" aria-hidden />
+            </span>
+            <p className="font-medium">Response time</p>
+            <p className="text-sm text-muted-foreground">
+              {SITE_FACTS.responseTime
+                ? `We usually reply within ${SITE_FACTS.responseTime} on working days.`
+                : "We usually reply the same working day."}
+              {SITE_FACTS.workingHours ? ` Working hours: ${SITE_FACTS.workingHours}.` : ""}
+            </p>
+            {SITE_FACTS.supportEmail ? (
+              <a
+                href={`mailto:${SITE_FACTS.supportEmail}`}
+                className="text-sm font-medium text-primary underline underline-offset-4"
+              >
+                {SITE_FACTS.supportEmail}
+              </a>
+            ) : null}
+          </div>
+        </section>
+
+        <section className="mt-12" aria-labelledby="prepare">
+          <h2 id="prepare" className="text-2xl font-semibold tracking-tight">
+            Before you contact us
+          </h2>
+          <p className="mt-2 text-muted-foreground">
+            You will get a faster, more useful answer if you include:
           </p>
-        </div>
+          <ul className="mt-4 flex list-disc flex-col gap-2 pl-5 text-muted-foreground">
+            {contactPrepare.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="mt-12" aria-labelledby="not-sure">
+          <h2 id="not-sure" className="text-2xl font-semibold tracking-tight">
+            Not sure where to start?
+          </h2>
+          <ul className="mt-4 flex flex-col gap-2 text-muted-foreground">
+            {contactNotSure.map((item) => (
+              <li key={item.href}>
+                {item.text}{" "}
+                <Link href={item.href} className="font-medium text-primary underline underline-offset-4">
+                  {item.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        {SITE_FACTS.serviceAreas ? (
+          <section className="mt-12" aria-labelledby="service-area">
+            <h2 id="service-area" className="text-2xl font-semibold tracking-tight">
+              Service area
+            </h2>
+            <p className="mt-2 leading-relaxed text-muted-foreground">
+              We work online with clients in {SITE_FACTS.serviceAreas}. Because the process is
+              digital, you do not need to visit us. Overseas clients are welcome.
+            </p>
+          </section>
+        ) : null}
+
+        <section className="mt-12">
+          <FaqSection items={contactFaq} />
+        </section>
       </div>
+
+      <JsonLd data={localBusinessSchema()} />
+
+      <ClosingCta
+        heading="Ready to talk about your plot?"
+        text="Start your order in under five minutes, or ask us anything on WhatsApp first."
+        links={[{ label: "See packages and pricing", href: ROUTES.services }]}
+      />
     </main>
   );
 }

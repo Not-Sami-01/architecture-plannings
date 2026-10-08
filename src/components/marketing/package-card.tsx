@@ -26,12 +26,25 @@ type PackageCardPackage = {
 
 type PackageCardProps = {
   package: PackageCardPackage;
+  /** Highlighted card (ring + primary CTA), used on the home page. */
+  featured?: boolean;
+  /** Badge label shown above the title on a featured card. */
+  featuredLabel?: string;
 };
 
-export function PackageCard({ package: pkg }: PackageCardProps) {
+export function PackageCard({ package: pkg, featured, featuredLabel }: PackageCardProps) {
   return (
-    <Card className="flex h-full flex-col">
+    <Card
+      className={`flex h-full flex-col ${
+        featured ? "border-primary bg-primary/5 ring-2 ring-primary/40" : ""
+      }`}
+    >
       <CardHeader>
+        {featured && featuredLabel ? (
+          <Badge variant="secondary" className="mb-1 w-fit uppercase tracking-widest">
+            {featuredLabel}
+          </Badge>
+        ) : null}
         <CardTitle>{pkg.name}</CardTitle>
         <CardDescription>{pkg.description}</CardDescription>
       </CardHeader>
