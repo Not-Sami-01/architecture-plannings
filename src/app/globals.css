@@ -33,6 +33,8 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-cta-foreground: var(--cta-foreground);
+  --color-cta: var(--cta);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
   --color-muted-foreground: var(--muted-foreground);
@@ -54,45 +56,49 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Light: warm paper background, blueprint-navy ink, terracotta accent.
-   Palette notes live in DESIGN.md. */
+/* Light: the DESIGN.md palette — paper #FBF8F2, ink #1F2A3D, blueprint navy
+   #24467A, terracotta CTA #A94A27, sand #F1ECE2, hairline #E3DBCB. */
 :root {
-  --background: oklch(0.985 0.006 85);
-  --foreground: oklch(0.24 0.03 255);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.24 0.03 255);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.24 0.03 255);
-  --primary: oklch(0.38 0.09 255);
-  --primary-foreground: oklch(0.985 0.006 85);
-  --secondary: oklch(0.955 0.012 85);
-  --secondary-foreground: oklch(0.3 0.06 255);
-  --muted: oklch(0.955 0.012 85);
-  --muted-foreground: oklch(0.5 0.025 255);
-  --accent: oklch(0.93 0.03 60);
-  --accent-foreground: oklch(0.3 0.06 45);
+  --background: #fbf8f2;
+  --foreground: #1f2a3d;
+  --card: #ffffff;
+  --card-foreground: #1f2a3d;
+  --popover: #ffffff;
+  --popover-foreground: #1f2a3d;
+  --primary: #24467a;
+  --primary-foreground: #fbf8f2;
+  --secondary: #f1ece2;
+  --secondary-foreground: #1f2a3d;
+  --muted: #f1ece2;
+  --muted-foreground: #4a566b;
+  --accent: #f7e9e0;
+  --accent-foreground: #a94a27;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.9 0.015 85);
-  --input: oklch(0.9 0.015 85);
-  --ring: oklch(0.55 0.09 255);
-  --chart-1: oklch(0.38 0.09 255);
+  --border: #e3dbcb;
+  --input: #e3dbcb;
+  --ring: #24467a;
+  /* Terracotta CTA: hero + closing-band buttons only; everything else stays navy. */
+  --cta: #a94a27;
+  --cta-foreground: #ffffff;
+  --cta-shadow: #7b3419;
+  --chart-1: #24467a;
   --chart-2: oklch(0.62 0.14 45);
   --chart-3: oklch(0.55 0.1 170);
   --chart-4: oklch(0.72 0.12 85);
   --chart-5: oklch(0.45 0.08 300);
   --radius: 0.625rem;
-  --sidebar: oklch(0.975 0.008 85);
-  --sidebar-foreground: oklch(0.24 0.03 255);
-  --sidebar-primary: oklch(0.38 0.09 255);
-  --sidebar-primary-foreground: oklch(0.985 0.006 85);
-  --sidebar-accent: oklch(0.93 0.03 60);
-  --sidebar-accent-foreground: oklch(0.3 0.06 45);
-  --sidebar-border: oklch(0.9 0.015 85);
-  --sidebar-ring: oklch(0.55 0.09 255);
-  /* Hero (light theme): deep blueprint navy, paper ink, warm glow accent. */
-  --hero: oklch(0.17 0.035 258);
-  --hero-ink: oklch(0.97 0.005 90);
-  --hero-accent: oklch(0.88 0.055 60);
+  --sidebar: #fbf8f2;
+  --sidebar-foreground: #1f2a3d;
+  --sidebar-primary: #24467a;
+  --sidebar-primary-foreground: #fbf8f2;
+  --sidebar-accent: #f7e9e0;
+  --sidebar-accent-foreground: #a94a27;
+  --sidebar-border: #e3dbcb;
+  --sidebar-ring: #24467a;
+  /* Hero (light theme): deep blueprint navy, paper ink, warm terracotta glow. */
+  --hero: #1b2a4a;
+  --hero-ink: #fbf8f2;
+  --hero-accent: #e5a67e;
 }
 
 /* Dark: deep slate-blue backgrounds, off-white ink, brighter terracotta. */
@@ -128,6 +134,10 @@
   --sidebar-accent-foreground: oklch(0.9 0.06 60);
   --sidebar-border: oklch(1 0 0 / 12%);
   --sidebar-ring: oklch(0.68 0.12 255);
+  /* Terracotta CTA brightened for dark surfaces (white text stays AA). */
+  --cta: #bc5a35;
+  --cta-foreground: #ffffff;
+  --cta-shadow: #7b3419;
   /* Hero (dark theme): deeper still, brighter warm accent for contrast. */
   --hero: oklch(0.12 0.03 258);
   --hero-ink: oklch(0.97 0.005 90);

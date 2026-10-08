@@ -4,28 +4,36 @@ Design tokens and UI rules for the app. Tokens live in `src/app/globals.css`; fi
 
 ## Color palette
 
-Theme: **warm paper + blueprint navy + terracotta accent** — an architectural drafting-desk feel. All values are OKLCH; never hard-code hex in components (use Tailwind token classes like `bg-primary`, `text-muted-foreground`).
+Theme: **warm paper + blueprint navy + terracotta CTA** — an architectural drafting-desk feel. Tokens live in `src/app/globals.css` (hex below is the source of truth); never hard-code hex in components — use Tailwind token classes (`bg-primary`, `text-cta`, `border-border`, …).
 
 ### Light theme (`:root`)
 
 | Token | Value | Use |
 |-------|-------|-----|
-| `--background` | `oklch(0.985 0.006 85)` | Page background — warm off-white paper |
-| `--foreground` | `oklch(0.24 0.03 255)` | Body text — near-black slate blue |
-| `--card` | `oklch(1 0 0)` | Card surfaces |
-| `--primary` | `oklch(0.38 0.09 255)` | Buttons, links, selected states — blueprint navy |
-| `--primary-foreground` | `oklch(0.985 0.006 85)` | Text on primary |
-| `--secondary` / `--muted` | `oklch(0.955 0.012 85)` | Subtle fills — warm light gray |
-| `--muted-foreground` | `oklch(0.5 0.025 255)` | Secondary text |
-| `--accent` | `oklch(0.93 0.03 60)` | Icon chips, highlights — pale terracotta |
-| `--accent-foreground` | `oklch(0.3 0.06 45)` | Text on accent |
+| `--background` | `#FBF8F2` | Paper — page background, text on navy bands |
+| `--foreground` | `#1F2A3D` | Ink — headings and body text |
+| `--card` / `--popover` | `#FFFFFF` | Cards, chips, dialogs |
+| `--primary` | `#24467A` | Blueprint navy — logo, links, default buttons, closing band, selected states |
+| `--primary-foreground` | `#FBF8F2` | Paper text on navy |
+| `--secondary` / `--muted` | `#F1ECE2` | Sand — alternate section backgrounds (process, plot size, FAQ), footer, admin sidebar |
+| `--muted-foreground` | `#4A566B` | Secondary text — descriptions, subtext (micro-notes like "Under 5 minutes" may render at `text-muted-foreground/85` ≈ `#5A6578`) |
+| `--accent` | `#F7E9E0` | Pale terracotta — chip fills, active select rows |
+| `--accent-foreground` | `#A94A27` | Terracotta — uppercase eyebrow labels |
+| `--border` / `--input` | `#E3DBCB` | Hairlines, card borders, input outlines |
+| `--ring` | `#24467A` | Focus rings (navy) |
 | `--destructive` | `oklch(0.577 0.245 27.325)` | Errors, cancelled status |
-| `--border` / `--input` | `oklch(0.9 0.015 85)` | Hairlines, input borders |
-| `--ring` | `oklch(0.55 0.09 255)` | Focus rings |
+| `--cta` | `#A94A27` | Terracotta CTA — **hero and closing-band buttons only** (one clear action per screen) |
+| `--cta-foreground` | `#FFFFFF` | CTA label — white on `#A94A27` is 5.7:1 (AA) |
+| `--cta-shadow` | `#7B3419` | Pressed-key shadow under CTAs: `shadow-[0_3px_0_0_var(--cta-shadow)]` + `active:translate-y-[3px] active:shadow-none` |
+| `--hero` | `#1B2A4A` | Cinematic hero surface — deep navy, stays dark in both themes |
+| `--hero-ink` | `#FBF8F2` | Text on the hero banner |
+| `--hero-accent` | `#E5A67E` | Warm glow accent on the hero (italic headline line, step icons) |
+
+**Navy tints:** `bg-primary/10` = step-number and icon chips; `bg-primary/5` + `border-primary` = selected package card; `text-primary/70` = supporting navy text.
 
 ### Dark theme (`.dark`)
 
-Deep slate-blue surfaces (`0.17–0.26` lightness, hue 255), off-white ink, brighter navy primary (`oklch(0.68 0.12 255)`) for contrast, terracotta accent deepened (`oklch(0.32 0.05 45)` with light foreground).
+Deep slate-blue surfaces (`0.17–0.26` lightness, hue 255), off-white ink, brighter navy primary (`oklch(0.68 0.12 255)`) for contrast, terracotta accent deepened (`oklch(0.32 0.05 45)` with light foreground). `--cta` brightens to `#BC5A35` so white CTA text stays AA on dark surfaces.
 
 ### Charts
 
@@ -34,6 +42,7 @@ Deep slate-blue surfaces (`0.17–0.26` lightness, hue 255), off-white ink, brig
 ## Typography
 
 - **Sans:** Geist Sans (`geist/font/sans`, self-hosted in `src/app/layout.tsx`) for everything.
+- **Display:** editorial serif (`--font-display`: `ui-serif, "Iowan Old Style", Georgia…`) for hero and banner headlines only — large `font-display` headings with an italic accent line.
 - **Mono:** Geist Mono for identifiers (order numbers) when needed.
 - Scale: page titles `text-3xl md:text-4xl font-semibold tracking-tight`; section titles `text-2xl font-semibold tracking-tight`; card titles `font-medium`; body `text-sm`.
 
@@ -46,7 +55,7 @@ Deep slate-blue surfaces (`0.17–0.26` lightness, hue 255), off-white ink, brig
 ## Component conventions
 
 - **Icons:** `lucide-react` only. Standard icon chip: `flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary`.
-- **Buttons:** shadcn/Base-UI `Button`. For links use `render={<Link href={…} />}` — the shared `Button` sets `nativeButton={false}` automatically for non-button renders.
+- **Buttons:** shadcn/Base-UI `Button`. For links use `render={<Link href={…} />}` — the shared `Button` sets `nativeButton={false}` automatically for non-button renders. Default buttons are navy (`bg-primary`); terracotta (`bg-cta` + pressed shadow) is reserved for the hero and closing-band CTAs.
 - **Selected card state:** `border-primary bg-primary/5 ring-2 ring-primary/40` + `BadgeCheckIcon` (see `order-form-step-package.tsx`).
 - **Status badge:** `order-status-badge.tsx` maps statuses to badge variants — do not improvise colors per status.
 - Every list: loading skeleton + empty state; every form: inline validation + pending state. Mobile first — verify at 375px.

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ClipboardListIcon, LogOutIcon } from "lucide-react";
+import { ClipboardListIcon, LogOutIcon, TagsIcon } from "lucide-react";
 import { signOut } from "next-auth/react";
 
 import { APP, ROUTES } from "@/config/constants";
@@ -12,7 +12,10 @@ type AdminShellProps = {
   children: React.ReactNode;
 };
 
-const NAV = [{ href: ROUTES.admin.orders, label: "Orders", icon: ClipboardListIcon }];
+const NAV = [
+  { href: ROUTES.admin.orders, label: "Orders", icon: ClipboardListIcon },
+  { href: ROUTES.admin.packages, label: "Pricing", icon: TagsIcon },
+];
 
 /** Sidebar shell for the admin panel — deliberately unlike the client panel. */
 export function AdminShell({ email, children }: AdminShellProps) {
@@ -74,6 +77,12 @@ export function AdminShell({ email, children }: AdminShellProps) {
               className="rounded-lg px-2 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted"
             >
               Orders
+            </Link>
+            <Link
+              href={ROUTES.admin.packages}
+              className="rounded-lg px-2 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted"
+            >
+              Pricing
             </Link>
             <button
               type="button"

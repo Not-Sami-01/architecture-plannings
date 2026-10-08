@@ -156,8 +156,9 @@ All limits, error codes, and roles come from `src/config/constants.ts`.
 | Method | Path | Access | Description |
 |--------|------|--------|-------------|
 | GET | `/api/packages` | public | List active packages |
+| GET | `/api/admin/packages` | admin | List all packages (incl. inactive) |
 | POST | `/api/admin/packages` | admin | Create package |
-| PATCH | `/api/admin/packages/:id` | admin | Update package |
+| PATCH | `/api/admin/packages/:id` | admin | Update package (content, price, active flag) |
 | DELETE | `/api/admin/packages/:id` | admin | Deactivate package |
 
 ```json
@@ -167,12 +168,27 @@ All limits, error codes, and roles come from `src/config/constants.ts`.
     "id": "pkg_1",
     "name": "Plan + Elevation",
     "slug": "plan-elevation",
+    "description": "Floor plan with front elevation.",
     "price": 25000,
-    "currency": "PKR",
     "revisionLimit": 2,
     "deliverables": ["Floor plan", "Front elevation"]
   }]
 }
+
+// POST /api/admin/packages  → 201
+{
+  "name": "Plan + Elevation",
+  "slug": "plan-elevation",        // optional — derived from name when omitted
+  "description": "Floor plan with front elevation.",
+  "price": 25000,                  // integer, smallest unit (PKR, no decimals)
+  "revisionLimit": 2,
+  "deliverables": ["Floor plan", "Front elevation"],
+  "sortOrder": 1                   // optional
+}
+
+// PATCH /api/admin/packages/:id — any subset of the POST body + "active": boolean
+// DELETE /api/admin/packages/:id → { "data": { …package with active: false } }
+// Slug conflicts return 409 CONFLICT; missing ids return 404.
 ```
 
 ---

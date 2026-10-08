@@ -23,7 +23,11 @@ export function ClosingCta({
           {heading}
         </h2>
         <p className="max-w-xl text-primary-foreground/80">{text}</p>
-        <Button size="lg" variant="secondary" render={<Link href={ROUTES.newOrder} />}>
+        <Button
+          size="lg"
+          className="bg-cta text-cta-foreground shadow-[0_3px_0_0_var(--cta-shadow)] transition-all hover:bg-cta/90 active:translate-y-[3px] active:shadow-none"
+          render={<Link href={ROUTES.newOrder} />}
+        >
           {CTA.primary}
         </Button>
         {links && links.length > 0 ? (

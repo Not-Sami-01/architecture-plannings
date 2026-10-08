@@ -44,7 +44,7 @@ export default function HowItWorksPage() {
         <ProcessSteps steps={howItWorksSteps} />
       </section>
 
-      <section className="border-t bg-muted/30 py-16">
+      <section className="border-t bg-muted py-16">
         <div className="mx-auto w-full max-w-3xl px-4">
           <ContentSections blocks={howItWorksBlocks} />
         </div>

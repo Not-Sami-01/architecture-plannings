@@ -251,6 +251,7 @@ export const API_ROUTES = {
   },
   packages: "/api/packages",
   adminPackages: "/api/admin/packages",
+  adminPackage: (id: string) => `/api/admin/packages/${id}`,
   session: "/api/session",
   orders: "/api/orders",
   order: (id: string) => `/api/orders/${id}`,

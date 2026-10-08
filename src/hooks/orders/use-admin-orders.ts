@@ -48,14 +48,15 @@ export function useAdminOrders(filters: Partial<AdminOrderListQuery>) {
       if (normalized.status) params.status = normalized.status;
       if (normalized.q) params.q = normalized.q;
 
-      const result = await api<{ items: AdminOrderRow[]; meta: PaginatedMeta }>("get", {
+      const result = await api<AdminOrderRow[]>("get", {
         url: API_ROUTES.adminOrders,
         params,
         signal,
       });
-      return (
-        result.data ?? { items: [], meta: { page: 1, pageSize: normalized.pageSize, total: 0 } }
-      );
+      return {
+        items: result.data ?? [],
+        meta: result.meta ?? { page: 1, pageSize: normalized.pageSize, total: 0 },
+      };
     },
   });
 

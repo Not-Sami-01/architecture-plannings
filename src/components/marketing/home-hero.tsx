@@ -68,7 +68,7 @@ export function HomeHero() {
           <div className="mt-8 flex flex-wrap items-center gap-x-4 gap-y-3">
             <Button
               size="lg"
-              className="rounded-full bg-hero-ink px-6 text-hero hover:bg-hero-ink/90"
+              className="rounded-full bg-cta px-6 text-cta-foreground shadow-[0_3px_0_0_var(--cta-shadow)] transition-all hover:bg-cta/90 active:translate-y-[3px] active:shadow-none"
               render={<Link href={ROUTES.newOrder} />}
             >
               {CTA.primary}

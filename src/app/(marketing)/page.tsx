@@ -34,7 +34,7 @@ export default async function HomePage() {
     <main>
       <HomeHero />
 
-      <section className="border-y bg-muted/30 py-16" aria-labelledby="process-heading">
+      <section className="border-y bg-muted py-16" aria-labelledby="process-heading">
         <div className="mx-auto w-full max-w-6xl px-4">
           <p className="text-xs font-medium uppercase tracking-widest text-accent-foreground">
             {homeProcess.eyebrow}
@@ -95,7 +95,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-y bg-muted/30 py-16" aria-labelledby="plot-size-heading">
+      <section className="border-y bg-muted py-16" aria-labelledby="plot-size-heading">
         <div className="mx-auto w-full max-w-6xl px-4">
           <h2 id="plot-size-heading" className="text-2xl font-semibold tracking-tight md:text-3xl">
             {homePlotSize.heading}
@@ -121,7 +121,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-y bg-muted/30 py-16">
+      <section className="border-y bg-muted py-16">
         <div className="mx-auto w-full max-w-3xl px-4">
           <FaqSection items={homeQuickAnswers} heading="Quick answers" id="quick-answers" />
         </div>
