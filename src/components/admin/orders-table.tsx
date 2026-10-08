@@ -5,7 +5,7 @@ import Link from "next/link";
 import { formatMoney } from "@/lib/format";
 import { ROUTES } from "@/config/constants";
 import type { AdminOrderRow } from "@/hooks/orders/use-admin-orders";
-import { OrderStatusBadge } from "@/components/admin/order-status-badge";
+import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import {
   Table,
   TableBody,

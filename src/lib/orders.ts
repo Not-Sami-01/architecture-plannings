@@ -30,7 +30,16 @@ export async function createOrder(user: ApiUser, input: OrderInput) {
     });
     const number = generateOrderNumber(new Date(), count + 1);
 
-    return tx.order.create({
+    // Ownership check (Security Rules): only attach files this user uploaded —
+    // never trust client-supplied ids beyond validation.
+    const ownedFiles = input.fileIds.length
+      ? await tx.orderFile.findMany({
+          where: { id: { in: input.fileIds }, uploadedById: user.id },
+          select: { id: true },
+        })
+      : [];
+
+    const created = await tx.order.create({
       data: {
         number,
         userId: user.id,
@@ -54,11 +63,24 @@ export async function createOrder(user: ApiUser, input: OrderInput) {
         notes: input.notes || null,
         // Attach client uploads (they were registered without an order).
         files: {
-          connect: input.fileIds.map((id) => ({ id })),
+          connect: ownedFiles.map((file) => ({ id: file.id })),
         },
       },
       select: { id: true, number: true, status: true },
     });
+
+    // The admin timeline reads `OrderEvent`; a submission without one looks
+    // like "no history". Status transitions later follow lib/orders/status.ts.
+    await tx.orderEvent.create({
+      data: {
+        orderId: created.id,
+        actorId: user.id,
+        fromStatus: null,
+        toStatus: ORDER_STATUSES.SUBMITTED,
+      },
+    });
+
+    return created;
   });
 
   return order;

@@ -48,6 +48,8 @@ export const ROUTES = {
   resetPassword: "/reset-password",
   verifyEmail: "/verify-email",
   dashboard: "/dashboard",
+  dashboardOrders: "/dashboard/orders",
+  dashboardOrder: (id: string) => `/dashboard/orders/${id}`,
   newOrder: "/order/new",
   admin: {
     root: "/admin",

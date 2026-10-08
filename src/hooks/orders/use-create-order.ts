@@ -8,6 +8,7 @@ import { api, ApiClientError } from "@/lib/api-client/api";
 import { API_ROUTES } from "@/config/constants";
 import type { OrderInput } from "@/lib/validators/order";
 
+import { adminOrderKeys } from "./admin-order-keys";
 import { orderKeys } from "./order-keys";
 
 type CreatedOrder = { id: string; number: string; status: string };
@@ -25,7 +26,9 @@ export function useCreateOrder() {
       return result.data as CreatedOrder;
     },
     onSuccess: (order) => {
+      // Both panels list orders under different key prefixes.
       queryClient.invalidateQueries({ queryKey: orderKeys.list() });
+      queryClient.invalidateQueries({ queryKey: adminOrderKeys.all });
       toast.success(`Order ${order.number} submitted!`);
     },
     onError: (error) => {

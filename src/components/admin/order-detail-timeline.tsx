@@ -31,7 +31,9 @@ export function OrderDetailTimeline({ events }: OrderDetailTimelineProps) {
                 />
                 <div>
                   <p className="font-medium">
-                    {label(event.fromStatus)} → {label(event.toStatus)}
+                    {event.fromStatus
+                      ? `${label(event.fromStatus)} → ${label(event.toStatus)}`
+                      : `Order ${label(event.toStatus).toLowerCase()}`}
                   </p>
                   {event.note ? <p className="text-muted-foreground">{event.note}</p> : null}
                   <p className="text-xs text-muted-foreground">

@@ -1,6 +1,7 @@
 "use client";
 
 import { CheckIcon, LayersIcon } from "lucide-react";
+import { useWatch } from "react-hook-form";
 
 import { formatMoney } from "@/lib/format";
 import type { OrderFormInstance } from "@/components/orders/order-form";
@@ -18,7 +19,7 @@ type OrderFormSelectedPackageProps = {
  * after step 1).
  */
 export function OrderFormSelectedPackage({ form, packages, onChange }: OrderFormSelectedPackageProps) {
-  const packageId = form.watch("packageId");
+  const packageId = useWatch({ control: form.control, name: "packageId" });
   const pkg = packages.find((candidate) => candidate.id === packageId);
 
   if (!pkg) return null;

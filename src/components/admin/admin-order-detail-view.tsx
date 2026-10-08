@@ -4,7 +4,7 @@ import { AlertTriangle } from "lucide-react";
 
 import { formatMoney } from "@/lib/format";
 import { useAdminOrderDetail } from "@/hooks/orders/use-admin-order-detail";
-import { OrderStatusBadge } from "@/components/admin/order-status-badge";
+import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import { OrderDetailPlot } from "@/components/admin/order-detail-plot";
 import { OrderDetailTimeline } from "@/components/admin/order-detail-timeline";
 import { OrderDetailUploads } from "@/components/admin/order-detail-uploads";

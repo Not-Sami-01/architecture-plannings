@@ -55,6 +55,8 @@ cp .env.example .env
 
 > Never read `process.env` directly in app code. All variables are validated and exported from `src/config/config.ts` (`import { config } from "@/config/config"`). Fixed values such as the app name live in `src/config/constants.ts`.
 
+Prisma CLI commands load environment variables from `.env.local` first, then `.env`. Keep these files local and untracked.
+
 ```env
 # Database
 DATABASE_URL="postgresql://user:password@host:5432/archiplan?sslmode=require"
@@ -85,6 +87,16 @@ PAYMENT_WEBHOOK_SECRET=""
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 NEXT_PUBLIC_WHATSAPP_NUMBER="923001234567"
 ```
+
+### Google sign-in (optional)
+
+Leave `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` empty and the "Continue with Google" button stays hidden (email/password always works). To enable it:
+
+1. Create an OAuth 2.0 Client (Web) in [Google Cloud Console](https://console.cloud.google.com/apis/credentials).
+2. Authorized redirect URI: `${AUTH_URL}/api/auth/callback/google` (e.g. `http://localhost:3000/api/auth/callback/google`).
+3. Fill the two env vars and restart `pnpm dev`.
+
+Google sign-in links to an existing account with the same (Google-verified) email instead of conflicting; new Google users are created with the `CLIENT` role.
 
 ### Database
 

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ROUTES } from "@/config/constants";
+import { config } from "@/config/config";
 import { RegisterForm } from "@/components/auth/register-form";
 import {
   Card,
@@ -24,7 +25,9 @@ export default function RegisterPage() {
         <CardDescription>Order designs and follow every step in one place.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <RegisterForm />
+        <RegisterForm
+          googleEnabled={Boolean(config.auth.google.clientId && config.auth.google.clientSecret)}
+        />
         <p className="text-sm text-muted-foreground">
           Already have an account?{" "}
           <Link href={ROUTES.login} className="font-medium underline underline-offset-4">

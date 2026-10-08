@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ROUTES } from "@/config/constants";
+import { config } from "@/config/config";
 import { LoginForm } from "@/components/auth/login-form";
 import {
   Card,
@@ -37,7 +38,10 @@ export default async function LoginPage({
         <CardDescription>Track your orders and downloads.</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-4">
-        <LoginForm next={safeNextPath(next)} />
+        <LoginForm
+          next={safeNextPath(next)}
+          googleEnabled={Boolean(config.auth.google.clientId && config.auth.google.clientSecret)}
+        />
         <p className="text-sm text-muted-foreground">
           New here?{" "}
           <Link href={ROUTES.register} className="font-medium underline underline-offset-4">

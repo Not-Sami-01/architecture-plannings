@@ -3,6 +3,7 @@
 import type * as React from "react";
 
 import { STYLES } from "@/config/constants";
+import { useFormState, useWatch } from "react-hook-form";
 import {
   Field,
   FieldError,
@@ -26,16 +27,17 @@ type OrderFormStepBudgetProps = {
 
 export function OrderFormStepBudget({ form }: OrderFormStepBudgetProps) {
   const register = form.register;
-  const errors = form.formState.errors;
-  const watch = form.watch;
   const setValue = form.setValue;
+  // Hook equivalents stay reactive under React Compiler (facebook/react#29144).
+  const { errors } = useFormState({ control: form.control });
+  const style = useWatch({ control: form.control, name: "style" });
 
   return (
     <FieldGroup className="gap-6">
       <Field data-invalid={errors.style ? true : undefined}>
         <FieldLabel>Architectural style</FieldLabel>
         <Select
-          value={watch("style")}
+          value={style}
           onValueChange={(
             value,
           ) => setValue("style", value as OrderFormValues["style"], { shouldValidate: true })}

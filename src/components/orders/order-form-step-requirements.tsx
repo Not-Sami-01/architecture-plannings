@@ -3,6 +3,7 @@
 
 
 import { KITCHEN_TYPES } from "@/config/constants";
+import { useFormState, useWatch } from "react-hook-form";
 import {
   Field,
   FieldError,
@@ -32,10 +33,13 @@ const KITCHEN_LABELS: Record<(typeof KITCHEN_TYPES)[number], string> = {
 
 export function OrderFormStepRequirements({ form }: OrderFormStepRequirementsProps) {
   const register = form.register;
-  const errors = form.formState.errors;
-  const watch = form.watch;
   const setValue = form.setValue;
+  // Hook equivalents stay reactive under React Compiler (facebook/react#29144).
+  const { errors } = useFormState({ control: form.control });
   const reqErrors = errors.requirements ?? {};
+  const kitchenType = useWatch({ control: form.control, name: "requirements.kitchenType" });
+  const garage = useWatch({ control: form.control, name: "requirements.garage" });
+  const lounge = useWatch({ control: form.control, name: "requirements.lounge" });
 
   return (
     <FieldGroup className="gap-6">
@@ -60,7 +64,7 @@ export function OrderFormStepRequirements({ form }: OrderFormStepRequirementsPro
       <Field>
         <FieldLabel>Kitchen type</FieldLabel>
         <Select
-          value={watch("requirements.kitchenType")}
+          value={kitchenType}
           onValueChange={(value) =>
             setValue(
               "requirements.kitchenType",
@@ -85,7 +89,7 @@ export function OrderFormStepRequirements({ form }: OrderFormStepRequirementsPro
       <div className="flex flex-wrap gap-6">
         <label className="flex items-center gap-2 text-sm">
           <Checkbox
-            checked={watch("requirements.garage")}
+            checked={garage}
             onCheckedChange={(checked) =>
               setValue("requirements.garage", checked === true, { shouldValidate: true })
             }
@@ -94,7 +98,7 @@ export function OrderFormStepRequirements({ form }: OrderFormStepRequirementsPro
         </label>
         <label className="flex items-center gap-2 text-sm">
           <Checkbox
-            checked={watch("requirements.lounge")}
+            checked={lounge}
             onCheckedChange={(checked) =>
               setValue("requirements.lounge", checked === true, { shouldValidate: true })
             }

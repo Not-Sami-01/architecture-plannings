@@ -3,6 +3,7 @@
 
 
 import { DIRECTIONS, PLOT_UNITS, ROAD_SIDES } from "@/config/constants";
+import { useFormState, useWatch } from "react-hook-form";
 import {
   Field,
   FieldError,
@@ -48,10 +49,15 @@ const ROAD_LABELS: Record<(typeof ROAD_SIDES)[number], string> = {
 
 export function OrderFormStepPlot({ form }: OrderFormStepPlotProps) {
   const register = form.register;
-  const errors = form.formState.errors;
-  const watch = form.watch;
   const setValue = form.setValue;
+  // React Compiler memoizes `form.watch()`/`form.formState` on the stable `form`
+  // identity, so render reads never update (facebook/react#29144). The hook
+  // equivalents subscribe via state and stay reactive under the compiler.
+  const { errors } = useFormState({ control: form.control });
   const plotErrors = errors.plot ?? {};
+  const unit = useWatch({ control: form.control, name: "plot.unit" });
+  const facing = useWatch({ control: form.control, name: "plot.facing" });
+  const roadSides = useWatch({ control: form.control, name: "plot.roadSides" }) ?? [];
 
   return (
     <FieldGroup className="gap-6">
@@ -83,7 +89,7 @@ export function OrderFormStepPlot({ form }: OrderFormStepPlotProps) {
         <Field>
           <FieldLabel>Unit</FieldLabel>
           <Select
-            value={watch("plot.unit")}
+            value={unit}
             onValueChange={(value) =>
               setValue("plot.unit", value as (typeof PLOT_UNITS)[number], { shouldValidate: true })
             }
@@ -105,7 +111,7 @@ export function OrderFormStepPlot({ form }: OrderFormStepPlotProps) {
       <Field data-invalid={plotErrors.facing ? true : undefined}>
         <FieldLabel>Facing direction</FieldLabel>
         <Select
-          value={watch("plot.facing")}
+          value={facing}
           onValueChange={(value) =>
             setValue("plot.facing", value as (typeof DIRECTIONS)[number], { shouldValidate: true })
           }
@@ -128,16 +134,15 @@ export function OrderFormStepPlot({ form }: OrderFormStepPlotProps) {
         <FieldLabel>Road sides</FieldLabel>
         <div className="flex flex-wrap gap-4">
           {ROAD_SIDES.map((side) => {
-            const current = watch("plot.roadSides") ?? [];
-            const checked = current.includes(side);
+            const checked = roadSides.includes(side);
             return (
               <label key={side} className="flex items-center gap-2 text-sm">
                 <Checkbox
                   checked={checked}
-                  onCheckedChange={(checked) => {
-                    const next = checked
-                      ? [...current, side]
-                      : current.filter((s) => s !== side);
+                  onCheckedChange={(nextChecked) => {
+                    const next = nextChecked
+                      ? [...roadSides, side]
+                      : roadSides.filter((s) => s !== side);
                     setValue("plot.roadSides", next, { shouldValidate: true });
                   }}
                 />

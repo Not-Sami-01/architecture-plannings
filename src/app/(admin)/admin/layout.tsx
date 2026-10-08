@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
+
+import { APP, ROLES, ROUTES } from "@/config/constants";
 import { auth } from "@/lib/auth";
-import { ROUTES, ROLES } from "@/config/constants";
-import { APP } from "@/config/constants";
+import { AdminShell } from "@/components/layout/admin-shell";
 
 export const metadata: Metadata = {
   title: "Admin",
   description: `${APP.name} internal dashboard.`,
+  robots: { index: false, follow: false },
 };
 
 /**
@@ -18,5 +20,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   if (!session?.user) redirect(ROUTES.login);
   if (session.user.role !== ROLES.ADMIN) redirect(ROUTES.dashboard);
 
-  return <div className="mx-auto w-full max-w-6xl px-4 py-8">{children}</div>;
+  return (
+    <AdminShell email={session.user.email ?? session.user.name ?? "Admin"}>
+      {children}
+    </AdminShell>
+  );
 }

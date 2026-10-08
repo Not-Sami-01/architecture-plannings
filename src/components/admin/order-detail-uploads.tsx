@@ -1,5 +1,5 @@
 import { formatBytes } from "@/lib/format";
-import { API_ROUTES, FILE_KINDS } from "@/config/constants";
+import { API_ROUTES } from "@/config/constants";
 import type { AdminOrderDetail } from "@/hooks/orders/use-admin-order-detail";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

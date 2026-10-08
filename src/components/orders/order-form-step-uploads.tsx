@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import { useFormState, useWatch } from "react-hook-form";
 
 import { FileIcon, Trash2Icon } from "lucide-react";
 
@@ -25,8 +26,10 @@ type TrackedUpload = {
 export function OrderFormStepUploads({ form }: OrderFormStepUploadsProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const { actions, loadings } = useUploadFile();
-  const fileIds = form.watch("fileIds");
-  const error = form.formState.errors.fileIds?.message;
+  // Hook equivalents stay reactive under React Compiler (facebook/react#29144).
+  const fileIds = useWatch({ control: form.control, name: "fileIds" }) ?? [];
+  const { errors } = useFormState({ control: form.control });
+  const error = errors.fileIds?.message;
 
   const uploaded: TrackedUpload[] = []; // tracked by fileIds; names shown from ids after refresh
 

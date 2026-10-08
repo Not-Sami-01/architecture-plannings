@@ -2,6 +2,8 @@
 
 
 
+import { useWatch } from "react-hook-form";
+
 import { formatMoney } from "@/lib/format";
 import type { OrderFormInstance } from "@/components/orders/order-form";
 import type { PackageSummary } from "@/hooks/packages/use-packages";
@@ -22,7 +24,8 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 }
 
 export function OrderFormStepReview({ form, packages }: OrderFormStepReviewProps) {
-  const values = form.watch();
+  // `form.watch()` would be memoized on `form` by React Compiler (facebook/react#29144).
+  const values = useWatch({ control: form.control });
 
   const pkg = packages.find((candidate) => candidate.id === values.packageId);
 
