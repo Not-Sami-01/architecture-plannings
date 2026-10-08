@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { ROUTES } from "@/config/constants";
 import {
+  homeBanner,
   homeCta,
   homePackages,
   homePlotSize,
@@ -19,6 +20,7 @@ import { FaqSection } from "@/components/common/faq-section";
 import { JsonLd } from "@/components/common/json-ld";
 import { Button } from "@/components/ui/button";
 import { HomeHero } from "@/components/marketing/home-hero";
+import { ImageBanner } from "@/components/marketing/image-banner";
 import { NumberedCards } from "@/components/marketing/numbered-cards";
 import { PackageCard } from "@/components/marketing/package-card";
 import { PlotSizeChips } from "@/components/marketing/plot-size-chips";
@@ -27,11 +29,10 @@ export const metadata: Metadata = buildMetadata(homeSeo);
 
 export default async function HomePage() {
   const packages = await listActivePackages().catch(() => []);
-  const featured = packages.find((pkg) => pkg.slug === homePackages.featuredSlug);
 
   return (
     <main>
-      <HomeHero revisions={featured?.revisionLimit} />
+      <HomeHero />
 
       <section className="border-y bg-muted/30 py-16" aria-labelledby="process-heading">
         <div className="mx-auto w-full max-w-6xl px-4">
@@ -53,6 +54,14 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
+
+      <ImageBanner
+        imageSrc="/images/second-banner.webp"
+        eyebrow={homeBanner.eyebrow}
+        heading={homeBanner.heading}
+        text={homeBanner.text}
+        cta={homeBanner.cta}
+      />
 
       <section className="py-16" aria-labelledby="packages-heading">
         <div className="mx-auto w-full max-w-6xl px-4">

@@ -123,6 +123,21 @@ export const homeHero = {
     { label: "Rather chat? Ask on WhatsApp", href: ROUTES.contact },
     { label: "Create account", href: ROUTES.register },
   ],
+  /** Four quick-step glass cards along the bottom of the hero. */
+  steps: [
+    { title: "Share your plot" },
+    { title: "Get your quote" },
+    { title: "Review the draft" },
+    { title: "Download the files" },
+  ],
+} as const;
+
+/** Full-bleed image banner between the process and packages sections. */
+export const homeBanner = {
+  eyebrow: "One dashboard, start to finish",
+  heading: "Every drawing, every revision, tracked in one place.",
+  text: "Follow your order from submission to final files — watermarked drafts, remaining revisions and payment status are always visible.",
+  cta: { label: "See how it works", href: ROUTES.howItWorks },
 } as const;
 
 /** "Press once…" section. */
