@@ -12,6 +12,7 @@ import { adminOrderKeys } from "./admin-order-keys";
 import { orderKeys } from "./order-keys";
 
 type CreatedOrder = { id: string; number: string; status: string };
+export type { CreatedOrder };
 
 /** POST /api/orders — submits the order form. */
 export function useCreateOrder() {

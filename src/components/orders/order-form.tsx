@@ -16,10 +16,12 @@ import { OrderFormStepRequirements } from "@/components/orders/order-form-step-r
 import { OrderFormStepBudget } from "@/components/orders/order-form-step-budget";
 import { OrderFormStepUploads } from "@/components/orders/order-form-step-uploads";
 import { OrderFormStepReview } from "@/components/orders/order-form-step-review";
+import { OrderSubmitProgress } from "@/components/orders/order-submit-progress";
 import { usePackages } from "@/hooks/packages/use-packages";
-import { useCreateOrder } from "@/hooks/orders/use-create-order";
+import { useSubmitOrder } from "@/hooks/orders/use-submit-order";
 import { useSession } from "@/hooks/auth/use-session";
 import { ApiClientError } from "@/lib/api-client/api";
+import { stageFiles, type StagedFile, type StagedRejection } from "@/lib/staged-files";
 import {
   orderSchema,
   type OrderFormValues,
@@ -86,10 +88,26 @@ export function OrderForm() {
     id: string;
     number: string;
   } | null>(null);
+  // Files picked in the wizard — uploaded as one gated batch on submit.
+  const [staged, setStaged] = useState<StagedFile[]>([]);
 
   const { data: packages, loadings: packagesLoading } = usePackages();
   const { data: session } = useSession();
-  const { actions: orderActions, loadings: orderLoading } = useCreateOrder();
+  const {
+    data: submitData,
+    loadings: submitting,
+    actions: submitActions,
+  } = useSubmitOrder();
+
+  const stageFromList = (files: FileList): StagedRejection[] => {
+    const result = stageFiles(staged, Array.from(files));
+    setStaged(result.staged);
+    return result.rejected;
+  };
+
+  const removeStagedFile = (key: string) => {
+    setStaged((current) => current.filter((file) => file.key !== key));
+  };
 
   const form = useForm<OrderFormValues>({
     resolver: zodResolver(orderSchema),
@@ -181,14 +199,17 @@ export function OrderForm() {
       <form
         onSubmit={form.handleSubmit(async (values) => {
           try {
-            // The resolver has validated; coerced fields are numbers server-side.
-            const order = await orderActions.create(values);
+            // Uploads every staged file first; POST /api/orders is only
+            // called once they have all succeeded (useSubmitOrder gate).
+            const order = await submitActions.submit({ values, files: staged });
             setCreatedOrder(order);
+            setStaged([]);
           } catch (error) {
             if (error instanceof ApiClientError && error.status === 401) {
               // Redirected to login by the api util; draft persists locally.
               return;
             }
+            // Batch failures keep the overlay open with per-file errors.
           }
         })}
       >
@@ -212,17 +233,24 @@ export function OrderForm() {
           <OrderFormStepRequirements form={form} />
         )}
         {step.key === "style" && <OrderFormStepBudget form={form} />}
-        {step.key === "uploads" && <OrderFormStepUploads form={form} />}
+        {step.key === "uploads" && (
+          <OrderFormStepUploads
+            form={form}
+            staged={staged}
+            onStage={stageFromList}
+            onRemove={removeStagedFile}
+          />
+        )}
 
         {step.key === "review" && (
-          <OrderFormStepReview form={form} packages={packages} />
+          <OrderFormStepReview form={form} packages={packages} files={staged} />
         )}
 
         <div className="mt-8 flex items-center justify-between gap-4">
           <Button
             type="button"
             variant="outline"
-            disabled={stepIndex === 0 || orderLoading.creating}
+            disabled={stepIndex === 0 || submitting.busy}
             onClick={() => setStepIndex((index) => Math.max(0, index - 1))}
           >
             Back
@@ -231,6 +259,7 @@ export function OrderForm() {
           {stepIndex < STEPS.length - 1 ? (
             <Button
               type="button"
+              disabled={submitting.busy}
               onClick={async () => {
                 const valid = await stepFieldsValid(form, step.key);
                 if (valid)
@@ -242,12 +271,30 @@ export function OrderForm() {
               Continue
             </Button>
           ) : (
-            <Button type="submit" disabled={orderLoading.creating}>
-              {orderLoading.creating ? "Submitting…" : "Submit order"}
+            <Button type="submit" disabled={submitting.busy}>
+              {submitting.uploading
+                ? "Uploading files…"
+                : submitting.submitting
+                  ? "Submitting…"
+                  : "Submit order"}
             </Button>
           )}
         </div>
       </form>
+
+      <OrderSubmitProgress
+        items={submitData.items}
+        phase={submitData.phase}
+        onRetry={() => {
+          void submitActions.retry().catch(() => {
+            // Errors stay in the overlay; the hooks already toasted them.
+          });
+        }}
+        onEditFiles={() => {
+          submitActions.dismiss();
+          setStepIndex(STEPS.findIndex((candidate) => candidate.key === "uploads"));
+        }}
+      />
     </div>
   );
 }
