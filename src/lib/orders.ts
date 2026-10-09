@@ -1,9 +1,10 @@
 import { prisma } from "@/lib/db";
 import { ApiError } from "@/lib/api/response";
-import { ORDER_STATUSES, ROLES } from "@/config/constants";
+import { ORDER_STATUSES, REALTIME_EVENTS, ROLES } from "@/config/constants";
 import type { ApiUser } from "@/lib/api/types";
 import type { OrderInput } from "@/lib/validators/order";
 import { applyStatusChange } from "@/lib/orders/status";
+import { publishAdminsEvent } from "@/lib/realtime";
 
 /** Order service (creation, ownership-safe reads, client-side transitions). */
 
@@ -84,6 +85,9 @@ export async function createOrder(user: ApiUser, input: OrderInput) {
     return created;
   });
 
+  // Admin order list refreshes (non-blocking; see realtime.ts).
+  void publishAdminsEvent({ type: REALTIME_EVENTS.orderCreated, refId: order.id });
+
   return order;
 }
 
@@ -140,7 +144,7 @@ async function getOrderForTransition(user: ApiUser, orderId: string) {
 export async function acceptQuote(user: ApiUser, orderId: string) {
   const order = await getOrderForTransition(user, orderId);
 
-  return prisma.$transaction((tx) =>
+  const result = await prisma.$transaction((tx) =>
     applyStatusChange(tx, {
       orderId: order.id,
       actorId: user.id,
@@ -148,13 +152,16 @@ export async function acceptQuote(user: ApiUser, orderId: string) {
       to: ORDER_STATUSES.AWAITING_ADVANCE,
     }),
   );
+
+  void publishAdminsEvent({ type: REALTIME_EVENTS.statusChanged, refId: order.id });
+  return result;
 }
 
 /** Client approves the delivered draft: DRAFT_DELIVERED → AWAITING_FINAL_PAYMENT. */
 export async function approveDraft(user: ApiUser, orderId: string) {
   const order = await getOrderForTransition(user, orderId);
 
-  return prisma.$transaction((tx) =>
+  const result = await prisma.$transaction((tx) =>
     applyStatusChange(tx, {
       orderId: order.id,
       actorId: user.id,
@@ -162,4 +169,7 @@ export async function approveDraft(user: ApiUser, orderId: string) {
       to: ORDER_STATUSES.AWAITING_FINAL_PAYMENT,
     }),
   );
+
+  void publishAdminsEvent({ type: REALTIME_EVENTS.statusChanged, refId: order.id });
+  return result;
 }

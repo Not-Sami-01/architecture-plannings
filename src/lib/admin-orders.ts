@@ -1,10 +1,11 @@
 import { prisma } from "@/lib/db";
 import { ApiError } from "@/lib/api/response";
-import { ROLES, ORDER_STATUSES } from "@/config/constants";
+import { REALTIME_EVENTS, ROLES, ORDER_STATUSES } from "@/config/constants";
 import type { OrderStatus } from "@/config/constants";
 import type { ApiUser } from "@/lib/api/types";
 import type { AdminOrderListQuery, QuoteInput, StatusChangeInput } from "@/lib/validators/admin-orders";
 import { assertTransition, applyStatusChange } from "@/lib/orders/status";
+import { publishUserEvent } from "@/lib/realtime";
 
 /** Admin order reads and the quote/status mutations (API.md §8). */
 
@@ -84,7 +85,7 @@ export async function sendQuote(user: ApiUser, orderId: string, input: QuoteInpu
 
   const order = await prisma.order.findUnique({
     where: { id: orderId },
-    select: { id: true, status: true },
+    select: { id: true, status: true, userId: true },
   });
   if (!order) throw ApiError.notFound();
 
@@ -92,7 +93,7 @@ export async function sendQuote(user: ApiUser, orderId: string, input: QuoteInpu
   // (the machine's SUBMITTED → QUOTED edge).
   assertTransition(order.status, ORDER_STATUSES.QUOTED);
 
-  return prisma.$transaction(async (tx) => {
+  const result = await prisma.$transaction(async (tx) => {
     await tx.order.update({
       where: { id: order.id },
       data: {
@@ -117,6 +118,14 @@ export async function sendQuote(user: ApiUser, orderId: string, input: QuoteInpu
 
     return { id: order.id, status: ORDER_STATUSES.QUOTED as OrderStatus };
   });
+
+  // Non-blocking ping: the client's order view refetches (see realtime.ts).
+  void publishUserEvent(order.userId, {
+    type: REALTIME_EVENTS.quoteSent,
+    refId: order.id,
+  });
+
+  return result;
 }
 
 /** Generic admin status change, validated by the status machine. */
@@ -125,11 +134,11 @@ export async function changeOrderStatus(user: ApiUser, orderId: string, input: S
 
   const order = await prisma.order.findUnique({
     where: { id: orderId },
-    select: { id: true, status: true },
+    select: { id: true, status: true, userId: true },
   });
   if (!order) throw ApiError.notFound();
 
-  return prisma.$transaction((tx) =>
+  const result = await prisma.$transaction((tx) =>
     applyStatusChange(tx, {
       orderId: order.id,
       actorId: user.id,
@@ -138,4 +147,14 @@ export async function changeOrderStatus(user: ApiUser, orderId: string, input: S
       note: input.reason,
     }),
   );
+
+  // Skip the ping when the admin moved their own order (no client view to refresh).
+  if (order.userId !== user.id) {
+    void publishUserEvent(order.userId, {
+      type: REALTIME_EVENTS.statusChanged,
+      refId: order.id,
+    });
+  }
+
+  return result;
 }

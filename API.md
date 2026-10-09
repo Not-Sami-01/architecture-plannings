@@ -393,6 +393,18 @@ If the free limit is exceeded, the response is `409 REVISION_LIMIT_REACHED` with
 
 ---
 
+## 12. Realtime
+
+Ably delivers **id-only pings** that tell subscribed browsers which query keys to invalidate; payloads never contain names, emails, message bodies, or amounts. Publishing happens server-side from the services (`src/lib/realtime.ts`), fire-and-forget: a realtime outage can never fail or delay the main action. With `ABLY_API_KEY` unset, publishing no-ops and the token route reports `enabled: false`.
+
+| Method | Path | Access | Description |
+|--------|------|--------|-------------|
+| POST | `/api/realtime/token` | authenticated | `{ data: { enabled, tokenRequest } }` — signed Ably `TokenRequest` (single use, 60 min TTL, subscribe-only capability on `user:{id}` and, for admins, `role:admin`). `enabled: false` when realtime is not configured. |
+
+Client events (`REALTIME_EVENTS` in `constants.ts`): `quote.sent` / `order.status_changed` invalidate `orderKeys` + `adminOrderKeys`; `order.created` invalidates `adminOrderKeys`; `message.created` invalidates that thread's `messageKeys`. The browser SDK renews its token through the same endpoint (Ably `authCallback`).
+
+---
+
 ## Server Actions (UI mutations)
 
 > **Superseded for the client UI:** per `RULES.md`, UI reads and mutations go through feature hooks (TanStack Query) that call the `api` util, which hits the route handlers above. Server Actions are not the default and need explicit approval.
@@ -434,4 +446,5 @@ Every action must: (1) check the session and role, (2) validate input with Zod, 
 | Contact form | 3 per hour per IP |
 | File presign | 30 per minute per user |
 | Messages | 20 per minute per user |
+| Realtime token | 30 per minute per user |
 | Everything else | 120 per minute per user |

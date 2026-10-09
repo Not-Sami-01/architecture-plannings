@@ -17,6 +17,13 @@ const optionalUrl = () =>
     z.url().optional(),
   );
 
+// Same rule for optional plain strings (e.g. an absent integration key).
+const optionalString = () =>
+  z.preprocess(
+    (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+    z.string().optional(),
+  );
+
 const envSchema = z.object({
   // Runtime
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
@@ -43,6 +50,10 @@ const envSchema = z.object({
   // Payments
   PAYMENT_PROVIDER: z.enum(["manual", "stripe", "other"]).default("manual"),
   PAYMENT_WEBHOOK_SECRET: z.string().optional(),
+
+  // Realtime (Ably). Empty or missing = realtime disabled; the app stays
+  // fully functional without it (pings only trigger extra refetches).
+  ABLY_API_KEY: optionalString(),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -81,6 +92,9 @@ export const config = {
   payments: {
     provider: parsed.data.PAYMENT_PROVIDER,
     webhookSecret: parsed.data.PAYMENT_WEBHOOK_SECRET,
+  },
+  realtime: {
+    ablyApiKey: parsed.data.ABLY_API_KEY,
   },
 } as const;
 

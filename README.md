@@ -85,6 +85,9 @@ ADMIN_NOTIFY_EMAIL="you@yourdomain.com"
 PAYMENT_PROVIDER="manual"        # manual | stripe | other
 PAYMENT_WEBHOOK_SECRET=""
 
+# Realtime (Ably — optional; empty disables live pings, everything else works)
+ABLY_API_KEY=""
+
 # App
 NEXT_PUBLIC_APP_URL="http://localhost:3000"
 NEXT_PUBLIC_WHATSAPP_NUMBER="923001234567"

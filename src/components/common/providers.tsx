@@ -6,6 +6,8 @@ import { useState } from "react";
 
 import { publicConfig } from "@/config/public-config";
 
+import { RealtimeSync } from "./realtime-sync";
+
 /**
  * The single TanStack Query provider (RULES.md §8). Defaults are decided here:
  * - staleTime 60s: avoids refetch storms across dashboard navigation.
@@ -29,6 +31,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
+      <RealtimeSync />
       {children}
       {publicConfig.isDev ? (
         <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />

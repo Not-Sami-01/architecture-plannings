@@ -178,8 +178,34 @@ export const RATE_LIMITS = {
   contact: { limit: 3, windowSeconds: 3600 },
   presign: { limit: 30, windowSeconds: 60 },
   messages: { limit: 20, windowSeconds: 60 },
+  realtime: { limit: 30, windowSeconds: 60 },
   default: { limit: 120, windowSeconds: 60 },
 } as const;
+
+/**
+ * Realtime pings (Ably): id-only events that tell subscribed clients which
+ * query keys to invalidate. Never carry names, emails, bodies, or amounts.
+ */
+export const REALTIME_EVENTS = {
+  quoteSent: "quote.sent",
+  statusChanged: "order.status_changed",
+  orderCreated: "order.created",
+  messageCreated: "message.created",
+} as const;
+
+export type RealtimeEventType =
+  (typeof REALTIME_EVENTS)[keyof typeof REALTIME_EVENTS];
+
+/** Channels are subscribe-only for clients; publishing happens server-side. */
+export const REALTIME_CHANNELS = {
+  user: (id: string) => `user:${id}`,
+  admins: "role:admin",
+  /** Single event name on every channel; the payload carries `type`. */
+  ping: "ping",
+} as const;
+
+/** Realtime token lifetime; the SDK renews before expiry via the token route. */
+export const REALTIME_TOKEN_TTL_MS = 60 * 60_000;
 
 export const ERROR_CODES = {
   VALIDATION_ERROR: "VALIDATION_ERROR",
@@ -268,6 +294,7 @@ export const API_ROUTES = {
   adminPayment: (id: string) => `/api/admin/payments/${id}`,
   adminRevision: (id: string) => `/api/admin/revisions/${id}`,
   adminStats: "/api/admin/stats",
+  realtimeToken: "/api/realtime/token",
   portfolio: "/api/portfolio",
   adminPortfolio: "/api/admin/portfolio",
   adminPortfolioReorder: "/api/admin/portfolio/reorder",
