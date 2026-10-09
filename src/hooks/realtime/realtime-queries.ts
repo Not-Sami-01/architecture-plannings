@@ -1,6 +1,7 @@
 import { REALTIME_EVENTS } from "@/config/constants";
 import { orderKeys } from "@/hooks/orders/order-keys";
 import { adminOrderKeys } from "@/hooks/orders/admin-order-keys";
+import { messageKeys } from "@/hooks/messages/message-keys";
 
 /** Id-only ping as it arrives over the wire. */
 export type RealtimePing = {
@@ -23,6 +24,9 @@ export function realtimeEventQueries(
     // Admin list (and stats later) react to a brand-new submission.
     case REALTIME_EVENTS.orderCreated:
       return [adminOrderKeys.all];
+    // New message in a thread (refId is the order/thread id).
+    case REALTIME_EVENTS.messageCreated:
+      return event.refId ? [messageKeys.list(event.refId)] : [];
     default:
       return [];
   }

@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import { REALTIME_EVENTS } from "@/config/constants";
 import { orderKeys } from "@/hooks/orders/order-keys";
 import { adminOrderKeys } from "@/hooks/orders/admin-order-keys";
+import { messageKeys } from "@/hooks/messages/message-keys";
 
 import { realtimeEventQueries } from "./realtime-queries";
 
@@ -20,6 +21,13 @@ describe("realtimeEventQueries", () => {
     expect(realtimeEventQueries({ type: REALTIME_EVENTS.orderCreated, refId: "ord_2" })).toEqual([
       adminOrderKeys.all,
     ]);
+  });
+
+  it("a new message pings only that thread's list", () => {
+    expect(realtimeEventQueries({ type: REALTIME_EVENTS.messageCreated, refId: "ord_3" })).toEqual(
+      [messageKeys.list("ord_3")],
+    );
+    expect(realtimeEventQueries({ type: REALTIME_EVENTS.messageCreated })).toEqual([]);
   });
 
   it("ignores unknown or malformed event types", () => {

@@ -207,6 +207,11 @@ export const REALTIME_CHANNELS = {
 /** Realtime token lifetime; the SDK renews before expiry via the token route. */
 export const REALTIME_TOKEN_TTL_MS = 60 * 60_000;
 
+/** Per-order chat limits (FR-26). */
+export const MESSAGES = {
+  maxLength: 2000,
+} as const;
+
 export const ERROR_CODES = {
   VALIDATION_ERROR: "VALIDATION_ERROR",
   UNAUTHENTICATED: "UNAUTHENTICATED",

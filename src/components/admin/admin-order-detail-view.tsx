@@ -11,6 +11,7 @@ import { OrderDetailTimeline } from "@/components/admin/order-detail-timeline";
 import { OrderDetailUploads } from "@/components/admin/order-detail-uploads";
 import { QuoteForm } from "@/components/admin/quote-form";
 import { StatusControls } from "@/components/admin/status-controls";
+import { MessageThread } from "@/components/messages/message-thread";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -103,6 +104,7 @@ export function AdminOrderDetailView({ orderId }: AdminOrderDetailViewProps) {
           <OrderDetailPlot order={order} />
           <OrderDetailUploads files={order.files} />
           <OrderDetailTimeline events={order.events} />
+          <MessageThread orderId={order.id} allowInternal />
         </div>
       </div>
     </div>

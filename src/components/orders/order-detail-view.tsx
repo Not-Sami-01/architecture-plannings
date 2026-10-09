@@ -7,6 +7,7 @@ import { useOrder } from "@/hooks/orders/use-order";
 import { formatBytes, formatMoney } from "@/lib/format";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import { OrderActions } from "@/components/orders/order-actions";
+import { MessageThread } from "@/components/messages/message-thread";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -157,6 +158,8 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
           </ul>
         )}
       </Section>
+
+      <MessageThread orderId={order.id} />
     </div>
   );
 }
