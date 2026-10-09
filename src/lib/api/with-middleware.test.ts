@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 
-// The default middleware chain includes `authenticate`, which imports the real
-// Auth.js module; keep it out of the unit test runtime.
-vi.mock("@/lib/auth", () => ({ auth: vi.fn() }));
+// The default middleware chain includes `authenticate`, which imports Clerk's
+// server SDK and the users service (server-only); keep them out of the unit
+// test runtime.
+vi.mock("@clerk/nextjs/server", () => ({ auth: vi.fn() }));
+vi.mock("@/lib/users", () => ({ resolveApiUser: vi.fn() }));
 
 const marks = vi.hoisted(() => ({ order: [] as string[] }));
 

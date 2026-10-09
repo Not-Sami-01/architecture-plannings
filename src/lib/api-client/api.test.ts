@@ -88,11 +88,11 @@ describe("api", () => {
     });
 
     await expect(api("get", { url: "/api/orders" })).rejects.toBeInstanceOf(ApiClientError);
-    expect(location.href).toBe("/login?next=%2Fdashboard");
+    expect(location.href).toBe("/sign-in?next=%2Fdashboard");
   });
 
-  it("does not redirect on 401 from auth endpoints (failed login)", async () => {
-    const location = { pathname: "/login", search: "", href: "" };
+  it("redirects to sign-in on 401 from any endpoint (no exceptions)", async () => {
+    const location = { pathname: "/dashboard", search: "?tab=1", href: "" };
     vi.stubGlobal("window", { location });
 
     requestMock.mockRejectedValue({
@@ -102,8 +102,8 @@ describe("api", () => {
     });
 
     await expect(
-      api("post", { url: "/api/auth/callback/credentials" })
+      api("post", { url: "/api/orders/ord_1/messages", body: {} })
     ).rejects.toBeInstanceOf(ApiClientError);
-    expect(location.href).toBe("");
+    expect(location.href).toBe("/sign-in?next=%2Fdashboard%3Ftab%3D1");
   });
 });

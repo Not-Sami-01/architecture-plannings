@@ -84,8 +84,8 @@ Prices are set in the admin panel. Extra revisions are charged per revision.
 ## 7. Functional Requirements
 
 ### 7.1 Authentication and Authorization
-- FR-1: Email/password registration with email verification; optional Google login.
-- FR-2: Roles: `CLIENT`, `ADMIN`. Admin accounts are created via seed only.
+- FR-1: Authentication via Clerk (email/password + social providers configured in the Clerk dashboard); email verification handled by Clerk.
+- FR-2: Roles: `CLIENT`, `ADMIN`. Admin is granted on first sign-in when the email is listed in `ADMIN_EMAILS`; roles are stored in our DB.
 - FR-3: Middleware protects `/dashboard/*` (client) and `/admin/*` (admin).
 - FR-4: A client can only access their own orders, files, and messages.
 - FR-5: Password reset via email link.
@@ -95,7 +95,7 @@ Prices are set in the admin panel. Extra revisions are charged per revision.
 - FR-7: Plot details: width, length, unit (ft/m/marla/kanal), facing direction, road side(s), location (city).
 - FR-8: Requirements: floors, bedrooms, bathrooms, kitchen type, garage, lounge, extras (free text).
 - FR-9: Uploads: up to 10 files (JPG, PNG, PDF), max 10 MB each.
-- FR-10: Guests start the form, and are prompted to register/login at submit. Form data persists locally in the meantime.
+- FR-10: Guests start the form, and are prompted to sign up/sign in at submit. Form data persists locally in the meantime.
 - FR-11: Each order gets a human-readable number, e.g. `AP-2026-0042`.
 
 ### 7.3 Order Lifecycle
@@ -156,7 +156,7 @@ Prices are set in the admin panel. Extra revisions are charged per revision.
 
 ## 9. Data Model (summary)
 
-- **User:** id, name, email, passwordHash, role, phone, createdAt
+- **User:** id, clerkId, name, email, role, phone, createdAt
 - **Package:** id, name, slug, description, price, revisionLimit, deliverables[], active, order
 - **Order:** id, number, userId, packageId, status, plot fields, requirement fields, style, budget, notes, totalPrice, advancePercent, revisionCount, finalPaymentVerified, createdAt
 - **OrderFile:** id, orderId, key, filename, mime, size, kind (`CLIENT | DRAFT_PREVIEW | DRAFT_ORIGINAL | FINAL | PAYMENT_PROOF | REVISION_REF`), uploadedById
@@ -169,7 +169,7 @@ Prices are set in the admin panel. Extra revisions are charged per revision.
 
 ## 10. Non-Functional Requirements
 
-- **Security:** OWASP basics, hashed passwords (bcrypt/argon2), CSRF protection, rate-limited auth routes, strict file type and size validation, signed URLs only.
+- **Security:** OWASP basics, Clerk-managed credentials/sessions (no local passwords), server-side role + ownership checks on every route, rate-limited sensitive routes, strict file type and size validation, signed URLs only.
 - **Performance:** LCP under 2.5s on mid-range mobile; portfolio images optimized and lazy-loaded.
 - **Reliability:** Daily DB backups; idempotent webhooks; email failures never block order creation.
 - **Privacy:** Clients' land documents are visible only to the client and admin. Provide a delete-my-data path.

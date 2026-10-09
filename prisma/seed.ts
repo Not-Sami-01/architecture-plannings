@@ -1,28 +1,12 @@
-import bcrypt from "bcryptjs";
-
-import { config } from "../src/config/config";
 import { prisma } from "../src/lib/db";
-import { APP, ROLES } from "../src/config/constants";
+import { APP } from "../src/config/constants";
 
 /**
- * Seeds the admin account and the three launch packages (PRD §6, FR-2).
- * Admin accounts are created via seed only.
+ * Seeds the three launch packages (PRD §6, FR-2).
+ * Admin accounts are no longer seeded: the first Clerk sign-in with an email
+ * listed in ADMIN_EMAILS is promoted to ADMIN by `resolveApiUser`.
  */
 async function main() {
-  const passwordHash = await bcrypt.hash(config.seed.adminPassword, 12);
-
-  await prisma.user.upsert({
-    where: { email: config.seed.adminEmail },
-    update: { role: ROLES.ADMIN },
-    create: {
-      email: config.seed.adminEmail,
-      name: "Studio Admin",
-      passwordHash,
-      role: ROLES.ADMIN,
-      emailVerified: new Date(),
-    },
-  });
-
   const packages = [
     {
       name: "Floor Plan",
@@ -61,7 +45,7 @@ async function main() {
     });
   }
 
-  console.log(`Seeded admin (${config.seed.adminEmail}) and ${packages.length} ${APP.currency} packages.`);
+  console.log(`Seeded ${packages.length} ${APP.currency} packages.`);
 }
 
 main()

@@ -10,7 +10,7 @@ Format: JSON unless stated otherwise.
 ## Conventions
 
 ### Authentication
-Session cookie issued by Auth.js. Access levels:
+Session cookie issued by Clerk (sign-in via `/sign-in`, sign-up via `/sign-up`; both are Clerk-hosted pages, not API endpoints). Every authenticated request resolves the local user (and role) via `resolveApiUser`. Access levels:
 
 | Level | Meaning |
 |-------|---------|
@@ -133,21 +133,11 @@ All limits, error codes, and roles come from `src/config/constants.ts`.
 
 ## 1. Auth
 
+No local auth endpoints: Clerk owns credentials and session cookies (`/sign-in`, `/sign-up`, and `clerkMiddleware` in `src/proxy.ts`). Our API only reads the session:
+
 | Method | Path | Access | Description |
 |--------|------|--------|-------------|
-| POST | `/api/auth/register` | public | Create client account |
-| POST | `/api/auth/[...nextauth]` | public | Auth.js handlers (login, logout, session) |
-| POST | `/api/auth/forgot-password` | public | Send reset email |
-| POST | `/api/auth/reset-password` | public | Set new password with token |
-| POST | `/api/auth/verify-email` | public | Confirm email token |
-
-**POST `/api/auth/register`**
-```json
-// request
-{ "name": "Ali Khan", "email": "ali@example.com", "password": "min8chars", "phone": "+923001234567" }
-// 201
-{ "data": { "id": "usr_123", "email": "ali@example.com" } }
-```
+| GET | `/api/session` | public | `{ data: { id, name, email, role } }` or `{ data: null }` when signed out |
 
 ---
 
@@ -441,7 +431,6 @@ Every action must: (1) check the session and role, (2) validate input with Zod, 
 
 | Route group | Limit |
 |-------------|-------|
-| Auth (login, register, reset) | 5 per minute per IP |
 | Contact form | 3 per hour per IP |
 | File presign | 30 per minute per user |
 | Messages | 20 per minute per user |

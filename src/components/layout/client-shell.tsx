@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { signOut } from "next-auth/react";
+import { useClerk } from "@clerk/nextjs";
 
 import { APP, ROLES, ROUTES } from "@/config/constants";
 import type { Role } from "@/config/constants";
@@ -17,6 +17,8 @@ type ClientShellProps = {
 
 /** Header + main shell for the client panel (dashboard and its sub-pages). */
 export function ClientShell({ name, role, children }: ClientShellProps) {
+  const { signOut } = useClerk();
+
   return (
     <div className="flex min-h-svh flex-col">
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -62,7 +64,7 @@ export function ClientShell({ name, role, children }: ClientShellProps) {
               variant="outline"
               size="sm"
               onClick={() => {
-                void signOut({ callbackUrl: ROUTES.home });
+                void signOut({ redirectUrl: ROUTES.home });
               }}
             >
               Sign out

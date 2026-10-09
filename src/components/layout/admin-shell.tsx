@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
+import { useClerk } from "@clerk/nextjs";
 import { ClipboardListIcon, LogOutIcon, TagsIcon } from "lucide-react";
-import { signOut } from "next-auth/react";
 
 import { APP, ROUTES } from "@/config/constants";
 
@@ -19,8 +19,10 @@ const NAV = [
 
 /** Sidebar shell for the admin panel — deliberately unlike the client panel. */
 export function AdminShell({ email, children }: AdminShellProps) {
+  const { signOut } = useClerk();
+
   const signOutNow = () => {
-    void signOut({ callbackUrl: ROUTES.home });
+    void signOut({ redirectUrl: ROUTES.home });
   };
 
   return (

@@ -24,11 +24,9 @@ const envSchema = z.object({
   // Database
   DATABASE_URL: postgresUrl,
 
-  // Auth
-  AUTH_SECRET: z.string().min(16, "AUTH_SECRET must be at least 16 characters"),
-  AUTH_URL: optionalUrl(),
-  GOOGLE_CLIENT_ID: z.string().optional(),
-  GOOGLE_CLIENT_SECRET: z.string().optional(),
+  // Auth (Clerk). NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY are
+  // read by @clerk/nextjs itself; only our role bootstrap lives here.
+  ADMIN_EMAILS: z.string().default(""),
 
   // Storage (S3-compatible private bucket; empty values = local `.storage/` fallback)
   STORAGE_ENDPOINT: optionalUrl(),
@@ -45,10 +43,6 @@ const envSchema = z.object({
   // Payments
   PAYMENT_PROVIDER: z.enum(["manual", "stripe", "other"]).default("manual"),
   PAYMENT_WEBHOOK_SECRET: z.string().optional(),
-
-  // Seed (used by `prisma db seed` only; change in production)
-  ADMIN_EMAIL: z.email().default("admin@archiplan.local"),
-  ADMIN_PASSWORD: z.string().min(8).default("change-me-2026"),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -68,12 +62,9 @@ export const config = {
     url: parsed.data.DATABASE_URL,
   },
   auth: {
-    secret: parsed.data.AUTH_SECRET,
-    url: parsed.data.AUTH_URL,
-    google: {
-      clientId: parsed.data.GOOGLE_CLIENT_ID,
-      clientSecret: parsed.data.GOOGLE_CLIENT_SECRET,
-    },
+    adminEmails: parsed.data.ADMIN_EMAILS.split(",")
+      .map((email) => email.trim().toLowerCase())
+      .filter(Boolean),
   },
   storage: {
     endpoint: parsed.data.STORAGE_ENDPOINT,
@@ -90,10 +81,6 @@ export const config = {
   payments: {
     provider: parsed.data.PAYMENT_PROVIDER,
     webhookSecret: parsed.data.PAYMENT_WEBHOOK_SECRET,
-  },
-  seed: {
-    adminEmail: parsed.data.ADMIN_EMAIL,
-    adminPassword: parsed.data.ADMIN_PASSWORD,
   },
 } as const;
 

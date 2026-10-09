@@ -21,7 +21,7 @@ A full-stack web app where clients order custom house architecture designs (floo
 
 - **Framework:** Next.js (App Router) + TypeScript
 - **Database:** PostgreSQL (Neon or Supabase) with Prisma
-- **Auth:** Auth.js (NextAuth) with email/password + Google, role-based (CLIENT, ADMIN)
+- **Auth:** Clerk (email/password + social providers configured in the Clerk dashboard), role-based (CLIENT, ADMIN) with roles owned by our DB
 - **File storage:** Cloudflare R2 / S3 (private bucket, signed URLs) or UploadThing
 - **Email:** Resend + React Email templates
 - **UI:** Tailwind CSS + shadcn/ui (the only component library)
@@ -61,11 +61,13 @@ Prisma CLI commands load environment variables from `.env.local` first, then `.e
 # Database
 DATABASE_URL="postgresql://user:password@host:5432/archiplan?sslmode=require"
 
-# Auth
-AUTH_SECRET="generate-with: openssl rand -base64 32"
-AUTH_URL="http://localhost:3000"
-GOOGLE_CLIENT_ID=""
-GOOGLE_CLIENT_SECRET=""
+# Auth (Clerk — create an app at https://dashboard.clerk.com, copy keys from API Keys)
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_xxx"
+CLERK_SECRET_KEY="sk_test_xxx"
+NEXT_PUBLIC_CLERK_SIGN_IN_URL="/sign-in"
+NEXT_PUBLIC_CLERK_SIGN_UP_URL="/sign-up"
+# Comma-separated emails that get the ADMIN role on first sign-in
+ADMIN_EMAILS="admin@example.com"
 
 # Storage (S3-compatible, e.g. Cloudflare R2)
 STORAGE_ENDPOINT=""
@@ -88,15 +90,14 @@ NEXT_PUBLIC_APP_URL="http://localhost:3000"
 NEXT_PUBLIC_WHATSAPP_NUMBER="923001234567"
 ```
 
-### Google sign-in (optional)
+### Clerk setup (required)
 
-Leave `GOOGLE_CLIENT_ID`/`GOOGLE_CLIENT_SECRET` empty and the "Continue with Google" button stays hidden (email/password always works). To enable it:
+1. Create an app at [dashboard.clerk.com](https://dashboard.clerk.com) (free Hobby tier is enough).
+2. Copy the publishable + secret keys into `.env.local` (API Keys page).
+3. In the Clerk dashboard, enable the sign-in methods you want (email + Google, etc.) — providers are configured there, not in code.
+4. Add your own email to `ADMIN_EMAILS` so your first sign-in grants the ADMIN role; restart `pnpm dev`.
 
-1. Create an OAuth 2.0 Client (Web) in [Google Cloud Console](https://console.cloud.google.com/apis/credentials).
-2. Authorized redirect URI: `${AUTH_URL}/api/auth/callback/google` (e.g. `http://localhost:3000/api/auth/callback/google`).
-3. Fill the two env vars and restart `pnpm dev`.
-
-Google sign-in links to an existing account with the same (Google-verified) email instead of conflicting; new Google users are created with the `CLIENT` role.
+Auth flow: Clerk owns credentials/sessions; every request resolves through `resolveApiUser` (`src/lib/users.ts`), which lazily creates the local `User` row (and promotes/demotes the role from `ADMIN_EMAILS`). Roles and ownership checks stay in our DB.
 
 ### Database
 
@@ -140,7 +141,7 @@ Open http://localhost:3000.
 │   │   └── public-config.ts      # NEXT_PUBLIC_* only (client safe)
 │   ├── app/
 │   │   ├── (marketing)/          # Home, portfolio, services, how-it-works, about, contact
-│   │   ├── (auth)/               # login, register, forgot-password
+│   │   ├── (auth)/               # sign-in, sign-up (Clerk components)
 │   │   ├── (client)/dashboard/   # Client dashboard + order detail
 │   │   ├── (admin)/admin/        # Admin dashboard, orders, packages, portfolio
 │   │   ├── order/new/            # Order form (multi-step)
@@ -158,7 +159,7 @@ Open http://localhost:3000.
 │   │   │   └── middlewares/      # authenticate, require-role, validate, rate-limit
 │   │   ├── api-client/api.ts     # api<data>(method, data) on axios, the only HTTP caller
 │   │   ├── db.ts                 # Prisma client singleton
-│   │   ├── auth.ts               # Auth.js config
+│   │   ├── users.ts              # resolveApiUser (Clerk id -> local User row)
 │   │   ├── storage.ts            # Signed URLs, upload helpers
 │   │   ├── watermark.ts          # sharp watermark + preview generation
 │   │   ├── email/                # Resend client + templates
@@ -229,7 +230,7 @@ Status changes only happen through `lib/orders/status.ts`. Every change writes a
 1. Push to GitHub and import the repository into Vercel. Keep the **Root Directory** set to the repository root and the **Framework Preset** set to **Next.js**.
 2. Use `pnpm build` as the build command. It generates the Prisma client in `src/generated/prisma` before building; that folder is intentionally gitignored and must not be committed.
 3. Leave **Output Directory** unset so Vercel uses Next.js output. Do not set it to `generated` or `src/generated/prisma`—those are not deployment output folders.
-4. Add `DATABASE_URL` and a strong `AUTH_SECRET` in Vercel's Environment Variables for the environments you deploy to. Set `NEXT_PUBLIC_APP_URL` to your deployed URL. Add provider variables (storage, email, Google) when those integrations are configured.
+4. Add `DATABASE_URL`, the Clerk keys (`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`), and `ADMIN_EMAILS` in Vercel's Environment Variables for the environments you deploy to. Set `NEXT_PUBLIC_APP_URL` to your deployed URL. Add provider variables (storage, email) when those integrations are configured.
 5. Apply database migrations separately with `pnpm prisma migrate deploy` against the production database before directing users to the deployment. Do not run migrations as part of each Vercel build.
 6. Point your domain and verify the email domain in Resend.
 

@@ -42,8 +42,8 @@ export const ROUTES = {
     marla10: "/10-marla-house-plan",
     kanal1: "/1-kanal-house-design",
   },
-  login: "/login",
-  register: "/register",
+  login: "/sign-in",
+  register: "/sign-up",
   forgotPassword: "/forgot-password",
   resetPassword: "/reset-password",
   verifyEmail: "/verify-email",
@@ -175,7 +175,6 @@ export const PAGINATION = {
 } as const;
 
 export const RATE_LIMITS = {
-  auth: { limit: 5, windowSeconds: 60 },
   contact: { limit: 3, windowSeconds: 3600 },
   presign: { limit: 30, windowSeconds: 60 },
   messages: { limit: 20, windowSeconds: 60 },
@@ -243,12 +242,6 @@ export const DISCLAIMER =
   "Our drawings are design drawings. Local approval requirements (such as society or development authority rules) may apply. Please confirm them before construction.";
 
 export const API_ROUTES = {
-  auth: {
-    register: "/api/auth/register",
-    forgotPassword: "/api/auth/forgot-password",
-    resetPassword: "/api/auth/reset-password",
-    verifyEmail: "/api/auth/verify-email",
-  },
   packages: "/api/packages",
   adminPackages: "/api/admin/packages",
   adminPackage: (id: string) => `/api/admin/packages/${id}`,

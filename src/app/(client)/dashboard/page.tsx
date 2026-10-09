@@ -1,14 +1,16 @@
 import Link from "next/link";
+import { auth } from "@clerk/nextjs/server";
 
 import { ROUTES } from "@/config/constants";
-import { auth } from "@/lib/auth";
+import { resolveApiUser } from "@/lib/users";
 import { Button } from "@/components/ui/button";
 import { OrderList } from "@/components/orders/order-list";
 
 /** Client home: greeting + the signed-in user's orders (fetch lives in OrderList). */
 export default async function DashboardPage() {
-  const session = await auth();
-  const name = session?.user.name;
+  const { userId } = await auth();
+  const user = userId ? await resolveApiUser(userId) : null;
+  const name = user?.name;
 
   return (
     <div className="flex flex-col gap-6">

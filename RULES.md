@@ -42,7 +42,7 @@ Rules:
 4. It reads the base URL from `publicConfig` (never from `process.env`) and any fixed endpoint paths from `constants.ts`.
 5. It unwraps the standard success envelope and returns the inner `data` (and `meta` for paginated responses), so hooks never deal with raw axios responses.
 6. It converts API failures into one typed error (message, code, status, details) matching the error format in `API.md`, so every hook and UI handles errors the same way.
-7. It sends cookies/credentials for the Auth.js session, and handles `401` consistently (redirect to login) in one place.
+7. It sends cookies/credentials for the Clerk session, and handles `401` consistently (redirect to sign-in) in one place.
 8. Request cancellation (abort signal from TanStack Query) must be supported.
 9. File uploads to storage (presigned URLs) also go through `api` or a clearly named sibling util in the same folder. Components never talk to storage directly.
 10. No business logic, no toasts, no UI code inside `api`.

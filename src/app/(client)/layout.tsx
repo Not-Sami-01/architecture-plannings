@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 import { ROUTES } from "@/config/constants";
-import { auth } from "@/lib/auth";
+import { resolveApiUser } from "@/lib/users";
 import { ClientShell } from "@/components/layout/client-shell";
 
 export const metadata: Metadata = {
@@ -12,24 +13,23 @@ export const metadata: Metadata = {
 
 /**
  * Gate + shell for the whole client panel. The proxy already checks the
- * session cookie at the edge; this re-checks the session server-side so
- * unauthenticated visitors never render panel markup.
+ * session at the edge; this re-checks server-side so unauthenticated
+ * visitors never render panel markup.
  */
 export default async function ClientLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const session = await auth();
-  if (!session?.user) {
+  const { userId } = await auth();
+  if (!userId) {
     redirect(`${ROUTES.login}?next=${encodeURIComponent(ROUTES.dashboard)}`);
   }
 
+  const user = await resolveApiUser(userId);
+
   return (
-    <ClientShell
-      name={session.user.name ?? session.user.email ?? "My account"}
-      role={session.user.role}
-    >
+    <ClientShell name={user.name ?? user.email ?? "My account"} role={user.role}>
       {children}
     </ClientShell>
   );

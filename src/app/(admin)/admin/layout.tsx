@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
+import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
 import { APP, ROLES, ROUTES } from "@/config/constants";
-import { auth } from "@/lib/auth";
+import { resolveApiUser } from "@/lib/users";
 import { AdminShell } from "@/components/layout/admin-shell";
 
 export const metadata: Metadata = {
@@ -16,13 +17,11 @@ export const metadata: Metadata = {
  * (requireRole). Layout-level enforcement keeps non-admins out of admin pages.
  */
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
-  if (!session?.user) redirect(ROUTES.login);
-  if (session.user.role !== ROLES.ADMIN) redirect(ROUTES.dashboard);
+  const { userId } = await auth();
+  if (!userId) redirect(ROUTES.login);
 
-  return (
-    <AdminShell email={session.user.email ?? session.user.name ?? "Admin"}>
-      {children}
-    </AdminShell>
-  );
+  const user = await resolveApiUser(userId);
+  if (user.role !== ROLES.ADMIN) redirect(ROUTES.dashboard);
+
+  return <AdminShell email={user.email ?? user.name ?? "Admin"}>{children}</AdminShell>;
 }

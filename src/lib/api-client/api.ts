@@ -12,8 +12,8 @@ import type { PaginatedMeta } from "@/lib/api/response";
  * The one HTTP client (RULES.md §3). Hooks call `api`; components never do.
  * - Unwraps the standard `{ data, meta? }` envelope.
  * - Converts failures into one typed `ApiClientError` (message, code, status, details).
- * - Handles expired sessions (401) in exactly one place, except auth endpoints
- *   (a failed login must not redirect).
+ * - Handles expired sessions (401) in exactly one place (a Clerk sign-in page
+ *   takes over via the redirect).
  * - Supports request cancellation via `signal`.
  *
  * Base URL is same-origin ("/"): the client always calls its own API, which
@@ -51,10 +51,6 @@ const instance = axios.create({
   withCredentials: true,
 });
 
-function isAuthEndpoint(url: string): boolean {
-  return url.startsWith("/api/auth/");
-}
-
 function toApiClientError(error: unknown, url: string): ApiClientError {
   if (axios.isAxiosError(error)) {
     const status = error.response?.status ?? 0;
@@ -88,8 +84,7 @@ export async function api<data>(
     const clientError = toApiClientError(error, config.url);
     if (
       typeof window !== "undefined" &&
-      clientError.status === 401 &&
-      !isAuthEndpoint(config.url)
+      clientError.status === 401
     ) {
       const next = encodeURIComponent(window.location.pathname + window.location.search);
       // Full reload on purpose: it clears stale client state for an expired session.

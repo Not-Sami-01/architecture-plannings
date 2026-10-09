@@ -18,7 +18,7 @@ Read these before coding:
 
 ## Stack
 
-Next.js App Router, TypeScript (strict), PostgreSQL + Prisma, Auth.js, S3-compatible private storage, Resend, Tailwind + shadcn/ui, Zod, React Hook Form, sharp.
+Next.js App Router, TypeScript (strict), PostgreSQL + Prisma, Clerk (sessions) + our DB (roles), S3-compatible private storage, Resend, Tailwind + shadcn/ui, Zod, React Hook Form, sharp.
 
 ## Commands
 
@@ -29,7 +29,7 @@ pnpm typecheck           # must pass
 pnpm test                # must pass
 pnpm prisma migrate dev  # after schema changes
 pnpm prisma generate     # regenerate client
-pnpm prisma db seed      # seed admin + packages
+pnpm prisma db seed      # seed packages (admin bootstraps via ADMIN_EMAILS)
 ```
 
 Before declaring a task done, run `pnpm lint && pnpm typecheck && pnpm test`.
@@ -167,7 +167,7 @@ Rules:
 - Draft files shown to clients are the **watermarked, low-res previews**. Never send `DRAFT_ORIGINAL` to a client.
 - Validate uploads by mime type **and** size on the server; do not trust the client-supplied values.
 - Payment webhooks: verify the signature, be idempotent, never trust amounts from the client.
-- Hash passwords with argon2 or bcrypt. Never log passwords, tokens, signed URLs, or personal documents.
+- Credentials and sessions are owned by Clerk; never store passwords or auth tokens locally. Never log tokens, signed URLs, or personal documents.
 - Do not commit secrets. Use `.env` locally and update `.env.example` when adding variables.
 - Rate-limit auth, contact, upload-presign, and message endpoints.
 
@@ -256,8 +256,8 @@ Rules:
 1. Scaffold the Next.js app with Tailwind and shadcn/ui; configure the design tokens from `DESIGN.md`.
 2. Add `src/config/` (`constants.ts`, `config.ts`, `public-config.ts`) and the ESLint `process.env` rule.
 3. Add `src/lib/api/` (types, response, request, with-middleware, middlewares).
-4. Write `prisma/schema.prisma` from the data model in `PRD.md`; seed admin + 3 packages.
-5. Set up Auth.js with email/password and role-based middleware.
+4. Write `prisma/schema.prisma` from the data model in `PRD.md`; seed 3 packages.
+5. Set up Clerk (middleware + sign-in/sign-up routes) with role-based checks driven by `ADMIN_EMAILS` and the DB role.
 6. Build the marketing pages (Home, Services, Portfolio placeholder).
 7. Build the multi-step order form with direct-to-storage uploads.
 8. Build the admin orders list and order detail (read-only first).

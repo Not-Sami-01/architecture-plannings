@@ -1,17 +1,20 @@
+import { auth } from "@clerk/nextjs/server";
+
 import { withMiddleware } from "@/lib/api/with-middleware";
 import { ok } from "@/lib/api/response";
-import { auth } from "@/lib/auth";
+import { resolveApiUser } from "@/lib/users";
 import type { Handler } from "@/lib/api/types";
 
 /**
- * Session in the standard `{ data }` envelope for feature hooks. (Auth.js'
- * own /api/auth/session returns a provider-specific shape; RULES.md §3 wants
- * one envelope everywhere, so hooks use this thin read-only wrapper.)
+ * Session in the standard `{ data }` envelope for feature hooks (RULES.md §3
+ * wants one envelope everywhere, so hooks use this thin read-only wrapper
+ * instead of a provider-specific shape).
  */
 const getHandler: Handler = async () => {
-  const session = await auth();
-  if (!session?.user) return ok(null);
-  return ok({ id: session.user.id, name: session.user.name, email: session.user.email, role: session.user.role });
+  const { userId } = await auth();
+  if (!userId) return ok(null);
+  const user = await resolveApiUser(userId);
+  return ok({ id: user.id, name: user.name, email: user.email, role: user.role });
 };
 
 export const GET = withMiddleware(getHandler, []);

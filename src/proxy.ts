@@ -1,32 +1,23 @@
-import { NextResponse, type NextRequest } from "next/server";
-
-import { ROUTES } from "@/config/constants";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 
 /**
- * FR-3: protect /dashboard/* and /admin/*.
+ * FR-3: clerkMiddleware runs everywhere so `auth()` is available inside
+ * layouts, route handlers, and server components.
  *
- * This is the UX gate only: it checks for an Auth.js session cookie (edge
- * runtime — no DB, no env access here) and redirects to login. Real
- * authorization (role and ownership) is enforced server-side in every admin
- * layout and route handler via withMiddleware; never rely on this alone.
+ * Path-based `auth.protect()` checks are intentionally NOT used here (Clerk v7
+ * deprecates `createRouteMatcher` — middleware path matching can diverge from
+ * how Next.js routes requests). Resource checks live where the data lives:
+ * - `(client)/layout` and `(admin)/admin/layout` redirect signed-out visitors
+ *   (the admin layout also re-checks the DB role).
+ * - API routes enforce auth via the `authenticate` + `requireRole` middlewares.
+ * Never rely on a single layer.
  */
-const SESSION_COOKIES = ["authjs.session-token", "__Secure-authjs.session-token"];
-
-export function proxy(req: NextRequest) {
-  const isProtected =
-    req.nextUrl.pathname.startsWith(ROUTES.dashboard) ||
-    req.nextUrl.pathname.startsWith(ROUTES.admin.root);
-
-  if (!isProtected) return NextResponse.next();
-
-  const hasSession = SESSION_COOKIES.some((name) => req.cookies.has(name));
-  if (hasSession) return NextResponse.next();
-
-  const loginUrl = new URL(ROUTES.login, req.url);
-  loginUrl.searchParams.set("next", req.nextUrl.pathname + req.nextUrl.search);
-  return NextResponse.redirect(loginUrl);
-}
+export default clerkMiddleware();
 
 export const config = {
-  matcher: ["/dashboard/:path*", "/admin/:path*"],
+  matcher: [
+    // Skip Next internals and static assets; run everywhere else (API included).
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/(api|trpc)(.*)",
+  ],
 };
