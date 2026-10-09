@@ -6,6 +6,7 @@ import { API_ROUTES } from "@/config/constants";
 import { useOrder } from "@/hooks/orders/use-order";
 import { formatBytes, formatMoney } from "@/lib/format";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
+import { OrderActions } from "@/components/orders/order-actions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -71,6 +72,14 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
         </div>
         <OrderStatusBadge status={order.status} />
       </header>
+
+      <OrderActions
+        orderId={order.id}
+        status={order.status}
+        totalPrice={order.totalPrice}
+        advancePercent={order.advancePercent}
+        quoteMessage={order.quoteMessage}
+      />
 
       <Section title="Package">
         <Row label="Package" value={order.package.name} />

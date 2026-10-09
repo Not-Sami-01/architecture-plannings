@@ -27,6 +27,9 @@ export type ClientOrderDetail = {
   style: string;
   budget: number | null;
   notes: string | null;
+  totalPrice: number | null;
+  advancePercent: number;
+  quoteMessage: string | null;
   createdAt: string;
   package: { name: string; revisionLimit: number };
   files: { id: string; filename: string; mime: string; size: number }[];

@@ -1,13 +1,12 @@
 import { prisma } from "@/lib/db";
 import { ApiError } from "@/lib/api/response";
 import { ROLES, ORDER_STATUSES } from "@/config/constants";
+import type { OrderStatus } from "@/config/constants";
 import type { ApiUser } from "@/lib/api/types";
-import type { AdminOrderListQuery } from "@/lib/validators/admin-orders";
+import type { AdminOrderListQuery, QuoteInput, StatusChangeInput } from "@/lib/validators/admin-orders";
+import { assertTransition, applyStatusChange } from "@/lib/orders/status";
 
-/**
- * Admin order reads (Phase 1.9 scope: list with filters + full detail).
- * Quote/status mutations arrive with Phase 2 and `src/lib/orders/status.ts`.
- */
+/** Admin order reads and the quote/status mutations (API.md §8). */
 
 export async function listOrdersForAdmin(user: ApiUser, query: AdminOrderListQuery) {
   if (user.role !== ROLES.ADMIN) throw ApiError.notFound();
@@ -75,3 +74,68 @@ export async function getOrderForAdmin(user: ApiUser, orderId: string) {
 
 /** Status options for admin UI filters; values from constants, never literals. */
 export const ADMIN_ORDER_FILTER_STATUSES = Object.values(ORDER_STATUSES);
+
+/**
+ * Send a quote: sets the price terms and moves SUBMITTED → QUOTED atomically.
+ * The client must see the quote and its status change as one event.
+ */
+export async function sendQuote(user: ApiUser, orderId: string, input: QuoteInput) {
+  if (user.role !== ROLES.ADMIN) throw ApiError.notFound();
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: { id: true, status: true },
+  });
+  if (!order) throw ApiError.notFound();
+
+  // Fail before writing anything: quoting only makes sense from SUBMITTED
+  // (the machine's SUBMITTED → QUOTED edge).
+  assertTransition(order.status, ORDER_STATUSES.QUOTED);
+
+  return prisma.$transaction(async (tx) => {
+    await tx.order.update({
+      where: { id: order.id },
+      data: {
+        totalPrice: input.totalPrice,
+        advancePercent: input.advancePercent,
+        quoteMessage: input.message ?? null,
+        quotedAt: new Date(),
+        status: ORDER_STATUSES.QUOTED,
+      },
+      select: { id: true },
+    });
+
+    await tx.orderEvent.create({
+      data: {
+        orderId: order.id,
+        actorId: user.id,
+        fromStatus: order.status,
+        toStatus: ORDER_STATUSES.QUOTED,
+        note: input.message ?? null,
+      },
+    });
+
+    return { id: order.id, status: ORDER_STATUSES.QUOTED as OrderStatus };
+  });
+}
+
+/** Generic admin status change, validated by the status machine. */
+export async function changeOrderStatus(user: ApiUser, orderId: string, input: StatusChangeInput) {
+  if (user.role !== ROLES.ADMIN) throw ApiError.notFound();
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: { id: true, status: true },
+  });
+  if (!order) throw ApiError.notFound();
+
+  return prisma.$transaction((tx) =>
+    applyStatusChange(tx, {
+      orderId: order.id,
+      actorId: user.id,
+      from: order.status,
+      to: input.to,
+      note: input.reason,
+    }),
+  );
+}

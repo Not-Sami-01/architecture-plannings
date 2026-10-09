@@ -3,8 +3,9 @@ import { ApiError } from "@/lib/api/response";
 import { ORDER_STATUSES, ROLES } from "@/config/constants";
 import type { ApiUser } from "@/lib/api/types";
 import type { OrderInput } from "@/lib/validators/order";
+import { applyStatusChange } from "@/lib/orders/status";
 
-/** Order service (Phase 1 scope: creation and ownership-safe reads). */
+/** Order service (creation, ownership-safe reads, client-side transitions). */
 
 /** FR-11: human-readable number, e.g. AP-2026-0042. */
 export function generateOrderNumber(date: Date, sequence: number): string {
@@ -120,4 +121,45 @@ export async function listOrdersForUser(user: ApiUser) {
       user: { select: { name: true, email: true } },
     },
   });
+}
+
+/**
+ * Ownership-safe read for the client transition endpoints: strangers get 404
+ * (existence is never leaked), the current status is validated by the machine.
+ */
+async function getOrderForTransition(user: ApiUser, orderId: string) {
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: { id: true, userId: true, status: true },
+  });
+  if (!order || order.userId !== user.id) throw ApiError.notFound();
+  return order;
+}
+
+/** Client accepts the quote: QUOTED → AWAITING_ADVANCE. */
+export async function acceptQuote(user: ApiUser, orderId: string) {
+  const order = await getOrderForTransition(user, orderId);
+
+  return prisma.$transaction((tx) =>
+    applyStatusChange(tx, {
+      orderId: order.id,
+      actorId: user.id,
+      from: order.status,
+      to: ORDER_STATUSES.AWAITING_ADVANCE,
+    }),
+  );
+}
+
+/** Client approves the delivered draft: DRAFT_DELIVERED → AWAITING_FINAL_PAYMENT. */
+export async function approveDraft(user: ApiUser, orderId: string) {
+  const order = await getOrderForTransition(user, orderId);
+
+  return prisma.$transaction((tx) =>
+    applyStatusChange(tx, {
+      orderId: order.id,
+      actorId: user.id,
+      from: order.status,
+      to: ORDER_STATUSES.AWAITING_FINAL_PAYMENT,
+    }),
+  );
 }

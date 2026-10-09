@@ -2,12 +2,15 @@
 
 import { AlertTriangle } from "lucide-react";
 
+import { ORDER_STATUSES } from "@/config/constants";
 import { formatMoney } from "@/lib/format";
 import { useAdminOrderDetail } from "@/hooks/orders/use-admin-order-detail";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import { OrderDetailPlot } from "@/components/admin/order-detail-plot";
 import { OrderDetailTimeline } from "@/components/admin/order-detail-timeline";
 import { OrderDetailUploads } from "@/components/admin/order-detail-uploads";
+import { QuoteForm } from "@/components/admin/quote-form";
+import { StatusControls } from "@/components/admin/status-controls";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -63,22 +66,36 @@ export function AdminOrderDetailView({ orderId }: AdminOrderDetailViewProps) {
           </div>
           <div className="rounded-xl border p-4">
             <p className="text-xs text-muted-foreground">Quote</p>
-            <p className="font-medium">
-              {order.totalPrice != null
-                ? `${formatMoney(order.totalPrice)} · ${order.advancePercent}% advance`
-                : "Not quoted yet (Phase 2)"}
-            </p>
-            {order.quoteMessage ? (
-              <p className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground">
-                {order.quoteMessage}
-              </p>
-            ) : null}
+            {order.status === ORDER_STATUSES.SUBMITTED ? (
+              <div className="mt-2">
+                <QuoteForm orderId={order.id} />
+              </div>
+            ) : (
+              <>
+                <p className="font-medium">
+                  {order.totalPrice != null
+                    ? `${formatMoney(order.totalPrice)} · ${order.advancePercent}% advance`
+                    : "No quote sent"}
+                </p>
+                {order.quoteMessage ? (
+                  <p className="mt-2 whitespace-pre-wrap text-xs text-muted-foreground">
+                    {order.quoteMessage}
+                  </p>
+                ) : null}
+              </>
+            )}
           </div>
           <div className="rounded-xl border p-4">
             <p className="text-xs text-muted-foreground">Revisions</p>
             <p className="font-medium">
               {order.revisionCount} used of {order.package.revisionLimit} free
             </p>
+          </div>
+          <div className="rounded-xl border p-4">
+            <p className="text-xs text-muted-foreground">Change status</p>
+            <div className="mt-2">
+              <StatusControls orderId={order.id} status={order.status} />
+            </div>
           </div>
         </div>
 
