@@ -39,6 +39,15 @@ Deep slate-blue surfaces (`0.17–0.26` lightness, hue 255), off-white ink, brig
 
 `--chart-1…5`: navy, terracotta, teal, sand, plum — used by future stats UI.
 
+## Themes & dark mode
+
+Two independent axes, both applied as classes on `<html>`:
+
+- **Mode** — `dark` (managed by `next-themes`; `ThemeProvider` in `src/components/common/theme-provider.tsx`). Light/dark/system, persisted in `localStorage` (`archiplan-theme-mode`).
+- **Color scheme** — `scheme-{id}` (`scheme-ocean`, `scheme-forest`, `scheme-violet`, `scheme-rose`; no class = **Blueprint**, the default). Persisted as `archiplan-theme-scheme`. Each scheme has a light block and a `.scheme-{id}.dark` block in `globals.css` (higher specificity than `.dark`) so every scheme works in both modes. Schemes swap only brand hues — `primary`, `ring`, `accent`, `chart-1`, and the `sidebar-*` brand tokens. Surfaces, borders, `--cta` (terracotta) and `--hero` stay constant.
+
+Schemes are declared in `THEME_SCHEMES` (`src/config/constants.ts`) with swatch pairs for the UI. The palette is restored pre-hydration by an inline script in the root layout (no flash); `useTheme()` (`src/hooks/theme/use-theme.ts`) is the four-key hook for mode + scheme; the switcher UI is `theme-switcher.tsx` (navbar, client shell, admin sidebar).
+
 ## Typography
 
 - **Sans:** Geist Sans (`geist/font/sans`, self-hosted in `src/app/layout.tsx`) for everything.

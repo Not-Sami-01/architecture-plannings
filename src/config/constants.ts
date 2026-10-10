@@ -212,6 +212,39 @@ export const MESSAGES = {
   maxLength: 2000,
 } as const;
 
+/**
+ * Theme system: dark mode is the `.dark` class on <html> (next-themes);
+ * each color scheme is a `scheme-{id}` class with a light block and a
+ * `.scheme-{id}.dark` block in globals.css. Swatches drive the switcher UI.
+ */
+export const THEME_STORAGE_KEYS = {
+  mode: "archiplan-theme-mode",
+  scheme: "archiplan-theme-scheme",
+} as const;
+
+export const THEME_MODES = {
+  light: "light",
+  dark: "dark",
+  system: "system",
+} as const;
+
+export type ThemeMode = (typeof THEME_MODES)[keyof typeof THEME_MODES];
+
+export const THEME_SCHEMES = [
+  { id: "default", label: "Blueprint", lightSwatch: ["#24467a", "#a94a27"], darkSwatch: ["#5b8ddd", "#bc5a35"] },
+  { id: "ocean", label: "Ocean", lightSwatch: ["#0e7490", "#c2410c"], darkSwatch: ["#22d3ee", "#f97316"] },
+  { id: "forest", label: "Forest", lightSwatch: ["#15803d", "#b45309"], darkSwatch: ["#4ade80", "#f59e0b"] },
+  { id: "violet", label: "Violet", lightSwatch: ["#7c3aed", "#db2777"], darkSwatch: ["#a78bfa", "#f472b6"] },
+  { id: "rose", label: "Rose", lightSwatch: ["#be123c", "#9f1239"], darkSwatch: ["#fb7185", "#f43f5e"] },
+] as const;
+
+export type ThemeSchemeId = (typeof THEME_SCHEMES)[number]["id"];
+
+/** Classes the palette script/provider may legally place on <html>. */
+export const THEME_SCHEME_CLASSES = THEME_SCHEMES.map((scheme) =>
+  scheme.id === "default" ? "" : `scheme-${scheme.id}`,
+).filter(Boolean);
+
 export const ERROR_CODES = {
   VALIDATION_ERROR: "VALIDATION_ERROR",
   UNAUTHENTICATED: "UNAUTHENTICATED",

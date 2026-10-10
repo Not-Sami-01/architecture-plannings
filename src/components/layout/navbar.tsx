@@ -8,6 +8,7 @@ import { APP, NAV_LINKS, ROUTES } from "@/config/constants";
 import { useSession } from "@/hooks/auth/use-session";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { ThemeSwitcher } from "@/components/common/theme-switcher";
 
 /** Marketing navbar. Signed-in visitors get a profile shortcut instead of auth CTAs. */
 export function Navbar() {
@@ -56,6 +57,7 @@ export function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
+          <ThemeSwitcher />
           {authAction}
           <Button render={<Link href={ROUTES.newOrder} />}>Start an order</Button>
         </div>
@@ -72,6 +74,10 @@ export function Navbar() {
             <nav className="flex flex-col gap-1 pt-4" aria-label="Mobile">
               {links}
               <div className="mt-4 flex flex-col gap-2 border-t pt-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-muted-foreground">Appearance</span>
+                  <ThemeSwitcher />
+                </div>
                 <Button
                   variant="outline"
                   render={

@@ -7,6 +7,7 @@ import { useState } from "react";
 import { publicConfig } from "@/config/public-config";
 
 import { RealtimeSync } from "./realtime-sync";
+import { ThemeProvider } from "./theme-provider";
 
 /**
  * The single TanStack Query provider (RULES.md §8). Defaults are decided here:
@@ -30,12 +31,14 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <RealtimeSync />
-      {children}
-      {publicConfig.isDev ? (
-        <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
-      ) : null}
-    </QueryClientProvider>
+    <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        <RealtimeSync />
+        {children}
+        {publicConfig.isDev ? (
+          <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
+        ) : null}
+      </QueryClientProvider>
+    </ThemeProvider>
   );
 }

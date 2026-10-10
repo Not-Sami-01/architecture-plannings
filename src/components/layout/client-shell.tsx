@@ -6,6 +6,7 @@ import { useClerk } from "@clerk/nextjs";
 import { APP, ROLES, ROUTES } from "@/config/constants";
 import type { Role } from "@/config/constants";
 import { Button } from "@/components/ui/button";
+import { ThemeSwitcher } from "@/components/common/theme-switcher";
 
 type ClientShellProps = {
   /** Greeting; comes from the server session in the (client) layout. */
@@ -57,6 +58,7 @@ export function ClientShell({ name, role, children }: ClientShellProps) {
             </nav>
           </div>
           <div className="flex items-center gap-3">
+            <ThemeSwitcher />
             <span className="hidden max-w-40 truncate text-sm text-muted-foreground sm:inline">
               {name}
             </span>

@@ -5,6 +5,7 @@ import { useClerk } from "@clerk/nextjs";
 import { ClipboardListIcon, LogOutIcon, TagsIcon } from "lucide-react";
 
 import { APP, ROUTES } from "@/config/constants";
+import { ThemeSwitcher } from "@/components/common/theme-switcher";
 
 type AdminShellProps = {
   /** Signed-in admin email, rendered from the server session. */
@@ -49,6 +50,10 @@ export function AdminShell({ email, children }: AdminShellProps) {
           ))}
         </nav>
         <div className="flex flex-col gap-2 border-t p-3">
+          <div className="flex items-center justify-between px-1">
+            <span className="text-xs font-medium text-muted-foreground">Appearance</span>
+            <ThemeSwitcher />
+          </div>
           <p className="truncate px-1 text-xs text-muted-foreground" title={email}>
             {email}
           </p>
@@ -74,6 +79,7 @@ export function AdminShell({ email, children }: AdminShellProps) {
             </span>
           </div>
           <div className="flex items-center gap-2">
+            <ThemeSwitcher />
             <Link
               href={ROUTES.admin.orders}
               className="rounded-lg px-2 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted"
