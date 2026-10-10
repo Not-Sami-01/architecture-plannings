@@ -33,7 +33,8 @@ const CHECK = "✔";
 const CROSS = "✘";
 
 export default async function ServicesPage() {
-  const packages = await listActivePackages().catch(() => []);
+  // null = fetch failed (distinct from a legitimately empty package list).
+  const packages = await listActivePackages().catch(() => null);
 
   return (
     <main>
@@ -53,6 +54,30 @@ export default async function ServicesPage() {
         <h2 id="compare" className="text-2xl font-semibold tracking-tight">
           Compare our house plan design packages
         </h2>
+        {packages === null ? (
+          <div className="mt-6 rounded-xl border border-dashed p-8 text-center text-muted-foreground">
+            We could not load the package comparison right now. Please refresh the page, or{" "}
+            <Link
+              href={ROUTES.contact}
+              className="font-medium text-primary underline underline-offset-4"
+            >
+              contact us
+            </Link>{" "}
+            for details.
+          </div>
+        ) : packages.length === 0 ? (
+          <div className="mt-6 rounded-xl border border-dashed p-8 text-center text-muted-foreground">
+            Package pricing is being updated. Please{" "}
+            <Link
+              href={ROUTES.contact}
+              className="font-medium text-primary underline underline-offset-4"
+            >
+              contact us
+            </Link>{" "}
+            for a custom quote.
+          </div>
+        ) : (
+          <>
         <div className="mt-6 overflow-x-auto rounded-xl border">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
@@ -123,6 +148,8 @@ export default async function ServicesPage() {
           Prices and revision limits are managed in the admin panel and shown here live from the
           database. Your quote confirms the final amount before you pay.
         </p>
+        </>
+        )}
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-4 pb-12" aria-labelledby="which-package">

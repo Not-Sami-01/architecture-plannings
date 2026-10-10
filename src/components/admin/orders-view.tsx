@@ -9,6 +9,7 @@ import { OrdersFilters } from "@/components/admin/orders-filters";
 import { OrdersPager } from "@/components/admin/orders-pager";
 import { OrdersTable } from "@/components/admin/orders-table";
 import { EmptyState } from "@/components/common/empty-state";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
@@ -31,7 +32,7 @@ function parseFromSearchParams(query: Partial<AdminOrderListQuery>): Partial<Adm
 
 export function OrdersView({ query }: OrdersViewProps) {
   const filters = parseFromSearchParams(query);
-  const { data, meta, loadings } = useAdminOrders(filters);
+  const { data, meta, loadings, query: listQuery } = useAdminOrders(filters);
 
   return (
     <div className="flex flex-col gap-6">
@@ -62,16 +63,31 @@ export function OrdersView({ query }: OrdersViewProps) {
             </TableBody>
           </Table>
         </div>
-      ) : data.length === 0 ? (
+      ) : listQuery.isError ? (
         <EmptyState
           icon={PackageSearch}
-          title={filters.q || filters.status ? "No orders match these filters" : "No orders yet"}
-          description={
-            filters.q || filters.status
-              ? "Try a different search or clear the filters."
-              : "New client orders will appear here as soon as they are submitted."
+          title="Couldn't load orders"
+          description="Something went wrong on our side. Please try again."
+          action={
+            <Button variant="outline" onClick={() => listQuery.refetch()}>
+              Try again
+            </Button>
           }
         />
+      ) : data.length === 0 ? (
+        <>
+          <EmptyState
+            icon={PackageSearch}
+            title={filters.q || filters.status ? "No orders match these filters" : "No orders yet"}
+            description={
+              filters.q || filters.status
+                ? "Try a different search or clear the filters."
+                : "New client orders will appear here as soon as they are submitted."
+            }
+          />
+          {/* An out-of-range page can still be empty while matches exist — keep the pager reachable. */}
+          {meta.total > 0 ? <OrdersPager meta={meta} /> : null}
+        </>
       ) : (
         <>
           <OrdersTable orders={data} />

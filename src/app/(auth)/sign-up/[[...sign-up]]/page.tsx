@@ -8,10 +8,23 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function SignUpPage() {
+type SignUpSearchParams = { next?: string };
+
+function safeNextPath(next: string | undefined): string | undefined {
+  if (!next?.startsWith("/") || next.startsWith("//")) return undefined;
+  return next;
+}
+
+export default async function SignUpPage({
+  searchParams,
+}: {
+  searchParams: Promise<SignUpSearchParams>;
+}) {
+  const { next } = await searchParams;
+
   return (
     <div className="w-full max-w-sm">
-      <SignUp fallbackRedirectUrl={ROUTES.dashboard} />
+      <SignUp fallbackRedirectUrl={safeNextPath(next) ?? ROUTES.dashboard} />
     </div>
   );
 }

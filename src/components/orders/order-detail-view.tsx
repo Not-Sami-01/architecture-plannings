@@ -9,6 +9,7 @@ import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import { OrderActions } from "@/components/orders/order-actions";
 import { MessageThread } from "@/components/messages/message-thread";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 
@@ -38,7 +39,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 /** Read-only client detail for /dashboard/orders/[id] (ownership-checked server-side). */
 export function OrderDetailView({ orderId }: OrderDetailViewProps) {
-  const { data: order, loadings } = useOrder(orderId);
+  const { data: order, loadings, query } = useOrder(orderId);
 
   if (loadings.loading) {
     return (
@@ -51,14 +52,24 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
   }
 
   if (!order) {
+    // Distinguish a real404 from a failed fetch — never blame the link for a server error.
+    const status = (query.error as { status?: number } | null)?.status;
+    const notFound = query.isError && status === 404;
     return (
-      <Alert variant="destructive">
-        <AlertTriangleIcon />
-        <AlertTitle>Order not found</AlertTitle>
-        <AlertDescription>
-          It may have been removed, or the link is wrong.
-        </AlertDescription>
-      </Alert>
+      <div className="flex flex-col items-start gap-4">
+        <Alert variant="destructive">
+          <AlertTriangleIcon />
+          <AlertTitle>{notFound ? "Order not found" : "Couldn't load this order"}</AlertTitle>
+          <AlertDescription>
+            {notFound
+              ? "It may have been removed, or the link is wrong."
+              : "Something went wrong on our side. Please try again."}
+          </AlertDescription>
+        </Alert>
+        {!notFound ? (
+          <Button onClick={() => query.refetch()}>Try again</Button>
+        ) : null}
+      </div>
     );
   }
 

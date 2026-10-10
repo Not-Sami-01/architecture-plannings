@@ -426,6 +426,11 @@ Every action must: (1) check the session and role, (2) validate input with Zod, 
 
 ## Email Events
 
+> **Status: not yet active.** Status changes write `OrderEvent` rows immediately (visible on the
+> order timeline), but no email is sent — Resend integration is deferred to a later phase. The
+> table below is the contract for when sending lands; templates live in `src/lib/email/templates`
+> once implemented.
+
 | Event | Recipient | Template |
 |-------|-----------|----------|
 | Order submitted | Client + Admin | `order-received` |

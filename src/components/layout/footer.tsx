@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { APP, NAV_LINKS } from "@/config/constants";
+import { APP, NAV_LINKS, ROUTES } from "@/config/constants";
 import { SiteDisclaimer } from "@/components/common/site-disclaimer";
 import { publicConfig } from "@/config/public-config";
 
@@ -37,7 +37,9 @@ export function Footer() {
               Message us on WhatsApp
             </a>
           ) : (
-            <span>Set NEXT_PUBLIC_WHATSAPP_NUMBER to enable chat.</span>
+            <Link href={ROUTES.contact} className="underline underline-offset-4">
+              Contact us
+            </Link>
           )}
         </div>
       </div>

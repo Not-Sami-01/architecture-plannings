@@ -28,6 +28,9 @@ export function useSendQuote() {
       toast.success("Quote sent to the client.");
     },
     onError: (error) => {
+      // A 409 usually means the UI was stale (order already quoted/advanced) —
+      // refetch so the quote form disappears and the real state shows.
+      queryClient.invalidateQueries({ queryKey: adminOrderKeys.all });
       toast.error(error instanceof ApiClientError ? error.message : DEFAULT_ERROR_MESSAGE);
     },
   });

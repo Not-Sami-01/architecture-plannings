@@ -128,7 +128,7 @@ Open http://localhost:3000.
 | `pnpm typecheck` | `tsc --noEmit` |
 | `pnpm test` | Unit tests (Vitest) |
 | `pnpm prisma studio` | Browse the database |
-| `pnpm prisma db seed` | Seed admin + packages |
+| `pnpm prisma db seed` | Seed packages (the admin bootstraps via `ADMIN_EMAILS` on first sign-in) |
 
 ## Project Structure
 
@@ -151,8 +151,7 @@ Open http://localhost:3000.
 │   │   └── api/                  # Route handlers, all wrapped by withMiddleware
 │   ├── components/               # One component per file, grouped by feature
 │   │   ├── ui/                   # shadcn/ui primitives
-│   │   ├── common/  layout/  marketing/  orders/
-│   │   └── files/  payments/  messages/  admin/
+│   │   └── common/  layout/  marketing/  orders/  messages/  admin/
 │   ├── lib/
 │   │   ├── api/
 │   │   │   ├── types.ts
@@ -164,14 +163,13 @@ Open http://localhost:3000.
 │   │   ├── db.ts                 # Prisma client singleton
 │   │   ├── users.ts              # resolveApiUser (Clerk id -> local User row)
 │   │   ├── storage.ts            # Signed URLs, upload helpers
-│   │   ├── watermark.ts          # sharp watermark + preview generation
-│   │   ├── email/                # Resend client + templates
+│   │   ├── files.ts              # Presign + download gating (FINAL behind final payment)
+│   │   ├── realtime.ts           # Ably channel names + auth (optional integration)
 │   │   ├── orders/               # Status machine, order services
-│   │   ├── payments/             # Provider adapters
+│   │   ├── staged-files.ts       # Client-side upload staging for the order wizard
 │   │   └── validators/           # Zod schemas
 │   ├── hooks/                    # One hook per API call, grouped by feature (see RULES.md)
-│   ├── actions/                  # Server actions (not the default for UI mutations)
-│   └── middleware.ts             # Next.js route protection by role
+│   └── proxy.ts                  # clerkMiddleware: session + `?next` redirect for panels
 ├── public/
 ├── .env.example
 └── package.json
@@ -222,9 +220,11 @@ Status changes only happen through `lib/orders/status.ts`. Every change writes a
 
 ## Roadmap
 
-- [ ] **Phase 1:** Auth, packages, order form with uploads, admin order list
-- [ ] **Phase 2:** Client dashboard, status flow, email notifications
-- [ ] **Phase 3:** Watermarked drafts, revisions, comment thread
+> Checked = fully shipped. Details for the latest work: `PLAN.md` rows 20–23.
+
+- [x] **Phase 1:** Auth (Clerk), packages, order form with uploads, admin order list
+- [ ] **Phase 2:** Client dashboard ✅, status machine + quote flow ✅, **email notifications pending** (Resend deferred)
+- [ ] **Phase 3:** Per-order chat ✅ (shipped early, incl. admin internal notes + realtime pings) — watermarked drafts and revisions pending
 - [ ] **Phase 4:** Payments and locked final downloads
 - [ ] **Phase 5:** Portfolio CMS, stats, invoices, polish
 
@@ -233,7 +233,7 @@ Status changes only happen through `lib/orders/status.ts`. Every change writes a
 1. Push to GitHub and import the repository into Vercel. Keep the **Root Directory** set to the repository root and the **Framework Preset** set to **Next.js**.
 2. Use `pnpm build` as the build command. It generates the Prisma client in `src/generated/prisma` before building; that folder is intentionally gitignored and must not be committed.
 3. Leave **Output Directory** unset so Vercel uses Next.js output. Do not set it to `generated` or `src/generated/prisma`—those are not deployment output folders.
-4. Add `DATABASE_URL`, the Clerk keys (`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`), and `ADMIN_EMAILS` in Vercel's Environment Variables for the environments you deploy to. Set `NEXT_PUBLIC_APP_URL` to your deployed URL. Add provider variables (storage, email) when those integrations are configured.
+4. Add `DATABASE_URL`, the Clerk keys (`NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`), and `ADMIN_EMAILS` in Vercel's Environment Variables for the environments you deploy to. Set `NEXT_PUBLIC_APP_URL` to your deployed URL. Add provider variables (storage, email) when those integrations are configured. `ABLY_API_KEY` is optional — without it, live pings are disabled and the app works fully via refetches.
 5. Apply database migrations separately with `pnpm prisma migrate deploy` against the production database before directing users to the deployment. Do not run migrations as part of each Vercel build.
 6. Point your domain and verify the email domain in Resend.
 

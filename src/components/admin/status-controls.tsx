@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-import { ORDER_STATUS_LABELS } from "@/config/constants";
+import { ORDER_STATUSES, ORDER_STATUS_LABELS } from "@/config/constants";
 import type { OrderStatus } from "@/config/constants";
 import { allowedTransitions } from "@/lib/orders/status";
 import { Button } from "@/components/ui/button";
@@ -29,8 +29,10 @@ export function StatusControls({ orderId, status }: StatusControlsProps) {
   const { actions, loadings } = useChangeStatus();
   const [target, setTarget] = useState<OrderStatus | "">("");
   const [reason, setReason] = useState("");
+  const [confirmingCancel, setConfirmingCancel] = useState(false);
 
   const options = allowedTransitions(status as OrderStatus);
+  const isCancelTarget = target === ORDER_STATUSES.CANCELLED;
 
   if (options.length === 0) {
     return (
@@ -42,17 +44,28 @@ export function StatusControls({ orderId, status }: StatusControlsProps) {
 
   const apply = async () => {
     if (!target) return;
-    await actions.change({
-      id: orderId,
-      input: { to: target, reason: reason.trim() || undefined },
-    });
-    setTarget("");
-    setReason("");
+    try {
+      await actions.change({
+        id: orderId,
+        input: { to: target, reason: reason.trim() || undefined },
+      });
+      setTarget("");
+      setReason("");
+      setConfirmingCancel(false);
+    } catch {
+      // Rejection already surfaced as a toast by the hook.
+    }
   };
 
   return (
     <div className="flex flex-col gap-2">
-      <Select value={target} onValueChange={(value) => setTarget(value as OrderStatus)}>
+      <Select
+        value={target}
+        onValueChange={(value) => {
+          setTarget(value as OrderStatus);
+          setConfirmingCancel(false);
+        }}
+      >
         <SelectTrigger className="w-full" aria-label="New status">
           <SelectValue placeholder="Choose the next status…" />
         </SelectTrigger>
@@ -71,13 +84,31 @@ export function StatusControls({ orderId, status }: StatusControlsProps) {
         maxLength={500}
         aria-label="Reason for the status change"
       />
+      {isCancelTarget && !confirmingCancel ? (
+        <p className="text-xs text-destructive">
+          Cancelling is permanent and closes the order — you will be asked to confirm.
+        </p>
+      ) : null}
       <Button
         type="button"
         size="sm"
+        variant={isCancelTarget && confirmingCancel ? "destructive" : "default"}
         disabled={!target || loadings.changing}
-        onClick={() => void apply()}
+        onClick={() => {
+          if (isCancelTarget && !confirmingCancel) {
+            setConfirmingCancel(true);
+            return;
+          }
+          void apply();
+        }}
       >
-        {loadings.changing ? "Applying…" : "Apply status"}
+        {loadings.changing
+          ? "Applying…"
+          : isCancelTarget && confirmingCancel
+            ? "Yes, cancel this order"
+            : isCancelTarget
+              ? "Review cancellation…"
+              : "Apply status"}
       </Button>
     </div>
   );

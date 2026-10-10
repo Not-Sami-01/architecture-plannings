@@ -1,8 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { AlertTriangle } from "lucide-react";
 
-import { ORDER_STATUSES } from "@/config/constants";
+import { ORDER_STATUSES, ROUTES } from "@/config/constants";
 import { formatMoney } from "@/lib/format";
 import { useAdminOrderDetail } from "@/hooks/orders/use-admin-order-detail";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
@@ -13,6 +14,7 @@ import { QuoteForm } from "@/components/admin/quote-form";
 import { StatusControls } from "@/components/admin/status-controls";
 import { MessageThread } from "@/components/messages/message-thread";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type AdminOrderDetailViewProps = {
@@ -20,7 +22,7 @@ type AdminOrderDetailViewProps = {
 };
 
 export function AdminOrderDetailView({ orderId }: AdminOrderDetailViewProps) {
-  const { data: order, loadings } = useAdminOrderDetail(orderId);
+  const { data: order, loadings, query } = useAdminOrderDetail(orderId);
 
   if (loadings.loading) {
     return (
@@ -33,17 +35,34 @@ export function AdminOrderDetailView({ orderId }: AdminOrderDetailViewProps) {
   }
 
   if (!order) {
+    const status = (query.error as { status?: number } | null)?.status;
+    const notFound = query.isError && status === 404;
     return (
-      <Alert variant="destructive">
-        <AlertTriangle />
-        <AlertTitle>Order not found</AlertTitle>
-        <AlertDescription>It may have been removed, or the link is wrong.</AlertDescription>
-      </Alert>
+      <div className="flex flex-col items-start gap-4">
+        <Alert variant="destructive">
+          <AlertTriangle />
+          <AlertTitle>{notFound ? "Order not found" : "Couldn't load this order"}</AlertTitle>
+          <AlertDescription>
+            {notFound
+              ? "It may have been removed, or the link is wrong."
+              : "Something went wrong on our side. Please try again."}
+          </AlertDescription>
+        </Alert>
+        {!notFound ? (
+          <Button onClick={() => query.refetch()}>Try again</Button>
+        ) : null}
+      </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-6">
+      <Link
+        href={ROUTES.admin.orders}
+        className="w-fit text-sm text-muted-foreground hover:text-foreground"
+      >
+        ← Back to orders
+      </Link>
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">{order.number}</h1>

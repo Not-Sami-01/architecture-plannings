@@ -2,15 +2,17 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { MenuIcon, XIcon } from "lucide-react";
+import { MenuIcon, UserIcon, XIcon } from "lucide-react";
 
 import { APP, NAV_LINKS, ROUTES } from "@/config/constants";
+import { useSession } from "@/hooks/auth/use-session";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
-/** Marketing navbar. Session-aware actions live in the dashboard layouts. */
+/** Marketing navbar. Signed-in visitors get a profile shortcut instead of auth CTAs. */
 export function Navbar() {
   const [open, setOpen] = useState(false);
+  const { data: session } = useSession();
 
   const links = (
     <>
@@ -27,6 +29,21 @@ export function Navbar() {
     </>
   );
 
+  const authAction = session ? (
+    <Button
+      variant="ghost"
+      render={<Link href={ROUTES.dashboard} />}
+      aria-label="Open your dashboard"
+    >
+      <UserIcon className="mr-1 size-4" aria-hidden />
+      Profile
+    </Button>
+  ) : (
+    <Button variant="ghost" render={<Link href={ROUTES.login} />}>
+      Sign in
+    </Button>
+  );
+
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4">
@@ -39,9 +56,7 @@ export function Navbar() {
         </nav>
 
         <div className="hidden items-center gap-2 md:flex">
-          <Button variant="ghost" render={<Link href={ROUTES.login} />}>
-            Sign in
-          </Button>
+          {authAction}
           <Button render={<Link href={ROUTES.newOrder} />}>Start an order</Button>
         </div>
 
@@ -57,8 +72,21 @@ export function Navbar() {
             <nav className="flex flex-col gap-1 pt-4" aria-label="Mobile">
               {links}
               <div className="mt-4 flex flex-col gap-2 border-t pt-4">
-                <Button variant="outline" render={<Link href={ROUTES.login} />} onClick={() => setOpen(false)}>
-                  Sign in
+                <Button
+                  variant="outline"
+                  render={
+                    <Link href={session ? ROUTES.dashboard : ROUTES.login} />
+                  }
+                  onClick={() => setOpen(false)}
+                >
+                  {session ? (
+                    <>
+                      <UserIcon className="mr-1 size-4" aria-hidden />
+                      Profile
+                    </>
+                  ) : (
+                    "Sign in"
+                  )}
                 </Button>
                 <Button render={<Link href={ROUTES.newOrder} />} onClick={() => setOpen(false)}>
                   Start an order

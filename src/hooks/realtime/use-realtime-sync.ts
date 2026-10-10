@@ -69,6 +69,7 @@ export function useRealtimeSync() {
       const result = await api<TokenResponse>("post", {
         url: API_ROUTES.realtimeToken,
         signal,
+        redirectOnAuth: false,
       });
       return result.data;
     },
@@ -87,7 +88,7 @@ export function useRealtimeSync() {
       clientId: userId,
       // Renewals need a fresh single-use TokenRequest every time.
       authCallback: (_params, callback) => {
-        api<TokenResponse>("post", { url: API_ROUTES.realtimeToken })
+        api<TokenResponse>("post", { url: API_ROUTES.realtimeToken, redirectOnAuth: false })
           .then((result) => {
             if (result.data.enabled && result.data.tokenRequest) {
               callback(null, result.data.tokenRequest);

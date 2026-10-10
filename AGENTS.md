@@ -40,7 +40,7 @@ Before declaring a task done, run `pnpm lint && pnpm typecheck && pnpm test`.
 2. **Layers:** Component → Server Action / Route Handler (wrapped by `withMiddleware`) → service layer (`src/lib/**`) → Prisma. Business logic lives in the service layer, never in components or route files.
 3. **One Prisma client** from `src/lib/db.ts`. Never instantiate `PrismaClient` elsewhere.
 4. **Validate everything** with Zod schemas in `src/lib/validators/`. Reuse the same schema on client and server.
-5. **Status changes go through `src/lib/orders/status.ts` only.** Never update `order.status` directly. The function enforces allowed transitions, writes an `OrderEvent`, and queues the email.
+5. **Status changes go through `src/lib/orders/status.ts` only.** Never update `order.status` directly. The function enforces allowed transitions and writes an `OrderEvent` in the same transaction. Email dispatch is **not wired yet** (Resend deferred; the event contract lives in `API.md` §Email Events).
 6. **Money** is stored as integers in the smallest sensible unit (no floats). Format only at the UI layer.
 7. **Types:** no `any`. Prefer inferred types from Zod and Prisma.
 

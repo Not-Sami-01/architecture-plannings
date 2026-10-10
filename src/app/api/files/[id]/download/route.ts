@@ -2,21 +2,26 @@ import { FILE_KINDS, FILE_LIMITS } from "@/config/constants";
 import { withMiddleware } from "@/lib/api/with-middleware";
 import { authenticate } from "@/lib/api/middlewares";
 import { getParam, getUser } from "@/lib/api/request";
-import { ApiError, ok } from "@/lib/api/response";
+import { ApiError } from "@/lib/api/response";
 import { getFileForUser } from "@/lib/files";
 import type { Handler } from "@/lib/api/types";
 
 /**
  * FR-16/FR-18: the only way files leave the bucket. Checks ownership (404 for
- * strangers), gates FINAL files on verified final payment (402 otherwise), and
- * redirects to a 60-second signed URL. Storage keys are never exposed.
+ * strangers), gates FINAL files on verified final payment (402 otherwise —
+ * admins bypass, they manage the files themselves), and redirects the browser
+ * to a 60-second signed URL. Storage keys are never exposed.
  */
 const getHandler: Handler = async (req) => {
   const user = getUser(req);
   const fileId = getParam(req, "id");
   const file = await getFileForUser(user, fileId);
 
-  if (file.kind === FILE_KINDS.FINAL && !file.order?.finalPaymentVerified) {
+  if (
+    file.kind === FILE_KINDS.FINAL &&
+    !file.order?.finalPaymentVerified &&
+    user.role !== "ADMIN"
+  ) {
     throw ApiError.paymentRequired();
   }
 
@@ -29,7 +34,8 @@ const getHandler: Handler = async (req) => {
   const { presignDownload } = await import("@/lib/storage");
   const url = await presignDownload(file.key, FILE_LIMITS.signedUrlTtlSeconds);
 
-  return ok({ url, expiresIn: FILE_LIMITS.signedUrlTtlSeconds, filename: file.filename });
+  // Anchor navigations must land on the file, not on a JSON envelope.
+  return Response.redirect(new URL(url, req.url));
 };
 
 export const GET = withMiddleware(getHandler, [authenticate]);

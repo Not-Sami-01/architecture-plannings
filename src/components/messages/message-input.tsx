@@ -57,13 +57,16 @@ export function MessageInput({ onSend, sending, allowInternal = false }: Message
             {internal ? "Internal note" : "Client-visible"}
           </Button>
         ) : (
-          <span className="text-xs text-muted-foreground">
+          <span />
+        )}
+        <div className="flex items-center gap-3">
+          <span className="text-xs tabular-nums text-muted-foreground" aria-live="polite">
             {body.length}/{MESSAGES.maxLength}
           </span>
-        )}
-        <Button type="submit" size="sm" disabled={!canSend}>
-          {sending ? "Sending…" : "Send"}
-        </Button>
+          <Button type="submit" size="sm" disabled={!canSend}>
+            {sending ? "Sending…" : "Send"}
+          </Button>
+        </div>
       </div>
     </form>
   );

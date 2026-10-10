@@ -35,6 +35,8 @@ export function useChangeStatus() {
       toast.success(`Status changed to “${ORDER_STATUS_LABELS[result.status]}”.`);
     },
     onError: (error) => {
+      // Same stale-UI recovery: a rejected transition means the detail view is out of date.
+      queryClient.invalidateQueries({ queryKey: adminOrderKeys.all });
       toast.error(error instanceof ApiClientError ? error.message : DEFAULT_ERROR_MESSAGE);
     },
   });

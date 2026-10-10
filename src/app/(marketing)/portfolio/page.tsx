@@ -6,10 +6,8 @@ import {
   portfolioFaq,
   portfolioHowToUse,
   portfolioLead,
-  portfolioPlotFilters,
   portfolioProjectFields,
   portfolioSeo,
-  portfolioStyleFilters,
 } from "@/content/portfolio";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { collectionPageSchema } from "@/lib/seo/schema";
@@ -17,7 +15,6 @@ import { Breadcrumbs } from "@/components/common/breadcrumbs";
 import { ClosingCta } from "@/components/common/closing-cta";
 import { ContentSections } from "@/components/common/content-sections";
 import { FaqSection } from "@/components/common/faq-section";
-import { InlineText } from "@/components/common/inline-text";
 import { JsonLd } from "@/components/common/json-ld";
 import { PageHeader } from "@/components/common/page-header";
 
@@ -37,48 +34,6 @@ export default function PortfolioPage() {
         description={portfolioLead}
         links={[{ label: CTA.primary, href: ROUTES.newOrder }]}
       />
-
-      <section className="mx-auto w-full max-w-6xl px-4 pb-12" aria-labelledby="filter-plot">
-        <h2 id="filter-plot" className="text-2xl font-semibold tracking-tight">
-          Filter by plot size
-        </h2>
-        <p className="mt-2 text-muted-foreground">
-          Different plots need different solutions. Start with the size closest to yours:
-        </p>
-        <ul className="mt-4 flex flex-col gap-3">
-          {portfolioPlotFilters.map((filter) => (
-            <li key={filter.label} className="text-muted-foreground">
-              <Link href={filter.href} className="font-medium text-primary underline underline-offset-4">
-                {filter.label}
-              </Link>{" "}
-              — <InlineText text={filter.text} />
-            </li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="mx-auto w-full max-w-6xl px-4 pb-12" aria-labelledby="filter-style">
-        <h2 id="filter-style" className="text-2xl font-semibold tracking-tight">
-          Filter by style
-        </h2>
-        <ul className="mt-4 flex flex-col gap-3">
-          {portfolioStyleFilters.map((filter) => (
-            <li key={filter.label} className="text-muted-foreground">
-              <Link href={filter.href} className="font-medium text-primary underline underline-offset-4">
-                {filter.label}
-              </Link>{" "}
-              — {filter.text}
-            </li>
-          ))}
-        </ul>
-        <p className="mt-4 text-sm text-muted-foreground">
-          Compare them in{" "}
-          <Link href={ROUTES.guide("modern-vs-classic-elevation")} className="text-primary underline underline-offset-4">
-            modern vs classic elevation: how to choose a style
-          </Link>
-          .
-        </p>
-      </section>
 
       <section className="mx-auto w-full max-w-6xl px-4 pb-12">
         <div className="rounded-xl border border-dashed bg-muted/30 p-8">
@@ -102,10 +57,6 @@ export default function PortfolioPage() {
             </Link>
           </div>
         </div>
-        <p className="mt-6 text-sm text-muted-foreground">
-          Filter links work with the gallery as soon as it lands — the CMS for portfolio projects
-          arrives in Phase 5.
-        </p>
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-4 pb-12" aria-labelledby="each-project">

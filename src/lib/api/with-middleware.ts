@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { DEFAULT_ERROR_MESSAGE, ERROR_CODES } from "@/config/constants";
+import { config } from "@/config/config";
 import type { NextRequest } from "next/server";
 
 import { ApiError, fail } from "./response";
@@ -54,7 +55,10 @@ export function withMiddleware(
       headers.set("X-Request-Id", requestId);
       const durationMs = Math.round(performance.now() - startedAt);
       // Never log request bodies, tokens, or URLs of signed downloads.
-      console.log(`${req.method} ${new URL(req.url).pathname} ${response.status} ${durationMs}ms [${requestId}]`);
+      // Dev-only: per-request logs are noise in production.
+      if (config.app.nodeEnv !== "production") {
+        console.log(`${req.method} ${new URL(req.url).pathname} ${response.status} ${durationMs}ms [${requestId}]`);
+      }
       return new Response(response.body, { status: response.status, headers });
     };
 

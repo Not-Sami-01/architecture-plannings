@@ -12,6 +12,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import type { OrderFormInstance } from "@/components/orders/order-form";
 import type { PackageSummary } from "@/hooks/packages/use-packages";
 
@@ -19,9 +20,17 @@ type OrderFormStepPackageProps = {
   form: OrderFormInstance;
   packages: PackageSummary[];
   loading: boolean;
+  error: boolean;
+  onRetry: () => void;
 };
 
-export function OrderFormStepPackage({ form, packages, loading }: OrderFormStepPackageProps) {
+export function OrderFormStepPackage({
+  form,
+  packages,
+  loading,
+  error,
+  onRetry,
+}: OrderFormStepPackageProps) {
   const setValue = form.setValue;
   // React Compiler memoizes `form.watch()` on the stable `form` identity, so it
   // would never update (facebook/react#29144). `useWatch` subscribes via state.
@@ -33,6 +42,20 @@ export function OrderFormStepPackage({ form, packages, loading }: OrderFormStepP
         <Skeleton className="h-64" />
         <Skeleton className="h-64" />
         <Skeleton className="h-64" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center gap-3 rounded-xl border border-dashed p-8 text-center">
+        <p className="font-medium">Could not load packages</p>
+        <p className="text-sm text-muted-foreground">
+          Something went wrong on our side — your progress is saved.
+        </p>
+        <Button variant="outline" size="sm" onClick={onRetry}>
+          Try again
+        </Button>
       </div>
     );
   }

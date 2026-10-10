@@ -6,6 +6,7 @@ import { useSession } from "@/hooks/auth/use-session";
 import { useMessages } from "@/hooks/messages/use-messages";
 import { useSendMessage } from "@/hooks/messages/use-send-message";
 import { EmptyState } from "@/components/common/empty-state";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { MessageBubble } from "./message-bubble";
@@ -19,7 +20,7 @@ type MessageThreadProps = {
 
 export function MessageThread({ orderId, allowInternal = false }: MessageThreadProps) {
   const session = useSession();
-  const { data: messages, loadings } = useMessages(orderId);
+  const { data: messages, loadings, query: messagesQuery } = useMessages(orderId);
   const sendMessage = useSendMessage(orderId);
   const listRef = useRef<HTMLUListElement>(null);
 
@@ -40,6 +41,23 @@ export function MessageThread({ orderId, allowInternal = false }: MessageThreadP
     );
   }
 
+  // A failed fetch must never masquerade as an empty thread.
+  if (messagesQuery.isError) {
+    return (
+      <section aria-label="Messages" className="rounded-xl border p-4">
+        <EmptyState
+          title="Messages couldn't load"
+          description="Something went wrong on our side. Please try again."
+          action={
+            <Button variant="outline" onClick={() => messagesQuery.refetch()}>
+              Try again
+            </Button>
+          }
+        />
+      </section>
+    );
+  }
+
   return (
     <section aria-label="Messages" className="rounded-xl border">
       <header className="border-b px-4 py-3">
@@ -57,7 +75,12 @@ export function MessageThread({ orderId, allowInternal = false }: MessageThreadP
           />
         </div>
       ) : (
-        <ul ref={listRef} className="flex max-h-96 flex-col gap-4 overflow-y-auto p-4">
+        <ul
+          ref={listRef}
+          role="log"
+          aria-live="polite"
+          className="flex max-h-96 flex-col gap-4 overflow-y-auto p-4"
+        >
           {messages.map((message) => (
             <MessageBubble
               key={message.id}

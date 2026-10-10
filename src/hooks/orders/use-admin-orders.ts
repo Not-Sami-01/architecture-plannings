@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
 
 import { api } from "@/lib/api-client/api";
 import { API_ROUTES } from "@/config/constants";
@@ -58,6 +58,8 @@ export function useAdminOrders(filters: Partial<AdminOrderListQuery>) {
         meta: result.meta ?? { page: 1, pageSize: normalized.pageSize, total: 0 },
       };
     },
+    // Keep the previous page visible while the next one loads (no blank flash).
+    placeholderData: keepPreviousData,
   });
 
   return {

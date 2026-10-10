@@ -33,7 +33,20 @@ export function OrderActions({
     totalPrice != null
       ? { total: totalPrice, advance: Math.round((totalPrice * advancePercent) / 100) }
       : null;
-  if (!quote && status !== ORDER_STATUSES.DRAFT_DELIVERED) return null;
+
+  // Guidance-only states (no action button yet — payments land in a later phase).
+  const guidance: Partial<Record<string, string>> = {
+    [ORDER_STATUSES.AWAITING_ADVANCE]:
+      "Your quote is confirmed. Pay the advance invoice to move your order into design.",
+    [ORDER_STATUSES.IN_DESIGN]:
+      "We're designing your plan now. You'll see a watermarked draft here when it's ready.",
+    [ORDER_STATUSES.REVISION_REQUESTED]:
+      "We've received your revision notes and are updating the draft. We'll re-deliver it here.",
+    [ORDER_STATUSES.AWAITING_FINAL_PAYMENT]:
+      "Your draft is approved. Settle the final balance to receive the full-resolution files.",
+  };
+
+  if (!quote && status !== ORDER_STATUSES.DRAFT_DELIVERED && !guidance[status]) return null;
 
   return (
     <Card>
@@ -67,7 +80,7 @@ export function OrderActions({
             <Button
               type="button"
               disabled={acceptLoadings.accepting}
-              onClick={() => void acceptActions.accept(orderId)}
+              onClick={() => acceptActions.accept(orderId).catch(() => undefined)}
             >
               {acceptLoadings.accepting ? "Accepting…" : "Accept quote"}
             </Button>
@@ -82,11 +95,15 @@ export function OrderActions({
             <Button
               type="button"
               disabled={approveLoadings.approving}
-              onClick={() => void approveActions.approve(orderId)}
+              onClick={() => approveActions.approve(orderId).catch(() => undefined)}
             >
               {approveLoadings.approving ? "Approving…" : "Approve draft"}
             </Button>
           </div>
+        ) : null}
+
+        {guidance[status] ? (
+          <p className="text-sm text-muted-foreground">{guidance[status]}</p>
         ) : null}
       </CardContent>
     </Card>

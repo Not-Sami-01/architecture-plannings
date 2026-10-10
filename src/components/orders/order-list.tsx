@@ -12,7 +12,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 /** The client's orders on /dashboard: loading skeleton, empty state, list. */
 export function OrderList() {
-  const { data, loadings } = useOrders();
+  const { data, loadings, query } = useOrders();
 
   if (loadings.loading) {
     return (
@@ -21,6 +21,21 @@ export function OrderList() {
         <Skeleton className="h-24 w-full" />
         <Skeleton className="h-24 w-full" />
       </div>
+    );
+  }
+
+  if (query.isError) {
+    // A failed fetch is not the same as "no orders yet" — never lie about state.
+    return (
+      <EmptyState
+        title="Couldn't load your orders"
+        description="Something went wrong on our side. Please try again."
+        action={
+          <Button variant="outline" onClick={() => query.refetch()}>
+            Try again
+          </Button>
+        }
+      />
     );
   }
 

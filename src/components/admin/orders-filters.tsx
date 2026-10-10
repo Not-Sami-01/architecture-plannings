@@ -5,6 +5,7 @@ import { useTransition } from "react";
 
 import { ROUTES } from "@/config/constants";
 import { ORDER_STATUSES, ORDER_STATUS_LABELS } from "@/config/constants";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -40,6 +41,10 @@ export function OrdersFilters({ disabled }: OrdersFiltersProps) {
     const qs = next.toString();
     router.push(qs ? `${ROUTES.admin.orders}?${qs}` : ROUTES.admin.orders, { scroll: false });
   };
+
+  const hasFilters = Boolean(
+    params.get("q") || params.get("status") || (params.get("sort") && params.get("sort") !== "newest"),
+  );
 
   return (
     <div className={`flex flex-wrap items-center gap-3 ${isPending ? "opacity-60" : ""}`} aria-busy={isPending}>
@@ -84,6 +89,17 @@ export function OrdersFilters({ disabled }: OrdersFiltersProps) {
           <SelectItem value="oldest">Oldest first</SelectItem>
         </SelectContent>
       </Select>
+      {hasFilters ? (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          disabled={disabled}
+          onClick={() => startTransition(() => routerPush(new URLSearchParams()))}
+        >
+          Clear filters
+        </Button>
+      ) : null}
     </div>
   );
 }

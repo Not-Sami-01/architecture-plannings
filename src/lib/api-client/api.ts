@@ -28,6 +28,12 @@ export type ApiRequestConfig = {
   body?: unknown;
   params?: Record<string, unknown>;
   signal?: AbortSignal;
+  /**
+   * Opt out of the global401 redirect for background calls (e.g. realtime
+   * token renewals) that must degrade quietly instead of kicking the user
+   * to the sign-in page while they browse.
+   */
+  redirectOnAuth?: boolean;
 };
 
 export type ApiResult<data> = { data: data; meta?: PaginatedMeta };
@@ -84,7 +90,10 @@ export async function api<data>(
     const clientError = toApiClientError(error, config.url);
     if (
       typeof window !== "undefined" &&
-      clientError.status === 401
+      clientError.status === 401 &&
+      config.redirectOnAuth !== false &&
+      !window.location.pathname.startsWith(ROUTES.login) &&
+      !window.location.pathname.startsWith(ROUTES.register)
     ) {
       const next = encodeURIComponent(window.location.pathname + window.location.search);
       // Full reload on purpose: it clears stale client state for an expired session.

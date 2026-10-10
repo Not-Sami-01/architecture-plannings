@@ -1,18 +1,32 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
 /**
  * FR-3: clerkMiddleware runs everywhere so `auth()` is available inside
  * layouts, route handlers, and server components.
  *
- * Path-based `auth.protect()` checks are intentionally NOT used here (Clerk v7
- * deprecates `createRouteMatcher` — middleware path matching can diverge from
- * how Next.js routes requests). Resource checks live where the data lives:
- * - `(client)/layout` and `(admin)/admin/layout` redirect signed-out visitors
- *   (the admin layout also re-checks the DB role).
- * - API routes enforce auth via the `authenticate` + `requireRole` middlewares.
- * Never rely on a single layer.
+ * Signed-out visits to the panel prefixes are redirected here (with `?next`
+ * preserving the full deep link — this is the only layer that sees the URL).
+ * Path checks are deliberately minimal (`/dashboard`, `/admin` prefixes):
+ * layouts re-check auth + role server-side, and API routes enforce auth via
+ * the `authenticate` + `requireRole` middlewares. Never rely on a single layer.
  */
-export default clerkMiddleware();
+const PROTECTED_PREFIXES = ["/dashboard", "/admin"];
+
+export default clerkMiddleware(async (auth, req) => {
+  const { userId } = await auth();
+  if (userId) return;
+
+  const path = req.nextUrl.pathname;
+  const isProtected = PROTECTED_PREFIXES.some(
+    (prefix) => path === prefix || path.startsWith(`${prefix}/`),
+  );
+  if (!isProtected) return;
+
+  const signInUrl = new URL("/sign-in", req.url);
+  signInUrl.searchParams.set("next", `${path}${req.nextUrl.search}`);
+  return NextResponse.redirect(signInUrl);
+});
 
 export const config = {
   matcher: [

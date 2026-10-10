@@ -23,7 +23,8 @@ export default async function AdminOrdersPage({
       <div>
         <h1 className="text-3xl font-semibold tracking-tight">Orders</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Every submitted order. Quote and status actions arrive in Phase 2.
+          Every submitted order. Open one to send a quote, update its status, and message the
+          client.
         </p>
       </div>
       <OrdersView query={query} />

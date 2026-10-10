@@ -1,4 +1,4 @@
-import { ORDER_STATUSES } from "@/config/constants";
+import { ORDER_STATUSES, ORDER_STATUS_LABELS } from "@/config/constants";
 import type { OrderStatus } from "@/config/constants";
 import { ApiError } from "@/lib/api/response";
 import type { Prisma } from "@/generated/prisma/client";
@@ -38,8 +38,9 @@ export function allowedTransitions(status: OrderStatus): OrderStatus[] {
 /** Throws 409 INVALID_TRANSITION when `from → to` is not in the machine. */
 export function assertTransition(from: OrderStatus, to: OrderStatus): void {
   if (!ALLOWED_TRANSITIONS[from]?.includes(to)) {
+    // Human-readable: enum values ("AWAITING_FINAL_PAYMENT") mean nothing to clients.
     throw ApiError.invalidTransition(
-      `An order in “${from}” cannot move to “${to}”.`,
+      `An order marked “${ORDER_STATUS_LABELS[from]}” cannot move to “${ORDER_STATUS_LABELS[to]}”.`,
     );
   }
 }

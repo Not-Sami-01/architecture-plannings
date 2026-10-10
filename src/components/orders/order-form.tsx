@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import Link from "next/link";
+import { usePathname, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import { useForm, type UseFormReturn } from "react-hook-form";
@@ -82,6 +83,7 @@ const DEFAULTS: OrderFormValues = {
 
 export function OrderForm() {
   const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
   const [stepIndex, setStepIndex] = useState(0);
   const [createdOrder, setCreatedOrder] = useState<{
@@ -91,8 +93,8 @@ export function OrderForm() {
   // Files picked in the wizard — uploaded as one gated batch on submit.
   const [staged, setStaged] = useState<StagedFile[]>([]);
 
-  const { data: packages, loadings: packagesLoading } = usePackages();
-  const { data: session } = useSession();
+  const { data: packages, loadings: packagesLoading, query: packagesQuery } = usePackages();
+  const { data: session, loadings: sessionLoadings } = useSession();
   const {
     data: submitData,
     loadings: submitting,
@@ -159,26 +161,50 @@ export function OrderForm() {
   const step = STEPS[stepIndex];
   const packagesForStep = useMemo(() => packages, [packages]);
 
+  // Uploading requires an account (presign is authenticated), so gate at the
+  // door instead of letting a guest lose staged files at submit. The draft is
+  // autosaved locally and the `?next` link brings them straight back.
+  if (!sessionLoadings.loading && !session) {
+    const qs = searchParams.toString();
+    const returnTo = `${pathname}${qs ? `?${qs}` : ""}`;
+    return (
+      <div className="flex flex-col items-center gap-4 rounded-xl border p-10 text-center">
+        <p className="text-lg font-semibold">Sign in to start your order</p>
+        <p className="text-sm text-muted-foreground">
+          Orders are tied to your account so you can track quotes, revisions, and files. Your
+          answers here are saved — you will come straight back to this step.
+        </p>
+        <Button render={<Link href={`${ROUTES.login}?next=${encodeURIComponent(returnTo)}`} />}>
+          Sign in to continue
+        </Button>
+      </div>
+    );
+  }
+
   if (createdOrder) {
+    const signedIn = session != null;
+    const sessionKnown = !sessionLoadings.loading;
     return (
       <div className="flex flex-col items-center gap-4 rounded-xl border p-10 text-center">
         <p className="text-lg font-semibold">
           Order {createdOrder.number} submitted!
         </p>
         <p className="text-sm text-muted-foreground">
-          Sign in or create an account on this browser to see it in your
-          dashboard.
+          {signedIn
+            ? "Track quotes, drafts, and messages anytime from your dashboard."
+            : "Sign in or create an account on this browser to see it in your dashboard."}
         </p>
-        <Button
-          onClick={() => {
-            localStorage.removeItem(AUTOSAVE_KEY);
-            router.push(session ? ROUTES.dashboard : ROUTES.register);
-          }}
-        >
-          {session
-            ? "Go to my orders"
-            : "Create your account to track this order"}
-        </Button>
+        {sessionKnown ? (
+          <Button
+            onClick={() => {
+              router.push(signedIn ? ROUTES.dashboard : ROUTES.register);
+            }}
+          >
+            {signedIn ? "Go to my orders" : "Create your account to track this order"}
+          </Button>
+        ) : (
+          <Button disabled>Checking your session…</Button>
+        )}
       </div>
     );
   }
@@ -202,6 +228,8 @@ export function OrderForm() {
             // Uploads every staged file first; POST /api/orders is only
             // called once they have all succeeded (useSubmitOrder gate).
             const order = await submitActions.submit({ values, files: staged });
+            // Clear the draft the moment it succeeds — not when a button is clicked.
+            localStorage.removeItem(AUTOSAVE_KEY);
             setCreatedOrder(order);
             setStaged([]);
           } catch (error) {
@@ -226,6 +254,8 @@ export function OrderForm() {
             form={form}
             packages={packagesForStep}
             loading={packagesLoading.loading}
+            error={packagesQuery.isError}
+            onRetry={() => packagesQuery.refetch()}
           />
         )}
         {step.key === "plot" && <OrderFormStepPlot form={form} />}
