@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
@@ -70,7 +71,10 @@ export function ThemeSwitcher() {
         <MoonIcon className="absolute size-5 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" aria-hidden />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        <DropdownMenuLabel>Mode</DropdownMenuLabel>
+        {/* Base UI Menu.Label needs Menu.Group context — RadioGroup alone is not enough. */}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Mode</DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuRadioGroup
           value={data.mode}
           onValueChange={(value) => actions.setMode(value as ThemeMode)}
@@ -85,7 +89,9 @@ export function ThemeSwitcher() {
           ))}
         </DropdownMenuRadioGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuLabel>Color scheme</DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>Color scheme</DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuRadioGroup
           value={data.scheme}
           onValueChange={(value) => actions.setScheme(value as ThemeSchemeId)}
