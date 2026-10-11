@@ -1,6 +1,13 @@
 import { prisma } from "@/lib/db";
 import { ApiError } from "@/lib/api/response";
-import { ORDER_STATUSES, REALTIME_EVENTS, ROLES } from "@/config/constants";
+import {
+  FILE_KINDS,
+  ORDER_STATUSES,
+  REALTIME_EVENTS,
+  ROLES,
+  type FileKind,
+  type OrderStatus,
+} from "@/config/constants";
 import type { ApiUser } from "@/lib/api/types";
 import type { OrderInput } from "@/lib/validators/order";
 import { applyStatusChange } from "@/lib/orders/status";
@@ -15,6 +22,12 @@ export function generateOrderNumber(date: Date, sequence: number): string {
 }
 
 export async function createOrder(user: ApiUser, input: OrderInput) {
+  // Panel separation (plan Phase A): the designer is a fulfilment account,
+  // not a customer — their orders would appear on no one's dashboard.
+  if (user.role === ROLES.ADMIN) {
+    throw ApiError.forbidden("Admin accounts cannot place orders.");
+  }
+
   const pkg = await prisma.package.findFirst({
     where: { id: input.packageId, active: true },
     select: { id: true },
@@ -91,24 +104,54 @@ export async function createOrder(user: ApiUser, input: OrderInput) {
   return order;
 }
 
+/**
+ * Deliverable statuses, cheapest-first (plan Phase D5). Once an order reaches
+ * a step, every later step also qualifies for draft previews.
+ */
+const DELIVERABLE_STATUSES: ReadonlySet<OrderStatus> = new Set<OrderStatus>([
+  ORDER_STATUSES.DRAFT_DELIVERED,
+  ORDER_STATUSES.REVISION_REQUESTED,
+  ORDER_STATUSES.AWAITING_FINAL_PAYMENT,
+  ORDER_STATUSES.COMPLETED,
+] as OrderStatus[]);
+
 /** Ownership-safe single read (404 for strangers' orders). */
 export async function getOrderForUser(user: ApiUser, orderId: string) {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
     include: {
       package: { select: { id: true, name: true, revisionLimit: true } },
-      files: { where: { kind: "CLIENT" }, select: { id: true, filename: true, mime: true, size: true } },
     },
   });
 
   if (!order) throw ApiError.notFound();
 
+  // Status-aware file visibility is the security boundary (plan Phase D5):
+  // CLIENT uploads always; previews once a draft was delivered; finals only
+  // when the final payment is verified (mirrors the download route's 402).
+  // ORIGINAL drafts are never sent to clients — the download route 404s them.
   const isAdmin = user.role === ROLES.ADMIN;
   if (!isAdmin && order.userId !== user.id) {
     throw ApiError.notFound();
   }
 
-  return order;
+  const deliverablesReached = DELIVERABLE_STATUSES.has(order.status as OrderStatus);
+  const includePreviews = isAdmin || deliverablesReached;
+  const includeFinals = isAdmin || (deliverablesReached && order.finalPaymentVerified);
+
+  const allowedKinds: FileKind[] = [
+    FILE_KINDS.CLIENT,
+    ...(includePreviews ? [FILE_KINDS.DRAFT_PREVIEW, FILE_KINDS.REVISION_REF] : []),
+    ...(includeFinals ? [FILE_KINDS.FINAL] : []),
+  ];
+
+  const files = await prisma.orderFile.findMany({
+    where: { orderId: order.id, kind: { in: allowedKinds } },
+    select: { id: true, filename: true, mime: true, size: true, kind: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  return { ...order, files };
 }
 
 export async function listOrdersForUser(user: ApiUser) {

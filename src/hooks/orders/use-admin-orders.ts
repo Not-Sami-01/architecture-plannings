@@ -18,6 +18,7 @@ export type AdminOrderRow = {
   totalPrice: number | null;
   package: { name: string };
   user: { id: string; name: string | null; email: string };
+  assignedTo: { id: string; name: string | null; email: string } | null;
   _count: { files: number };
 };
 

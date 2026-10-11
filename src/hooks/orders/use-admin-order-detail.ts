@@ -59,6 +59,7 @@ export type AdminOrderDetail = {
   createdAt: string;
   package: { id: string; name: string; price: number; revisionLimit: number; deliverables: string[] };
   user: { id: string; name: string | null; email: string };
+  assignedTo: { id: string; name: string | null; email: string } | null;
   files: { id: string; filename: string; mime: string; size: number; kind: string; createdAt: string }[];
   events: AdminEventRow[];
   revisions: AdminRevisionRow[];

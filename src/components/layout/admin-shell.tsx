@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { useClerk } from "@clerk/nextjs";
-import { ClipboardListIcon, LogOutIcon, TagsIcon } from "lucide-react";
+import {
+  ClipboardListIcon,
+  FileIcon,
+  LogOutIcon,
+  MessageSquareIcon,
+  TagsIcon,
+  UsersIcon,
+} from "lucide-react";
 
 import { APP, ROUTES } from "@/config/constants";
 import { ThemeSwitcher } from "@/components/common/theme-switcher";
@@ -15,6 +22,9 @@ type AdminShellProps = {
 
 const NAV = [
   { href: ROUTES.admin.orders, label: "Orders", icon: ClipboardListIcon },
+  { href: ROUTES.admin.chats, label: "Chats", icon: MessageSquareIcon },
+  { href: ROUTES.admin.files, label: "Files", icon: FileIcon },
+  { href: ROUTES.admin.users, label: "Users", icon: UsersIcon },
   { href: ROUTES.admin.packages, label: "Pricing", icon: TagsIcon },
 ];
 
@@ -78,20 +88,18 @@ export function AdminShell({ email, children }: AdminShellProps) {
               Admin
             </span>
           </div>
-          <div className="flex items-center gap-2">
+          <nav className="flex items-center gap-1" aria-label="Admin sections">
+            {NAV.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                aria-label={item.label}
+                className="rounded-lg p-2 text-muted-foreground hover:bg-muted hover:text-foreground"
+              >
+                <item.icon className="size-4" aria-hidden />
+              </Link>
+            ))}
             <ThemeSwitcher />
-            <Link
-              href={ROUTES.admin.orders}
-              className="rounded-lg px-2 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted"
-            >
-              Orders
-            </Link>
-            <Link
-              href={ROUTES.admin.packages}
-              className="rounded-lg px-2 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted"
-            >
-              Pricing
-            </Link>
             <button
               type="button"
               onClick={signOutNow}
@@ -100,7 +108,7 @@ export function AdminShell({ email, children }: AdminShellProps) {
             >
               <LogOutIcon className="size-4" aria-hidden />
             </button>
-          </div>
+          </nav>
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
       </div>

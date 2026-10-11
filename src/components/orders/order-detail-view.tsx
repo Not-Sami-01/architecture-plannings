@@ -2,11 +2,11 @@
 
 import { AlertTriangleIcon } from "lucide-react";
 
-import { API_ROUTES } from "@/config/constants";
 import { useOrder } from "@/hooks/orders/use-order";
-import { formatBytes, formatMoney } from "@/lib/format";
+import { formatMoney } from "@/lib/format";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import { OrderActions } from "@/components/orders/order-actions";
+import { OrderDeliverables } from "@/components/orders/order-deliverables";
 import { MessageThread } from "@/components/messages/message-thread";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -140,35 +140,7 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
         />
         {order.budget ? <Row label="Budget" value={formatMoney(order.budget)} /> : null}
         {order.notes ? <Row label="Notes" value={order.notes} /> : null}
-      </Section>
-
-      <Section title={`Your files (${order.files.length})`}>
-        {order.files.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No files attached.</p>
-        ) : (
-          <ul className="divide-y rounded-lg border">
-            {order.files.map((file) => (
-              <li
-                key={file.id}
-                className="flex items-center justify-between gap-3 p-3 text-sm"
-              >
-                <div className="min-w-0">
-                  <p className="truncate font-medium">{file.filename}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {file.mime} · {formatBytes(file.size)}
-                  </p>
-                </div>
-                <a
-                  href={API_ROUTES.fileDownload(file.id)}
-                  className="shrink-0 text-sm underline-offset-4 hover:underline"
-                >
-                  Download
-                </a>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Section>
+      </Section>      <OrderDeliverables order={order} />
 
       <MessageThread orderId={order.id} />
     </div>

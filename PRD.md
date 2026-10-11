@@ -70,6 +70,10 @@ ArchiPlan Studio is an online service where people order custom house architectu
 - As admin, I can manage packages, prices, and revision limits.
 - As admin, I can add, edit, reorder, and hide portfolio projects without code.
 - As admin, I can see revenue, monthly orders, and pending work.
+- As admin, I can manage user accounts (search, rename, promote/demote roles; users are never deleted).
+- As admin, I can browse every conversation (chat inbox) and every uploaded file (global files panel with rename, reclassify, delete).
+- As admin, I can take an order to claim it, edit order details, upload drafts/finals directly, and hard-delete an order with confirmation (purges files and history).
+- As a client or admin, I can edit or delete my own chat messages (admins moderate any) and attach up to 4 files to a chat message.
 
 ## 6. Packages (initial seed, editable by admin)
 

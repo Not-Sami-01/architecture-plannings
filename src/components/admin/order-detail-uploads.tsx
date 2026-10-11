@@ -4,20 +4,26 @@ import type { AdminOrderDetail } from "@/hooks/orders/use-admin-order-detail";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { EmptyState } from "@/components/common/empty-state";
+import { OrderUploadControls } from "@/components/admin/order-upload-controls";
 
 type OrderDetailUploadsProps = {
   files: AdminOrderDetail["files"];
+  orderId: string;
 };
 
-export function OrderDetailUploads({ files }: OrderDetailUploadsProps) {
+export function OrderDetailUploads({ files, orderId }: OrderDetailUploadsProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">uploads ({files.length})</CardTitle>
+        <CardTitle className="text-base">Uploads ({files.length})</CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="flex flex-col gap-4">
+        <OrderUploadControls orderId={orderId} />
         {files.length === 0 ? (
-          <EmptyState title="No files attached" description="The client did not upload any plot files." />
+          <EmptyState
+            title="No files yet"
+            description="Client uploads and your drafts/finals all appear here."
+          />
         ) : (
           <ul className="divide-y rounded-lg border">
             {files.map((file) => (

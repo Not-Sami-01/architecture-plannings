@@ -32,7 +32,7 @@ export type ClientOrderDetail = {
   quoteMessage: string | null;
   createdAt: string;
   package: { name: string; revisionLimit: number };
-  files: { id: string; filename: string; mime: string; size: number }[];
+  files: { id: string; filename: string; mime: string; size: number; kind: string }[];
 };
 
 /** GET /api/orders/:id — ownership-safe client detail (404 for strangers' orders). */

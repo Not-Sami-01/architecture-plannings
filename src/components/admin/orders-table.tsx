@@ -30,6 +30,7 @@ export function OrdersTable({ orders }: OrdersTableProps) {
             <TableHead>Package</TableHead>
             <TableHead>City</TableHead>
             <TableHead>Status</TableHead>
+            <TableHead>Taken by</TableHead>
             <TableHead>Price</TableHead>
             <TableHead>Files</TableHead>
             <TableHead>Received</TableHead>
@@ -56,6 +57,11 @@ export function OrdersTable({ orders }: OrdersTableProps) {
               <TableCell>{order.city}</TableCell>
               <TableCell>
                 <OrderStatusBadge status={order.status} />
+              </TableCell>
+              <TableCell className="max-w-36 truncate text-xs text-muted-foreground">
+                {order.assignedTo
+                  ? order.assignedTo.name ?? order.assignedTo.email
+                  : "—"}
               </TableCell>
               <TableCell>{order.totalPrice != null ? formatMoney(order.totalPrice) : "—"}</TableCell>
               <TableCell>{order._count.files}</TableCell>

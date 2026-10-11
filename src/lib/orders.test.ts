@@ -71,6 +71,14 @@ describe("generateOrderNumber", () => {
 });
 
 describe("createOrder", () => {
+  it("rejects admins with 403 before touching the database (plan Phase A2)", async () => {
+    const admin: ApiUser = { id: "usr_admin", email: "admin@test.dev", role: ROLES.ADMIN };
+
+    await expect(createOrder(admin, input)).rejects.toMatchObject({ status: 403 });
+    expect(packageFindFirst).not.toHaveBeenCalled();
+    expect(orderCreate).not.toHaveBeenCalled();
+  });
+
   it("creates the order and its initial SUBMITTED event atomically", async () => {
     const order = await createOrder(user, input);
 

@@ -18,6 +18,8 @@ type PresignInput = {
   mime: string;
   size: number;
   kind: FileKind;
+  /** Attach the upload to an existing order at presign time. */
+  orderId?: string;
 };
 
 function assertCanUpload(user: ApiUser, input: PresignInput) {
@@ -34,17 +36,41 @@ function assertCanUpload(user: ApiUser, input: PresignInput) {
     throw ApiError.fileTooLarge();
   }
 
+  const isClientAttachableKind = (kind: FileKind) =>
+    kind === FILE_KINDS.CLIENT || kind === FILE_KINDS.REVISION_REF || kind === FILE_KINDS.CHAT_ATTACHMENT;
+
   const allowedKinds: FileKind[] = isAdmin
     ? Object.values(FILE_KINDS)
-    : [FILE_KINDS.CLIENT, FILE_KINDS.REVISION_REF];
+    : Object.values(FILE_KINDS).filter(isClientAttachableKind);
 
   if (!allowedKinds.includes(input.kind)) {
     throw ApiError.forbidden("You cannot upload that file kind.");
   }
+
+  // A client may only pre-attach kinds that belong to a submitted order
+  // (plan Phase D4); admins may attach anything to any order.
+  if (input.orderId && !isAdmin && !isClientAttachableKind(input.kind)) {
+    throw ApiError.forbidden("You cannot attach that file kind to an order.");
+  }
+
+  return { isAdmin };
 }
 
 export async function presignForUser(user: ApiUser, input: PresignInput) {
-  assertCanUpload(user, input);
+  const { isAdmin } = assertCanUpload(user, input);
+
+  // Never trust the client-supplied orderId: a client may only attach files
+  // to their own order (404 hides existence, AGENTS.md Security Rules).
+  let orderRow: { id: string; userId: string } | null = null;
+  if (input.orderId) {
+    orderRow = await prisma.order.findUnique({
+      where: { id: input.orderId },
+      select: { id: true, userId: true },
+    });
+    if (!orderRow || (!isAdmin && orderRow.userId !== user.id)) {
+      throw ApiError.notFound();
+    }
+  }
 
   const file = await prisma.orderFile.create({
     data: {
@@ -54,12 +80,13 @@ export async function presignForUser(user: ApiUser, input: PresignInput) {
       size: input.size,
       kind: input.kind,
       uploadedById: user.id,
+      orderId: orderRow?.id ?? null,
     },
     select: { id: true },
   });
 
   const key = buildStorageKey({
-    orderId: "pending",
+    orderId: orderRow?.id ?? "pending",
     kind: input.kind,
     fileId: file.id,
     filename: input.filename,

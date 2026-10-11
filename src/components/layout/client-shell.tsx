@@ -3,21 +3,18 @@
 import Link from "next/link";
 import { useClerk } from "@clerk/nextjs";
 
-import { APP, ROLES, ROUTES } from "@/config/constants";
-import type { Role } from "@/config/constants";
+import { APP, ROUTES } from "@/config/constants";
 import { Button } from "@/components/ui/button";
 import { ThemeSwitcher } from "@/components/common/theme-switcher";
 
 type ClientShellProps = {
   /** Greeting; comes from the server session in the (client) layout. */
   name: string;
-  /** Session role — admins get a shortcut into the admin panel. */
-  role?: Role;
   children: React.ReactNode;
 };
 
 /** Header + main shell for the client panel (dashboard and its sub-pages). */
-export function ClientShell({ name, role, children }: ClientShellProps) {
+export function ClientShell({ name, children }: ClientShellProps) {
   const { signOut } = useClerk();
 
   return (
@@ -47,14 +44,6 @@ export function ClientShell({ name, role, children }: ClientShellProps) {
               >
                 Start an order
               </Link>
-              {role === ROLES.ADMIN ? (
-                <Link
-                  href={ROUTES.admin.orders}
-                  className="text-sm font-medium text-primary transition-colors hover:underline"
-                >
-                  Admin panel
-                </Link>
-              ) : null}
             </nav>
           </div>
           <div className="flex items-center gap-3">

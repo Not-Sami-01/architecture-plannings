@@ -9,7 +9,7 @@ import { api, ApiClientError } from "@/lib/api-client/api";
 import { messageKeys } from "./message-keys";
 import type { MessageItem } from "./use-messages";
 
-type SendMessageInput = { body: string; internal: boolean };
+type SendMessageInput = { body: string; internal: boolean; fileIds?: string[] };
 
 /** POST /api/orders/:id/messages — send a chat message (or admin internal note). */
 export function useSendMessage(orderId: string) {

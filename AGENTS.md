@@ -194,7 +194,7 @@ Rules:
 - Change the schema only in `prisma/schema.prisma`, then create a migration (`pnpm prisma migrate dev --name <what-changed>`). Never edit applied migrations.
 - Add indexes for fields used in filters: `Order.status`, `Order.userId`, `Order.createdAt`, `Payment.orderId`, `OrderFile.orderId`.
 - Use transactions when a change touches multiple tables (e.g. verify payment + change status + create event).
-- Never delete orders or payments; use soft states (`CANCELLED`, `REJECTED`).
+- Never delete orders or payments; use soft states (`CANCELLED`, `REJECTED`). Exception (plan decision 1): admins may **hard delete an order** from the admin panel with a destructive two-step confirmation, which purges all storage objects and cascades every related row in one transaction. Payment-proof file rows are never deletable while a payment references them. Clients can never delete orders.
 
 ## Emails
 

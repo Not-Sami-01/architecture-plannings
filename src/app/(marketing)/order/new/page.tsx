@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
 
-import { APP } from "@/config/constants";
+import { APP, ROLES, ROUTES } from "@/config/constants";
+import { resolveApiUser } from "@/lib/users";
 import { OrderForm } from "@/components/orders/order-form";
 import { PageHeader } from "@/components/common/page-header";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,7 +15,16 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function NewOrderPage() {
+export default async function NewOrderPage() {
+  // Panel separation (plan Phase A2): admins cannot place orders.
+  const { userId } = await auth();
+  if (userId) {
+    const user = await resolveApiUser(userId);
+    if (user.role === ROLES.ADMIN) {
+      redirect(ROUTES.admin.orders);
+    }
+  }
+
   return (
     <main>
       <PageHeader

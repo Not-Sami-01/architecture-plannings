@@ -1,7 +1,14 @@
 import axios from "axios";
 
-import { API_ROUTES, CLIENT_MIME_TYPES, FILE_LIMITS, type FileKind } from "@/config/constants";
+import {
+  ADMIN_EXTRA_MIME_TYPES,
+  API_ROUTES,
+  CLIENT_MIME_TYPES,
+  FILE_LIMITS,
+  type FileKind,
+} from "@/config/constants";
 import { api, ApiClientError } from "@/lib/api-client/api";
+import { formatBytes } from "@/lib/format";
 
 /**
  * Presign → direct-to-storage PUT → confirm (RULES.md §10). This is the one
@@ -26,6 +33,10 @@ type PresignResponse = {
 export type UploadToStorageInput = {
   file: File;
   kind: FileKind;
+  /** Attach the file to an existing order at presign time (chat, admin uploads). */
+  orderId?: string;
+  /** Admin uploads may exceed the client cap and use extra mime types. */
+  isAdmin?: boolean;
   /** 0–100 during the direct upload. */
   onProgress?: (percent: number) => void;
 };
@@ -33,19 +44,30 @@ export type UploadToStorageInput = {
 export async function uploadToStorage({
   file,
   kind,
+  orderId,
+  isAdmin = false,
   onProgress,
 }: UploadToStorageInput): Promise<UploadedFile> {
   // Client-side pre-checks from constants; the server re-checks both anyway.
-  if (!(CLIENT_MIME_TYPES as readonly string[]).includes(file.type)) {
+  const allowedMimes: readonly string[] = isAdmin
+    ? [...CLIENT_MIME_TYPES, ...ADMIN_EXTRA_MIME_TYPES]
+    : (CLIENT_MIME_TYPES as readonly string[]);
+  const maxBytes = isAdmin ? FILE_LIMITS.adminMaxSizeBytes : FILE_LIMITS.clientMaxSizeBytes;
+
+  if (!(allowedMimes as readonly string[]).includes(file.type)) {
     throw new ApiClientError(415, "This file type is not allowed.", "UNSUPPORTED_FILE_TYPE");
   }
-  if (file.size > FILE_LIMITS.clientMaxSizeBytes) {
-    throw new ApiClientError(413, "The file is too large (max 10 MB).", "FILE_TOO_LARGE");
+  if (file.size > maxBytes) {
+    throw new ApiClientError(
+      413,
+      `The file is too large (max ${formatBytes(maxBytes)}).`,
+      "FILE_TOO_LARGE",
+    );
   }
 
   const presign = await api<PresignResponse>("post", {
     url: API_ROUTES.filesPresign,
-    body: { filename: file.name, mime: file.type, size: file.size, kind },
+    body: { filename: file.name, mime: file.type, size: file.size, kind, ...(orderId ? { orderId } : {}) },
   });
 
   await axios.put(presign.data.url, file, {

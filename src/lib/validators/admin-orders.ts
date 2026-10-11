@@ -1,6 +1,13 @@
 import { z } from "zod";
 
-import { ORDER_STATUSES, ORDER_DEFAULTS, PAGINATION } from "@/config/constants";
+import {
+  KITCHEN_TYPES,
+  ORDER_STATUSES,
+  ORDER_DEFAULTS,
+  PAGINATION,
+  PLOT_UNITS,
+  STYLES,
+} from "@/config/constants";
 
 type OrderStatusValue = (typeof ORDER_STATUSES)[keyof typeof ORDER_STATUSES];
 
@@ -73,6 +80,38 @@ export const quoteFormSchema = z.object({
 });
 
 export type QuoteFormValues = z.infer<typeof quoteFormSchema>;
+
+/**
+ * PATCH /api/admin/orders/:id (plan Phase D2). Field edits only — status and
+ * price are never set here (status machine, quote flow).
+ */
+export const adminOrderUpdateSchema = z.object({
+  city: z.string().trim().min(2).max(80).optional(),
+  plot: z
+    .object({
+      width: z.number().positive().max(1000),
+      length: z.number().positive().max(1000),
+      unit: z.enum(PLOT_UNITS),
+    })
+    .optional(),
+  requirements: z
+    .object({
+      floors: z.number().int().min(1).max(4),
+      bedrooms: z.number().int().min(0).max(20),
+      bathrooms: z.number().int().min(0).max(20),
+      kitchenType: z.enum(KITCHEN_TYPES),
+      garage: z.boolean(),
+      lounge: z.boolean(),
+      extras: z.string().max(2000).optional().or(z.literal("")),
+    })
+    .optional(),
+  style: z.enum(STYLES).optional(),
+  budget: z.number().int().positive().max(10_000_000_000).nullable().optional(),
+  notes: z.string().max(2000).nullable().optional(),
+  packageId: z.string().cuid2().optional(),
+});
+
+export type AdminOrderUpdateInput = z.infer<typeof adminOrderUpdateSchema>;
 
 /** POST /api/admin/orders/:id/status (API.md §8). */
 export const statusChangeSchema = z.object({

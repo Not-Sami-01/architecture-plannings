@@ -54,6 +54,11 @@ export const ROUTES = {
   admin: {
     root: "/admin",
     orders: "/admin/orders",
+    order: (id: string) => `/admin/orders/${id}`,
+    chats: "/admin/chats",
+    chat: (orderId: string) => `/admin/chats/${orderId}`,
+    files: "/admin/files",
+    users: "/admin/users",
     packages: "/admin/packages",
     portfolio: "/admin/portfolio",
   },
@@ -92,6 +97,7 @@ export const FILE_KINDS = {
   FINAL: "FINAL",
   PAYMENT_PROOF: "PAYMENT_PROOF",
   REVISION_REF: "REVISION_REF",
+  CHAT_ATTACHMENT: "CHAT_ATTACHMENT",
 } as const;
 
 export type FileKind = (typeof FILE_KINDS)[keyof typeof FILE_KINDS];
@@ -151,6 +157,8 @@ export const FILE_LIMITS = {
   maxClientFiles: 10,
   /** Max images attached to one revision request. */
   maxRevisionImages: 5,
+  /** Max files attached to one chat message. */
+  maxChatAttachments: 4,
   /** Signed download URL lifetime, in seconds. */
   signedUrlTtlSeconds: 60,
   /** Presigned upload URL lifetime, in seconds. */
@@ -191,6 +199,8 @@ export const REALTIME_EVENTS = {
   statusChanged: "order.status_changed",
   orderCreated: "order.created",
   messageCreated: "message.created",
+  messageUpdated: "message.updated",
+  messageDeleted: "message.deleted",
 } as const;
 
 export type RealtimeEventType =
@@ -317,11 +327,18 @@ export const API_ROUTES = {
   cancelOrder: (id: string) => `/api/orders/${id}/cancel`,
   revisions: (id: string) => `/api/orders/${id}/revisions`,
   messages: (id: string) => `/api/orders/${id}/messages`,
+  message: (orderId: string, messageId: string) => `/api/orders/${orderId}/messages/${messageId}`,
   payments: (id: string) => `/api/orders/${id}/payments`,
   paymentProof: (id: string) => `/api/payments/${id}/proof`,
   filesPresign: "/api/files/presign",
   filesConfirm: "/api/files/confirm",
   fileDownload: (id: string) => `/api/files/${id}/download`,
+  adminUsers: "/api/admin/users",
+  adminUser: (id: string) => `/api/admin/users/${id}`,
+  adminThreads: "/api/admin/threads",
+  adminFiles: "/api/admin/files",
+  adminFile: (id: string) => `/api/admin/files/${id}`,
+  adminOrderTake: (id: string) => `/api/admin/orders/${id}/take`,
   adminOrders: "/api/admin/orders",
   adminOrder: (id: string) => `/api/admin/orders/${id}`,
   adminQuote: (id: string) => `/api/admin/orders/${id}/quote`,

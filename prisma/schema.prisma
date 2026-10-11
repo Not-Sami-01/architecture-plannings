@@ -23,6 +23,7 @@ model User {
   updatedAt     DateTime  @updatedAt
 
   orders       Order[]
+  assignedOrders Order[]   @relation("AssignedOrders")
   uploadedFiles OrderFile[] @relation("UploadedFiles")
   events       OrderEvent[]
   verifiedPayments Payment[] @relation("VerifiedPayments")
@@ -106,6 +107,9 @@ model Order {
   quoteMessage   String?
   quotedAt       DateTime?
 
+  // Assignment (plan Phase D1): the admin who "took" the order.
+  assignedToId String?
+
   revisionCount        Int     @default(0)
   finalPaymentVerified Boolean @default(false)
 
@@ -114,6 +118,7 @@ model Order {
 
   user         User          @relation(fields: [userId], references: [id])
   package      Package       @relation(fields: [packageId], references: [id])
+  assignedTo   User?         @relation("AssignedOrders", fields: [assignedToId], references: [id])
   files        OrderFile[]
   events       OrderEvent[]
   revisions    Revision[]
@@ -124,6 +129,7 @@ model Order {
   @@index([status])
   @@index([userId])
   @@index([createdAt])
+  @@index([assignedToId])
 }
 
 model OrderFile {
@@ -138,6 +144,7 @@ model OrderFile {
   kind         FileKind
   uploadedById String
   revisionId   String?
+  messageId    String?
   confirmedAt  DateTime?
   createdAt    DateTime @default(now())
 
@@ -145,8 +152,12 @@ model OrderFile {
   uploadedBy User       @relation("UploadedFiles", fields: [uploadedById], references: [id])
   revision   Revision?  @relation(fields: [revisionId], references: [id])
   paymentProof Payment? @relation("PaymentProof")
+  message    Message?   @relation(fields: [messageId], references: [id])
 
   @@index([orderId])
+  @@index([kind])
+  @@index([messageId])
+  @@index([uploadedById])
 }
 
 model OrderEvent {
@@ -200,17 +211,19 @@ model Payment {
 }
 
 model Message {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   orderId   String
   senderId  String
   body      String
-  internal  Boolean  @default(false)
-  createdAt DateTime @default(now())
+  internal  Boolean   @default(false)
+  editedAt  DateTime?
+  createdAt DateTime  @default(now())
 
-  order  Order @relation(fields: [orderId], references: [id])
-  sender User  @relation(fields: [senderId], references: [id])
+  order       Order       @relation(fields: [orderId], references: [id])
+  sender      User        @relation(fields: [senderId], references: [id])
+  attachments OrderFile[]
 
-  @@index([orderId])
+  @@index([orderId, createdAt])
 }
 
 model Testimonial {
@@ -254,6 +267,7 @@ enum FileKind {
   FINAL
   PAYMENT_PROOF
   REVISION_REF
+  CHAT_ATTACHMENT
 }
 
 enum PaymentType {

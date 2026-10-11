@@ -1,17 +1,36 @@
 import { z } from "zod";
 
-import { MESSAGES } from "@/config/constants";
+import { FILE_LIMITS, MESSAGES } from "@/config/constants";
+
+const bodyField = z
+  .string()
+  .trim()
+  .min(1, { message: "Write a message first." })
+  .max(MESSAGES.maxLength, {
+    message: `Messages are limited to ${MESSAGES.maxLength} characters.`,
+  });
 
 export const messageSchema = z.object({
-  body: z
-    .string()
-    .trim()
-    .min(1, { message: "Write a message first." })
-    .max(MESSAGES.maxLength, {
-      message: `Messages are limited to ${MESSAGES.maxLength} characters.`,
-    }),
+  body: bodyField,
   // Defaults to false: forging `internal: true` as a client is rejected server-side.
   internal: z.boolean().optional().default(false),
+  // Chat attachments (plan Phase B): uploaded first (presign → PUT → confirm
+  // with CHAT_ATTACHMENT kind), then attached here by id.
+  fileIds: z
+    .array(z.string().cuid2())
+    .max(FILE_LIMITS.maxChatAttachments, {
+      message: `Up to ${FILE_LIMITS.maxChatAttachments} attachments per message.`,
+    })
+    .default([]),
 });
 
 export type MessageInput = z.infer<typeof messageSchema>;
+
+/** PATCH /api/orders/:id/messages/:messageId. */
+export const messageUpdateSchema = z.object({
+  body: bodyField,
+  // Admin-only field; a client sending it at all is a 400 (service enforces).
+  internal: z.boolean().optional(),
+});
+
+export type MessageUpdateInput = z.infer<typeof messageUpdateSchema>;

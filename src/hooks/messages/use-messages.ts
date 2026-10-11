@@ -7,12 +7,21 @@ import { API_ROUTES } from "@/config/constants";
 
 import { messageKeys } from "./message-keys";
 
+export type MessageAttachment = {
+  id: string;
+  filename: string;
+  mime: string;
+  size: number;
+};
+
 export type MessageItem = {
   id: string;
   body: string;
   internal: boolean;
+  editedAt: string | null;
   createdAt: string;
   sender: { id: string; name: string | null; role: "CLIENT" | "ADMIN" };
+  attachments: MessageAttachment[];
 };
 
 /** GET /api/orders/:id/messages — chronological thread (no internal notes for clients). */

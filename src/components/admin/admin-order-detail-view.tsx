@@ -6,12 +6,16 @@ import { AlertTriangle } from "lucide-react";
 import { ORDER_STATUSES, ROUTES } from "@/config/constants";
 import { formatMoney } from "@/lib/format";
 import { useAdminOrderDetail } from "@/hooks/orders/use-admin-order-detail";
+import { useSession } from "@/hooks/auth/use-session";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import { OrderDetailPlot } from "@/components/admin/order-detail-plot";
 import { OrderDetailTimeline } from "@/components/admin/order-detail-timeline";
 import { OrderDetailUploads } from "@/components/admin/order-detail-uploads";
 import { QuoteForm } from "@/components/admin/quote-form";
 import { StatusControls } from "@/components/admin/status-controls";
+import { OrderTakeControls } from "@/components/admin/order-take-controls";
+import { OrderEditDialog } from "@/components/admin/order-edit-dialog";
+import { OrderDeleteControls } from "@/components/admin/order-delete-controls";
 import { MessageThread } from "@/components/messages/message-thread";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -23,6 +27,8 @@ type AdminOrderDetailViewProps = {
 
 export function AdminOrderDetailView({ orderId }: AdminOrderDetailViewProps) {
   const { data: order, loadings, query } = useAdminOrderDetail(orderId);
+  const session = useSession();
+  const sessionAdminId = session.data?.id ?? "";
 
   if (loadings.loading) {
     return (
@@ -77,6 +83,16 @@ export function AdminOrderDetailView({ orderId }: AdminOrderDetailViewProps) {
       <div className="grid gap-6 md:grid-cols-3">
         <div className="flex flex-col gap-4 text-sm md:col-span-1">
           <div className="rounded-xl border p-4">
+            <p className="text-xs text-muted-foreground">Assignment</p>
+            <div className="mt-2">
+              <OrderTakeControls
+                orderId={order.id}
+                assignedTo={order.assignedTo}
+                currentAdminId={sessionAdminId}
+              />
+            </div>
+          </div>
+          <div className="rounded-xl border p-4">
             <p className="text-xs text-muted-foreground">Package</p>
             <p className="font-medium">{order.package.name}</p>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -117,11 +133,20 @@ export function AdminOrderDetailView({ orderId }: AdminOrderDetailViewProps) {
               <StatusControls orderId={order.id} status={order.status} />
             </div>
           </div>
+          <div className="flex gap-2">
+            <OrderEditDialog order={order} />
+          </div>
+          <div className="rounded-xl border border-destructive/30 p-4">
+            <p className="text-xs text-destructive">Danger zone</p>
+            <div className="mt-2">
+              <OrderDeleteControls order={order} />
+            </div>
+          </div>
         </div>
 
         <div className="flex flex-col gap-6 md:col-span-2">
           <OrderDetailPlot order={order} />
-          <OrderDetailUploads files={order.files} />
+          <OrderDetailUploads files={order.files} orderId={order.id} />
           <OrderDetailTimeline events={order.events} />
           <MessageThread orderId={order.id} allowInternal />
         </div>

@@ -260,6 +260,8 @@ Uploads go **directly to storage** using presigned URLs, then are registered.
 **Rules**
 - Allowed mime: `image/jpeg`, `image/png`, `application/pdf` (admin may also upload `application/zip`, `application/postscript`, `image/svg+xml`, `.ai` and `.dwg` as finals).
 - Max size: 10 MB for clients, 100 MB for admin.
+- `orderId` is honored: admins may attach files to any order; clients only to their own (404 otherwise, existence never leaks).
+- `CHAT_ATTACHMENT` kind is allowed for both roles and must later be bound to a message by the same sender.
 - `FINAL` download returns `402 PAYMENT_REQUIRED` unless final payment is verified.
 - Signed URL lifetime: 60 seconds.
 
@@ -289,11 +291,20 @@ If the free limit is exceeded, the response is `409 REVISION_LIMIT_REACHED` with
 |--------|------|--------|-------------|
 | GET | `/api/orders/:id/messages` | client/admin | List messages (clients never see `internal`) |
 | POST | `/api/orders/:id/messages` | client/admin | Send message |
+| PATCH | `/api/orders/:id/messages/:messageId` | client(own)/admin | Edit message — sets `editedAt` |
+| DELETE | `/api/orders/:id/messages/:messageId` | client(own)/admin | Delete message + purges attachments (rows and storage objects) |
 
 ```json
-{ "body": "Can you add a balcony on the first floor?", "internal": false }
+// POST body (creates attachments when fileIds are included)
+{ "body": "Can you add a balcony on the first floor?", "internal": false, "fileIds": ["file_31"] }
 ```
-`internal: true` is accepted from admins only.
+`internal: true` is accepted from admins only (on send **and** edit). Chat
+attachments are uploaded first with kind `CHAT_ATTACHMENT` (presign accepts an
+`orderId` and validates ownership), then attached by id — max 4 per message
+(`FILE_LIMITS.maxChatAttachments`); each must be confirmed and belong to the
+sender. Clients may edit/delete only their own non-internal messages (others
+404); admins may moderate any message in any thread. Realtime pings
+`message.updated` / `message.deleted` on edits and deletes.
 
 ---
 
@@ -333,6 +344,9 @@ If the free limit is exceeded, the response is `409 REVISION_LIMIT_REACHED` with
 |--------|------|--------|-------------|
 | GET | `/api/admin/orders` | admin | List with filters |
 | GET | `/api/admin/orders/:id` | admin | Full detail |
+| PATCH | `/api/admin/orders/:id` | admin | Edit order fields (`adminOrderUpdateSchema`: city, plot, requirements, style, budget, notes, packageId). Status and price are never settable here. |
+| DELETE | `/api/admin/orders/:id` | admin | **Hard delete** (plan decision 1): purges all storage objects, then cascades rows (files, messages, events, revisions, payments, testimonials) in one transaction. Destructive; UI confirms with the order number. |
+| POST | `/api/admin/orders/:id/take` | admin | `{ "take": true \| false }` — assign the current admin to the order, or release (`null`). Not a status change; no OrderEvent. |
 | POST | `/api/admin/orders/:id/quote` | admin | Send quote |
 | POST | `/api/admin/orders/:id/status` | admin | Change status (validated) |
 | POST | `/api/admin/orders/:id/drafts` | admin | Register draft (triggers watermark job) |
@@ -362,7 +376,32 @@ If the free limit is exceeded, the response is `409 REVISION_LIMIT_REACHED` with
 
 ---
 
-## 9. Portfolio
+## 9. Admin Users (plan C1)
+
+| Method | Path | Access | Description |
+|--------|------|--------|-------------|
+| GET | `/api/admin/users` | admin | List users. Query: `q` (name/email), `role`, `page`, `pageSize` |
+| PATCH | `/api/admin/users/:id` | admin | Edit `{ name?, role? }`. Role changes write Clerk `publicMetadata` (source of truth) **and** the DB mirror in one service call. |
+
+Users are never deleted or deactivated (plan decision 2).
+
+## 9b. Admin Threads (plan C2)
+
+| Method | Path | Access | Description |
+|--------|------|--------|-------------|
+| GET | `/api/admin/threads` | admin | Orders having messages: order number, client, last-message preview, message count, `lastMessageAt`. Query: `q`, `page`, `pageSize`. |
+
+Open a thread at `/admin/chats/[orderId]`; the per-order messages endpoints above serve it.
+
+## 9c. Admin Files (plan C3)
+
+| Method | Path | Access | Description |
+|--------|------|--------|-------------|
+| GET | `/api/admin/files` | admin | Global file listing. Query: `kind`, `q` (filename/order number), `page`, `pageSize` |
+| PATCH | `/api/admin/files/:id` | admin | Rename (`filename`) and/or change `kind` |
+| DELETE | `/api/admin/files/:id` | admin | Delete row + storage object. **Blocked for payment-proof rows** (`409`). |
+
+## 10. Portfolio
 
 | Method | Path | Access | Description |
 |--------|------|--------|-------------|
@@ -401,7 +440,7 @@ Ably delivers **id-only pings** that tell subscribed browsers which query keys t
 |--------|------|--------|-------------|
 | POST | `/api/realtime/token` | authenticated | `{ data: { enabled, tokenRequest } }` — signed Ably `TokenRequest` (single use, 60 min TTL, subscribe-only capability on `user:{id}` and, for admins, `role:admin`). `enabled: false` when realtime is not configured. |
 
-Client events (`REALTIME_EVENTS` in `constants.ts`): `quote.sent` / `order.status_changed` invalidate `orderKeys` + `adminOrderKeys`; `order.created` invalidates `adminOrderKeys`; `message.created` invalidates that thread's `messageKeys`. The browser SDK renews its token through the same endpoint (Ably `authCallback`).
+Client events (`REALTIME_EVENTS` in `constants.ts`): `quote.sent` / `order.status_changed` invalidate `orderKeys` + `adminOrderKeys`; `order.created` invalidates `adminOrderKeys`; `message.created` / `message.updated` / `message.deleted` invalidate that thread's `messageKeys`. The browser SDK renews its token through the same endpoint (Ably `authCallback`).
 
 ---
 

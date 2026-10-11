@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
-import { ROUTES } from "@/config/constants";
+import { ROLES, ROUTES } from "@/config/constants";
 import { resolveApiUser } from "@/lib/users";
 import { ClientShell } from "@/components/layout/client-shell";
 
@@ -28,8 +28,14 @@ export default async function ClientLayout({
 
   const user = await resolveApiUser(userId);
 
+  // Strict panel separation (plan Phase A2): admins never render client
+  // markup — they land on the admin panel instead.
+  if (user.role === ROLES.ADMIN) {
+    redirect(ROUTES.admin.orders);
+  }
+
   return (
-    <ClientShell name={user.name ?? user.email ?? "My account"} role={user.role}>
+    <ClientShell name={user.name ?? user.email ?? "My account"}>
       {children}
     </ClientShell>
   );
