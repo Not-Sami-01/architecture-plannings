@@ -37,7 +37,12 @@ function assertCanUpload(user: ApiUser, input: PresignInput) {
   }
 
   const isClientAttachableKind = (kind: FileKind) =>
-    kind === FILE_KINDS.CLIENT || kind === FILE_KINDS.REVISION_REF || kind === FILE_KINDS.CHAT_ATTACHMENT;
+    kind === FILE_KINDS.CLIENT ||
+    kind === FILE_KINDS.REVISION_REF ||
+    kind === FILE_KINDS.CHAT_ATTACHMENT ||
+    // Payment proofs (plan 2 P4): clients upload proof for their own order's
+    // pending charge; the binding to the Payment row happens in the service.
+    kind === FILE_KINDS.PAYMENT_PROOF;
 
   const allowedKinds: FileKind[] = isAdmin
     ? Object.values(FILE_KINDS)
@@ -51,6 +56,11 @@ function assertCanUpload(user: ApiUser, input: PresignInput) {
   // (plan Phase D4); admins may attach anything to any order.
   if (input.orderId && !isAdmin && !isClientAttachableKind(input.kind)) {
     throw ApiError.forbidden("You cannot attach that file kind to an order.");
+  }
+
+  // A proof with no order can never be bound to a payment — reject early.
+  if (!isAdmin && input.kind === FILE_KINDS.PAYMENT_PROOF && !input.orderId) {
+    throw ApiError.forbidden("A payment proof must be attached to your order.");
   }
 
   return { isAdmin };

@@ -1,6 +1,13 @@
-# Plan — Role Separation + Full Admin Panel Expansion
+# Plans
 
-Status: **approved for execution** (defaults below apply unless revisited).
+- **Plan 1** (below): Role Separation + Full Admin Panel Expansion — ✅ executed (see `PLAN.md` step 24).
+- **Plan 2** (bottom): Proceed Order Page, Chat UX, Read Receipts & Charge User — ✅ executed (see `PLAN.md` step 25).
+
+---
+
+# Plan 1 — Role Separation + Full Admin Panel Expansion
+
+Status: ✅ **executed** (phases A–E complete, see `PLAN.md` step 24).
 
 Decisions locked in:
 1. **Delete order = hard delete** (row + files + storage objects, destructive-confirm dialog). The AGENTS.md "never delete orders" rule is updated to allow admin-only hard delete with confirmation.
@@ -160,3 +167,99 @@ Decisions locked in:
 - **Role freshness** — DB mirror refreshed on every authenticated request (same freshness model as today); Clerk metadata write is fire-safe (failure → log, keep DB change).
 - **`internal` flag** — only `requireRole(ADMIN)` paths may set it (existing rule; keep on edit path too).
 - **Realtime payload rules** — id-only pings, never bodies (existing contract; new events follow it).
+
+---
+
+# Plan 2 — Proceed Order Page, Chat UX, Read Receipts & Charge User
+
+Status: ✅ **executed** (P0–P6 complete, see `PLAN.md` step 25; tests 173/173, lint/typecheck/build green).
+
+Decisions locked in:
+1. **Dedicated proceed page** — `/admin/orders/[id]/proceed` (entered via a "Proceed" button on the order detail), not an enhancement of the existing detail layout.
+2. **"Charge user" = real payment-request flow** (Phase 4 minimal slice): admin creates a `Payment(PENDING)` row with a custom amount → client sees amount due and uploads a payment proof → admin verifies/rejects. No gateway/webhooks.
+3. **Per-message read receipts** — new `MessageRead` table; opening the chat marks messages read and pings the counterpart; hover shows exact seen status.
+4. **Sender labels** — admin messages show `Name (Admin)` for everyone; own messages show "You"; names always visible in both views.
+
+---
+
+## P0 — Chat bug fixes (independent, do first)
+
+1. **Attachments not showing (root cause):** `src/components/messages/message-thread.tsx` wraps `uploadAll` and `return []`, discarding the uploaded file ids — every message is sent with `fileIds: []`. Fix: return `attachments.actions.uploadAll()` result. (Bubbles/server select already support attachments.)
+2. **Ctrl+Enter sends:** `message-input.tsx` textarea `onKeyDown` — `(e.metaKey || e.ctrlKey) && e.key === "Enter"` submits; Enter alone stays a newline.
+3. **Realtime gap:** `realtime-queries.ts` has no cases for `message.updated`/`message.deleted` (published but never consumed) — add them → `[messageKeys.list(refId)]`.
+
+---
+
+## P1 — Schema migration (`pnpm prisma migrate dev`)
+
+```prisma
+model MessageRead {
+  id        String   @id @default(cuid())
+  messageId String
+  readerId  String
+  readAt    DateTime @default(now())
+  message   Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  reader    User     @relation(fields: [readerId], references: [id])
+  @@unique([messageId, readerId])
+  @@index([readerId])
+}
+```
+
+- `Message` += `reads MessageRead[]`; `User` += reverse relation.
+- `Payment` += `note String?` (admin's charge note shown to client).
+- Indexes: `MessageRead(messageId, readerId)` unique + `readerId`.
+
+---
+
+## P2 — Read receipts (server)
+
+- **`POST /api/orders/:id/messages/read`** — body `{ messageIds: string[] }` (cuid2, capped e.g. 100). Service `markMessagesRead`: thread-access 404 gate → keep only messages in this order with `senderId ≠ reader` and `internal: false` → `createMany(skipDuplicates)` (idempotent) → after commit, ping counterpart channel `message.read` (new `REALTIME_EVENTS.messageRead`, refId = orderId, id-only).
+- **`GET /api/orders/:id/messages/unread-count`** → `{ count }` (`senderId ≠ me`, `internal: false` for clients, no read row by me). Invalidated by `message.created` + `message.read` pings.
+- `messageSelect` += `reads { readerId, readAt }`.
+- Rate-limit both with `RATE_LIMITS.messages`.
+
+---
+
+## P3 — Chat UI
+
+- **`src/lib/format-message-time.ts`** (pure, unit-tested): <1m "just now" · <60m "x min ago" · <24h "x h ago" · ≥24h → date ("8 Oct").
+- **`message-bubble.tsx`:** sender label always shown — own → "You", admin → `Name (Admin)`, client → name; relative timestamp; subtle read-tick on own messages (read = counterpart has a read row). **shadcn Tooltip** (adds `@radix-ui/react-tooltip`) on timestamp/tick: full "8 Oct 2026, 14:32" + "Seen by client · 9 Oct, 09:11" / "Not seen yet" + "(edited)".
+- **`message-thread.tsx`:** effect collects counterpart, non-internal, not-yet-read ids on load/new messages → POST read (fires on open). `allowInternal` no longer suppresses sender names.
+- Unread badge prop on the thread for P5's collapsible toggle.
+
+---
+
+## P4 — "Charge user" = payments slice (Phase 4 minimal)
+
+- **Validators** `src/lib/validators/payments.ts`: `createPaymentSchema` `{ amount: int > 0, type: ADVANCE|FINAL|EXTRA_REVISION, note?: ≤500 }`, `verifyPaymentSchema` `{ status: PAID|REJECTED, note?: ≤500 }`.
+- **Service** `src/lib/payments.ts`:
+  - `createOrderPayment` — admin; 409 if a PENDING payment of same type exists; `OrderEvent` note; realtime ping → client.
+  - `listPaymentsForOrder` — client: own order 404 else; admin: any.
+  - `attachPaymentProof` — client: own pending payment; binds a `PAYMENT_PROOF` file uploaded by them; realtime ping → admins.
+  - `verifyPayment` — admin; PAID sets `verifiedById`; **type FINAL + PAID → `order.finalPaymentVerified = true`**. Status never auto-moves — admin uses Change status.
+- **Routes:** `POST /api/admin/orders/:id/payments` · `PATCH /api/admin/payments/:id` · `GET /api/orders/:id/payments` · `POST /api/payments/:id/proof` (API.md §7; constants already reserve these paths).
+- **Presign tweak:** `assertCanUpload` allows clients `PAYMENT_PROOF` only on their own order (ownership check already there).
+- **Client side:** order detail gains a "Payment due" card when a PENDING payment exists (amount, type, note, proof upload → `PAYMENT_PROOF` kind, shows uploaded proof + state). Hooks: `use-order-payments`, `use-upload-payment-proof`, `use-admin-create-payment`, `use-admin-verify-payment` (four-key, RULES shape). Realtime `payment.*` → invalidate order detail + payment keys.
+
+---
+
+## P5 — Proceed page `/admin/orders/[id]/proceed`
+
+- New route + `ROUTES.admin.orderProceed(id)`; "Proceed" button in the admin order-detail header links there.
+- **`AdminProceedView`** layout:
+  - Header: back link, order #, client, `OrderStatusBadge`.
+  - **Proceed panel:** primary "Proceed" button → single Dialog with view state `menu | dropFiles | chargeUser`:
+    - **Drop files** — real drag-and-drop dropzone (pattern from the order wizard), kind Select (`DRAFT_PREVIEW / DRAFT_ORIGINAL / FINAL / REVISION_REF / PAYMENT_PROOF`), per-file progress via existing `useAdminOrderUpload`; recent files list (`OrderDetailUploads` reuse) below.
+    - **Charge user** — amount **prefilled from `order.package.price`** (editable), type Select auto-derived from status (`AWAITING_ADVANCE`→Advance, `AWAITING_FINAL_PAYMENT`→Final, else Extra revision), note; submits P4's create-payment. Payments list card (pending/paid/rejected + verify/reject buttons with proof preview for admin).
+  - **Change status card** — reuses existing `StatusControls` unchanged.
+  - **Collapsible chat** — chevron toggle (persisted open state in localStorage), wraps `MessageThread allowInternal`, unread badge on the collapsed toggle.
+
+---
+
+## P6 — Docs, tests, gates
+
+- **API.md:** new/changed endpoints (`messages/read`, `unread-count`, admin payments, client payments + proof, message `reads` shape); **constants:** routes, `REALTIME_EVENTS.messageRead`, payment labels; **README/PLAN.md** rows; **AGENTS.md** if behavior rules change.
+- **Tests:** `format-message-time`, `markMessagesRead` (skips own/internal/foreign, idempotent, ping target), unread-count, payments service (dup pending 409, verify FINAL→`finalPaymentVerified`, proof ownership 404), validators, realtime-queries new cases. Existing suites stay green.
+- **Gates:** `pnpm lint && pnpm typecheck && pnpm test` + production build; migrate on local DB.
+
+**Explicitly out of scope:** auto status change on payment verify, client-side chat collapse, gateway/webhook payments (manual proof only), watermarking.

@@ -23,25 +23,34 @@ export function OrderDetailTimeline({ events }: OrderDetailTimelineProps) {
           <EmptyState title="No events yet" description="Status changes will appear here." />
         ) : (
           <ol className="space-y-4">
-            {events.map((event) => (
-              <li key={event.id} className="flex gap-3 text-sm">
-                <span
-                  aria-hidden
-                  className="mt-1.5 size-2 shrink-0 rounded-full bg-primary"
-                />
-                <div>
-                  <p className="font-medium">
-                    {event.fromStatus
-                      ? `${label(event.fromStatus)} → ${label(event.toStatus)}`
-                      : `Order ${label(event.toStatus).toLowerCase()}`}
-                  </p>
-                  {event.note ? <p className="text-muted-foreground">{event.note}</p> : null}
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(event.createdAt).toLocaleString()}
-                  </p>
-                </div>
-              </li>
-            ))}
+            {events.map((event) => {
+              // Same-status events carry notes only (charges, plan 2 P4) —
+              // never fake them into a "Status → Status" transition.
+              const isNote = Boolean(event.fromStatus) && event.fromStatus === event.toStatus;
+              return (
+                <li key={event.id} className="flex gap-3 text-sm">
+                  <span
+                    aria-hidden
+                    className="mt-1.5 size-2 shrink-0 rounded-full bg-primary"
+                  />
+                  <div>
+                    <p className="font-medium">
+                      {isNote
+                        ? (event.note ?? "Note")
+                        : event.fromStatus
+                          ? `${label(event.fromStatus)} → ${label(event.toStatus)}`
+                          : `Order ${label(event.toStatus).toLowerCase()}`}
+                    </p>
+                    {event.note && !isNote ? (
+                      <p className="text-muted-foreground">{event.note}</p>
+                    ) : null}
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(event.createdAt).toLocaleString()}
+                    </p>
+                  </div>
+                </li>
+              );
+            })}
           </ol>
         )}
       </CardContent>

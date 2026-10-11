@@ -1,18 +1,23 @@
 "use client";
 
-import { FileIcon } from "lucide-react";
+import { CheckCheckIcon, FileIcon } from "lucide-react";
 
 import { API_ROUTES } from "@/config/constants";
 import { formatBytes } from "@/lib/format";
+import { formatMessageTime } from "@/lib/format-message-time";
 import type { MessageItem } from "@/hooks/messages/use-messages";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
 type MessageBubbleProps = {
   message: MessageItem;
   isOwn: boolean;
-  /** Sender name is useful in the admin thread; clients only ever see themselves. */
-  showSender: boolean;
+  /**
+   * For own messages: the counterpart's read receipt (plan 2 P3). Null when
+   * the other side has not opened the thread yet.
+   */
+  seenBy: { readAt: string } | null;
   /** Edit/delete controls (per moderation permissions, plan B3). */
   canModerate: boolean;
   onEdit: (message: MessageItem) => void;
@@ -24,14 +29,27 @@ type MessageBubbleProps = {
 export function MessageBubble({
   message,
   isOwn,
-  showSender,
+  seenBy,
   canModerate,
   onEdit,
   onDelete,
   deleting = false,
 }: MessageBubbleProps) {
-  const senderLabel =
-    message.sender.name ?? (isOwn ? "You" : message.sender.role === "ADMIN" ? "Designer" : "Client");
+  // Locked labels (plan 2): own → "You", admins always get the "(Admin)" mark.
+  const senderLabel = isOwn
+    ? "You"
+    : message.sender.role === "ADMIN"
+      ? `${message.sender.name ?? "Designer"} (Admin)`
+      : (message.sender.name ?? "Client");
+
+  const time = formatMessageTime(message.createdAt);
+  const seenTime = seenBy ? formatMessageTime(seenBy.readAt) : null;
+
+  const tooltipLines = [
+    time.full,
+    seenTime ? `Seen · ${seenTime.full}` : isOwn ? "Not seen yet" : null,
+    message.editedAt ? `Edited ${formatMessageTime(message.editedAt).full}` : null,
+  ].filter((line): line is string => Boolean(line));
 
   return (
     <li
@@ -39,9 +57,32 @@ export function MessageBubble({
       aria-label={`Message from ${senderLabel}`}
     >
       <div className="flex items-center gap-2 text-xs text-muted-foreground">
-        {showSender ? <span className="font-medium">{senderLabel}</span> : null}
-        <time dateTime={message.createdAt}>{new Date(message.createdAt).toLocaleString()}</time>
-        {message.editedAt ? <span className="italic">(edited)</span> : null}
+        <span className="font-medium">{senderLabel}</span>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <span className="cursor-default underline decoration-dotted underline-offset-2">
+                <time dateTime={message.createdAt}>{time.short}</time>
+                {message.editedAt ? <span className="italic"> (edited)</span> : null}
+                {isOwn ? (
+                  <CheckCheckIcon
+                    aria-label={seenBy ? "Seen by the other side" : "Not seen yet"}
+                    className={`ml-1 inline size-3.5 -translate-y-px ${
+                      seenBy ? "text-primary" : "text-muted-foreground/50"
+                    }`}
+                  />
+                ) : null}
+              </span>
+            }
+          />
+          <TooltipContent>
+            <span className="flex flex-col gap-0.5">
+              {tooltipLines.map((line) => (
+                <span key={line}>{line}</span>
+              ))}
+            </span>
+          </TooltipContent>
+        </Tooltip>
         {message.internal ? (
           <Badge variant="secondary" className="text-[10px] uppercase">
             Internal

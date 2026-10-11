@@ -28,6 +28,7 @@ model User {
   events       OrderEvent[]
   verifiedPayments Payment[] @relation("VerifiedPayments")
   messages     Message[]
+  messageReads MessageRead[]
   testimonials Testimonial[]
 
   @@index([role])
@@ -196,6 +197,8 @@ model Payment {
   amount          Int
   method          PaymentMethod
   status          PaymentStatus  @default(PENDING)
+  // Admin's charge note shown to the client ("Pay at branch X before Friday").
+  note            String?
   reference       String?
   proofFileId     String?        @unique
   verifiedById    String?
@@ -219,11 +222,27 @@ model Message {
   editedAt  DateTime?
   createdAt DateTime  @default(now())
 
-  order       Order       @relation(fields: [orderId], references: [id])
-  sender      User        @relation(fields: [senderId], references: [id])
+  order       Order        @relation(fields: [orderId], references: [id])
+  sender      User         @relation(fields: [senderId], references: [id])
   attachments OrderFile[]
+  reads       MessageRead[]
 
   @@index([orderId, createdAt])
+}
+
+// Read receipt: one row per (message, reader). Opening a thread upserts rows
+// for the counterpart's messages; deleting a message cascades its rows.
+model MessageRead {
+  id        String   @id @default(cuid())
+  messageId String
+  readerId  String
+  readAt    DateTime @default(now())
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  reader  User    @relation(fields: [readerId], references: [id])
+
+  @@unique([messageId, readerId])
+  @@index([readerId])
 }
 
 model Testimonial {

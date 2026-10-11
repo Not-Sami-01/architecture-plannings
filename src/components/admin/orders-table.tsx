@@ -1,11 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import { ArrowRightIcon } from "lucide-react";
 
 import { formatMoney } from "@/lib/format";
 import { ROUTES } from "@/config/constants";
 import type { AdminOrderRow } from "@/hooks/orders/use-admin-orders";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -34,6 +36,9 @@ export function OrdersTable({ orders }: OrdersTableProps) {
             <TableHead>Price</TableHead>
             <TableHead>Files</TableHead>
             <TableHead>Received</TableHead>
+            <TableHead>
+              <span className="sr-only">Actions</span>
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -41,7 +46,7 @@ export function OrdersTable({ orders }: OrdersTableProps) {
             <TableRow key={order.id}>
               <TableCell>
                 <Link
-                  href={`${ROUTES.admin.orders}/${order.id}`}
+                  href={ROUTES.admin.order(order.id)}
                   className="font-medium underline-offset-4 hover:underline"
                 >
                   {order.number}
@@ -66,6 +71,16 @@ export function OrdersTable({ orders }: OrdersTableProps) {
               <TableCell>{order.totalPrice != null ? formatMoney(order.totalPrice) : "—"}</TableCell>
               <TableCell>{order._count.files}</TableCell>
               <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
+              <TableCell>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  render={<Link href={ROUTES.admin.orderProceed(order.id)} />}
+                >
+                  Proceed
+                  <ArrowRightIcon data-icon="inline-end" />
+                </Button>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

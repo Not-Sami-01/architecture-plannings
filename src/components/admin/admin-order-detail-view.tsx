@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, ArrowRightIcon } from "lucide-react";
 
 import { ORDER_STATUSES, ROUTES } from "@/config/constants";
 import { formatMoney } from "@/lib/format";
@@ -77,7 +77,13 @@ export function AdminOrderDetailView({ orderId }: AdminOrderDetailViewProps) {
             {new Date(order.createdAt).toLocaleString()}
           </p>
         </div>
-        <OrderStatusBadge status={order.status} />
+        <div className="flex items-center gap-3">
+          <OrderStatusBadge status={order.status} />
+          <Button render={<Link href={ROUTES.admin.orderProceed(order.id)} />}>
+            Proceed
+            <ArrowRightIcon className="size-4" aria-hidden />
+          </Button>
+        </div>
       </header>
 
       <div className="grid gap-6 md:grid-cols-3">

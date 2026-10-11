@@ -23,11 +23,24 @@ describe("realtimeEventQueries", () => {
     ]);
   });
 
-  it("a new message pings only that thread's list", () => {
+  it("a new message pings that thread's list and both unread badges", () => {
     expect(realtimeEventQueries({ type: REALTIME_EVENTS.messageCreated, refId: "ord_3" })).toEqual(
-      [messageKeys.list("ord_3")],
+      [messageKeys.list("ord_3"), messageKeys.unread("ord_3")],
     );
     expect(realtimeEventQueries({ type: REALTIME_EVENTS.messageCreated })).toEqual([]);
+  });
+
+  it("read receipts refresh the thread and unread badges", () => {
+    expect(realtimeEventQueries({ type: REALTIME_EVENTS.messageRead, refId: "ord_3" })).toEqual(
+      [messageKeys.list("ord_3"), messageKeys.unread("ord_3")],
+    );
+  });
+
+  it("edits and deletes refresh only the thread list", () => {
+    for (const type of [REALTIME_EVENTS.messageUpdated, REALTIME_EVENTS.messageDeleted]) {
+      expect(realtimeEventQueries({ type, refId: "ord_3" })).toEqual([messageKeys.list("ord_3")]);
+      expect(realtimeEventQueries({ type })).toEqual([]);
+    }
   });
 
   it("ignores unknown or malformed event types", () => {

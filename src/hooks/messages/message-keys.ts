@@ -2,4 +2,5 @@
 export const messageKeys = {
   all: ["messages"] as const,
   list: (orderId: string) => [...messageKeys.all, "list", orderId] as const,
+  unread: (orderId: string) => [...messageKeys.all, "unread", orderId] as const,
 };

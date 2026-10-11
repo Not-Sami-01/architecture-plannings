@@ -55,6 +55,8 @@ export const ROUTES = {
     root: "/admin",
     orders: "/admin/orders",
     order: (id: string) => `/admin/orders/${id}`,
+    /** Focused workspace: status, drop files, charge, chat (plan 2 P5). */
+    orderProceed: (id: string) => `/admin/orders/${id}/proceed`,
     chats: "/admin/chats",
     chat: (orderId: string) => `/admin/chats/${orderId}`,
     files: "/admin/files",
@@ -125,6 +127,18 @@ export const PAYMENT_METHODS = {
 } as const;
 
 export type PaymentMethod = (typeof PAYMENT_METHODS)[keyof typeof PAYMENT_METHODS];
+
+export const PAYMENT_TYPE_LABELS: Record<PaymentType, string> = {
+  ADVANCE: "Advance payment",
+  FINAL: "Final payment",
+  EXTRA_REVISION: "Extra revision charge",
+};
+
+export const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+  PENDING: "Awaiting payment",
+  PAID: "Paid",
+  REJECTED: "Rejected",
+};
 
 export const REVISION_STATUSES = {
   OPEN: "OPEN",
@@ -201,6 +215,11 @@ export const REALTIME_EVENTS = {
   messageCreated: "message.created",
   messageUpdated: "message.updated",
   messageDeleted: "message.deleted",
+  /** Messages were marked read by the counterpart (refId = order id). */
+  messageRead: "message.read",
+  /** A charge was created / verified (refId = order id). */
+  paymentCreated: "payment.created",
+  paymentUpdated: "payment.updated",
 } as const;
 
 export type RealtimeEventType =
@@ -220,6 +239,8 @@ export const REALTIME_TOKEN_TTL_MS = 60 * 60_000;
 /** Per-order chat limits (FR-26). */
 export const MESSAGES = {
   maxLength: 2000,
+  /** Max message ids accepted in one read-receipt batch. */
+  maxReadBatch: 100,
 } as const;
 
 /**
@@ -328,6 +349,8 @@ export const API_ROUTES = {
   revisions: (id: string) => `/api/orders/${id}/revisions`,
   messages: (id: string) => `/api/orders/${id}/messages`,
   message: (orderId: string, messageId: string) => `/api/orders/${orderId}/messages/${messageId}`,
+  messagesRead: (id: string) => `/api/orders/${id}/messages/read`,
+  messagesUnreadCount: (id: string) => `/api/orders/${id}/messages/unread-count`,
   payments: (id: string) => `/api/orders/${id}/payments`,
   paymentProof: (id: string) => `/api/payments/${id}/proof`,
   filesPresign: "/api/files/presign",
@@ -343,6 +366,7 @@ export const API_ROUTES = {
   adminOrder: (id: string) => `/api/admin/orders/${id}`,
   adminQuote: (id: string) => `/api/admin/orders/${id}/quote`,
   adminOrderStatus: (id: string) => `/api/admin/orders/${id}/status`,
+  adminOrderPayments: (id: string) => `/api/admin/orders/${id}/payments`,
   adminDrafts: (id: string) => `/api/admin/orders/${id}/drafts`,
   adminFinals: (id: string) => `/api/admin/orders/${id}/finals`,
   adminNotes: (id: string) => `/api/admin/orders/${id}/notes`,

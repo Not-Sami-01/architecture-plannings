@@ -14,6 +14,11 @@ export type MessageAttachment = {
   size: number;
 };
 
+export type MessageReadReceipt = {
+  readerId: string;
+  readAt: string;
+};
+
 export type MessageItem = {
   id: string;
   body: string;
@@ -22,6 +27,8 @@ export type MessageItem = {
   createdAt: string;
   sender: { id: string; name: string | null; role: "CLIENT" | "ADMIN" };
   attachments: MessageAttachment[];
+  /** Read receipts: who has seen this message and when (plan 2 P2). */
+  reads: MessageReadReceipt[];
 };
 
 /** GET /api/orders/:id/messages — chronological thread (no internal notes for clients). */

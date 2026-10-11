@@ -2,6 +2,7 @@ import { REALTIME_EVENTS } from "@/config/constants";
 import { orderKeys } from "@/hooks/orders/order-keys";
 import { adminOrderKeys } from "@/hooks/orders/admin-order-keys";
 import { messageKeys } from "@/hooks/messages/message-keys";
+import { paymentKeys } from "@/hooks/payments/payment-keys";
 
 /** Id-only ping as it arrives over the wire. */
 export type RealtimePing = {
@@ -24,9 +25,21 @@ export function realtimeEventQueries(
     // Admin list (and stats later) react to a brand-new submission.
     case REALTIME_EVENTS.orderCreated:
       return [adminOrderKeys.all];
-    // New message in a thread (refId is the order/thread id).
+    // New message in a thread (refId is the order/thread id): the thread and
+    // both parties' unread badges change.
     case REALTIME_EVENTS.messageCreated:
+    case REALTIME_EVENTS.messageRead:
+      return event.refId
+        ? [messageKeys.list(event.refId), messageKeys.unread(event.refId)]
+        : [];
+    // Edits/deletes only change the thread itself.
+    case REALTIME_EVENTS.messageUpdated:
+    case REALTIME_EVENTS.messageDeleted:
       return event.refId ? [messageKeys.list(event.refId)] : [];
+    // A charge was created or decided: payment lists + both order views.
+    case REALTIME_EVENTS.paymentCreated:
+    case REALTIME_EVENTS.paymentUpdated:
+      return [paymentKeys.all, orderKeys.all, adminOrderKeys.all];
     default:
       return [];
   }

@@ -291,6 +291,8 @@ If the free limit is exceeded, the response is `409 REVISION_LIMIT_REACHED` with
 |--------|------|--------|-------------|
 | GET | `/api/orders/:id/messages` | client/admin | List messages (clients never see `internal`) |
 | POST | `/api/orders/:id/messages` | client/admin | Send message |
+| POST | `/api/orders/:id/messages/read` | client/admin | Mark messages read (`{ "messageIds": [...] }`, max 100) |
+| GET | `/api/orders/:id/messages/unread-count` | client/admin | `{ "count": 3 }` — counterpart messages without a read row |
 | PATCH | `/api/orders/:id/messages/:messageId` | client(own)/admin | Edit message — sets `editedAt` |
 | DELETE | `/api/orders/:id/messages/:messageId` | client(own)/admin | Delete message + purges attachments (rows and storage objects) |
 
@@ -306,32 +308,64 @@ sender. Clients may edit/delete only their own non-internal messages (others
 404); admins may moderate any message in any thread. Realtime pings
 `message.updated` / `message.deleted` on edits and deletes.
 
+**Read receipts.** Every message in the list response carries
+`reads: { readerId, readAt }[]` (selected server-side). `POST …/messages/read`
+writes a `MessageRead` row per **counterpart, visible** message
+(`skipDuplicates` — own messages and, for clients, internal notes are skipped),
+returns `{ "marked": 12 }`, and pings `message.read` only when something new
+was written. `unread-count` powers the sidebar badge; the same event name
+invalidates both the thread list and the count.
+
+```json
+// POST /api/orders/ord_1/messages/read
+{ "messageIds": ["msg_1", "msg_2"] }
+// 200
+{ "data": { "marked": 2 } }
+```
+
 ---
 
 ## 7. Payments
 
+Manual payment-request flow (plan 2 P4): the **admin** creates a charge, the
+client uploads a transfer proof, the admin verifies. Statuses never move on
+their own — that stays on the status machine (`POST /api/admin/orders/:id/status`).
+
 | Method | Path | Access | Description |
 |--------|------|--------|-------------|
-| GET | `/api/orders/:id/payments` | client/admin | List payments |
-| POST | `/api/orders/:id/payments` | client | Start a payment (`ADVANCE` or `FINAL`) |
-| POST | `/api/payments/:id/proof` | client | Attach proof file (manual transfers) |
-| PATCH | `/api/admin/payments/:id` | admin | Verify or reject |
-| POST | `/api/webhooks/payments` | public (signed) | Gateway webhook |
+| GET | `/api/orders/:id/payments` | client/admin | List payments (stranger → 404) |
+| POST | `/api/admin/orders/:id/payments` | admin | Create a charge (`createPaymentSchema`: `amount` int minor-units, `type`, optional `note`) |
+| POST | `/api/payments/:id/proof` | client(own)/admin | Attach proof file (`{ "fileId": "…" }` — confirmed `PAYMENT_PROOF` upload by the caller on that order) |
+| PATCH | `/api/admin/payments/:id` | admin | Verify or reject (`{ "status": "PAID" \| "REJECTED", "note"? }`) |
+| POST | `/api/webhooks/payments` | public (signed) | Gateway webhook (deferred — no gateway yet) |
 
 ```json
-// POST /api/orders/ord_1/payments
-{ "type": "ADVANCE", "method": "BANK_TRANSFER" }
-// 201
+// POST /api/admin/orders/ord_1/payments
+{ "amount": 250000, "type": "ADVANCE", "note": "Transfer to account X, then upload the slip" }
+// 201 — paymentSelect shape
 {
   "data": {
-    "id": "pay_1", "amount": 10000, "status": "PENDING",
-    "instructions": { "bank": "Bank Name", "account": "000000", "reference": "AP-2026-0042" }
+    "id": "pay_1", "type": "ADVANCE", "amount": 250000, "status": "PENDING",
+    "note": "…", "createdAt": "…", "updatedAt": "…", "proofFile": null
   }
 }
 ```
+
+Rules:
+- One `PENDING` payment per `(order, type)` — a second create → **409**.
+- Each create/verify writes a same-status `OrderEvent` note, so the timeline
+  shows charges next to status changes.
+- A verified **FINAL** payment sets `order.finalPaymentVerified = true`, which
+  unlocks FINAL downloads server-side; the order status itself only moves when
+  the admin changes it on the proceed page.
+- Rejecting a proof attachment: wrong kind, foreign file, unconfirmed upload or
+  already attached → **400**.
+- Realtime: `payment.created` / `payment.updated` pings keep the client's
+  charges card and the admin's proceed page in sync.
+
 ```json
 // PATCH /api/admin/payments/pay_1
-{ "status": "PAID" }          // or { "status": "REJECTED", "reason": "Amount mismatch" }
+{ "status": "PAID" }          // or { "status": "REJECTED", "note": "Amount mismatch" }
 ```
 
 **Webhook rules:** verify the signature header with `PAYMENT_WEBHOOK_SECRET`; process idempotently using the provider event id; return `200` quickly; never trust client-supplied amounts.
@@ -440,26 +474,16 @@ Ably delivers **id-only pings** that tell subscribed browsers which query keys t
 |--------|------|--------|-------------|
 | POST | `/api/realtime/token` | authenticated | `{ data: { enabled, tokenRequest } }` — signed Ably `TokenRequest` (single use, 60 min TTL, subscribe-only capability on `user:{id}` and, for admins, `role:admin`). `enabled: false` when realtime is not configured. |
 
-Client events (`REALTIME_EVENTS` in `constants.ts`): `quote.sent` / `order.status_changed` invalidate `orderKeys` + `adminOrderKeys`; `order.created` invalidates `adminOrderKeys`; `message.created` / `message.updated` / `message.deleted` invalidate that thread's `messageKeys`. The browser SDK renews its token through the same endpoint (Ably `authCallback`).
+Client events (`REALTIME_EVENTS` in `constants.ts`): `quote.sent` / `order.status_changed` invalidate `orderKeys` + `adminOrderKeys`; `order.created` invalidates `adminOrderKeys`; `message.created` / `message.updated` / `message.deleted` invalidate that thread's `messageKeys`; `message.read` invalidates that thread's `messageKeys` + the unread count; `payment.created` / `payment.updated` invalidate the thread's `paymentKeys` (and on a verified FINAL payment, the order keys, so the download gate flips live). The browser SDK renews its token through the same endpoint (Ably `authCallback`).
 
 ---
 
 ## Server Actions (UI mutations)
 
-> **Superseded for the client UI:** per `RULES.md`, UI reads and mutations go through feature hooks (TanStack Query) that call the `api` util, which hits the route handlers above. Server Actions are not the default and need explicit approval.
-
-Prefer Server Actions inside the app for form submissions; they call the same service layer (`src/lib/orders/*`) as the route handlers.
-
-| Action | File | Used by |
-|--------|------|---------|
-| `createOrder` | `actions/orders.ts` | Order form |
-| `requestRevision` | `actions/revisions.ts` | Order detail |
-| `sendMessage` | `actions/messages.ts` | Message thread |
-| `updateOrderStatus` | `actions/admin-orders.ts` | Admin order page |
-| `verifyPayment` | `actions/admin-payments.ts` | Admin payments |
-| `savePortfolioProject` | `actions/admin-portfolio.ts` | Portfolio CMS |
-
-Every action must: (1) check the session and role, (2) validate input with Zod, (3) check resource ownership, (4) call the service layer, (5) `revalidatePath` where needed.
+> **Superseded:** per `RULES.md`, UI reads and mutations go through feature hooks
+> (TanStack Query) that call the `api` util, which hits the route handlers above.
+> No Server Actions remain — the table of historical names is kept only as a
+> pointer to their service-layer replacements in `src/lib/`.
 
 ---
 

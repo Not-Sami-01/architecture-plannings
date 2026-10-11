@@ -32,6 +32,8 @@ const messageSelect = {
   attachments: {
     select: { id: true, filename: true, mime: true, size: true },
   },
+  // Read receipts: which readers have seen this message and when.
+  reads: { select: { readerId: true, readAt: true } },
 } as const;
 
 /** Chronological thread; clients never see internal admin notes. */
@@ -207,4 +209,62 @@ export async function deleteMessage(user: ApiUser, orderId: string, messageId: s
   });
 
   pingThread(order.userId, user.role, REALTIME_EVENTS.messageDeleted, order.id);
+}
+
+/**
+ * Marks the counterpart's messages as read by this user (plan 2 P2).
+ * Foreign ids, own messages and messages the reader cannot see (clients and
+ * internal notes) are silently dropped — never a 404, so probing cannot map
+ * a thread. Idempotent via the (messageId, readerId) unique pair; the ping
+ * only fires when rows were actually created.
+ */
+export async function markMessagesRead(user: ApiUser, orderId: string, messageIds: string[]) {
+  const order = await requireThreadAccess(user, orderId);
+  if (messageIds.length === 0) return { marked: 0 };
+
+  const isAdmin = user.role === ROLES.ADMIN;
+  const messages = await prisma.message.findMany({
+    where: { id: { in: messageIds }, orderId },
+    select: { id: true, senderId: true, internal: true },
+  });
+
+  const eligible = messages.filter(
+    (message) =>
+      message.senderId !== user.id &&
+      // Readers may only mark what they can see (clients never see internal).
+      (isAdmin || !message.internal),
+  );
+  if (eligible.length === 0) return { marked: 0 };
+
+  const result = await prisma.messageRead.createMany({
+    data: eligible.map((message) => ({ messageId: message.id, readerId: user.id })),
+    skipDuplicates: true,
+  });
+
+  if (result.count > 0) {
+    const event = { type: REALTIME_EVENTS.messageRead, refId: order.id };
+    if (isAdmin) {
+      void publishUserEvent(order.userId, event);
+    } else {
+      void publishAdminsEvent(event);
+    }
+  }
+
+  return { marked: result.count };
+}
+
+/** Unread badge: counterpart messages this user has no read receipt for. */
+export async function countUnreadMessages(user: ApiUser, orderId: string) {
+  await requireThreadAccess(user, orderId);
+
+  const count = await prisma.message.count({
+    where: {
+      orderId,
+      senderId: { not: user.id },
+      ...(user.role === ROLES.ADMIN ? {} : { internal: false }),
+      reads: { none: { readerId: user.id } },
+    },
+  });
+
+  return { count };
 }

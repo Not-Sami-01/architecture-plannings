@@ -34,3 +34,15 @@ export const messageUpdateSchema = z.object({
 });
 
 export type MessageUpdateInput = z.infer<typeof messageUpdateSchema>;
+
+/** POST /api/orders/:id/messages/read — bulk read receipts (plan 2 P2). */
+export const markReadSchema = z.object({
+  messageIds: z
+    .array(z.string().cuid2())
+    .min(1, { message: "No messages to mark." })
+    .max(MESSAGES.maxReadBatch, {
+      message: `Up to ${MESSAGES.maxReadBatch} messages per read receipt.`,
+    }),
+});
+
+export type MarkReadInput = z.infer<typeof markReadSchema>;

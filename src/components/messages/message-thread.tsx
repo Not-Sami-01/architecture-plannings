@@ -7,6 +7,7 @@ import { useSendMessage } from "@/hooks/messages/use-send-message";
 import { useUpdateMessage } from "@/hooks/messages/use-update-message";
 import { useDeleteMessage } from "@/hooks/messages/use-delete-message";
 import { useChatAttachments } from "@/hooks/messages/use-chat-attachments";
+import { useMarkMessagesRead } from "@/hooks/messages/use-mark-messages-read";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { MessageItem } from "@/hooks/messages/use-messages";
@@ -17,17 +18,25 @@ import { MessageInput } from "./message-input";
 
 type MessageThreadProps = {
   orderId: string;
-  /** Admins get the internal-note toggle; clients never do. */
+  /** Admins get the internal-note toggle in the composer. */
   allowInternal?: boolean;
+  /** The wrapper (e.g. CollapsibleChat) renders its own header bar. */
+  hideHeader?: boolean;
 };
 
-export function MessageThread({ orderId, allowInternal = false }: MessageThreadProps) {
+export function MessageThread({
+  orderId,
+  allowInternal = false,
+  hideHeader = false,
+}: MessageThreadProps) {
   const session = useSession();
+  const myId = session.data?.id;
   const isAdmin = session.data?.role === "ADMIN";
   const { data: messages, loadings, query: messagesQuery } = useMessages(orderId);
   const sendMessage = useSendMessage(orderId);
   const updateMessage = useUpdateMessage(orderId);
   const deleteMessage = useDeleteMessage(orderId);
+  const markRead = useMarkMessagesRead(orderId);
   const attachments = useChatAttachments(orderId, Boolean(isAdmin));
   const [editing, setEditing] = useState<MessageItem | null>(null);
   const [editBody, setEditBody] = useState("");
@@ -38,6 +47,25 @@ export function MessageThread({ orderId, allowInternal = false }: MessageThreadP
     const list = listRef.current;
     if (list) list.scrollTop = list.scrollHeight;
   }, [messages.length]);
+
+  // Read receipts (plan 2 P2): opening the thread (and every arriving batch)
+  // marks the counterpart's visible messages read and pings the other side.
+  const mark = markRead.actions.mark;
+  useEffect(() => {
+    if (!myId || messages.length === 0) return;
+    const unreadIds = messages
+      .filter(
+        (message) =>
+          message.sender.id !== myId &&
+          (isAdmin || !message.internal) &&
+          !message.reads.some((receipt) => receipt.readerId === myId),
+      )
+      .map((message) => message.id);
+    if (unreadIds.length === 0) return;
+    void mark(unreadIds).catch(() => {
+      // Receipts are best-effort — the thread still works without them.
+    });
+  }, [messages, myId, isAdmin, mark]);
 
   if (loadings.loading) {
     return (
@@ -78,14 +106,19 @@ export function MessageThread({ orderId, allowInternal = false }: MessageThreadP
     }
   };
 
+  const deletingId =
+    deleteMessage.loadings.deleting ? deleteMessage.query.variables?.messageId : undefined;
+
   return (
     <section aria-label="Messages" className="rounded-xl border">
-      <header className="border-b px-4 py-3">
-        <h2 className="text-sm font-semibold">Messages</h2>
-        <p className="text-xs text-muted-foreground">
-          Ask questions or share feedback about this order.
-        </p>
-      </header>
+      {hideHeader ? null : (
+        <header className="border-b px-4 py-3">
+          <h2 className="text-sm font-semibold">Messages</h2>
+          <p className="text-xs text-muted-foreground">
+            Ask questions or share feedback about this order.
+          </p>
+        </header>
+      )}
 
       {messages.length === 0 ? (
         <div className="p-4">
@@ -102,10 +135,14 @@ export function MessageThread({ orderId, allowInternal = false }: MessageThreadP
           className="flex max-h-96 flex-col gap-4 overflow-y-auto p-4"
         >
           {messages.map((message) => {
-            const isOwn = message.sender.id === session.data?.id;
+            const isOwn = message.sender.id === myId;
             // Moderation: admins edit/delete any; clients edit/delete their own.
             const canModerate = Boolean(isAdmin) || (isOwn && !message.internal);
             const isEditing = editing?.id === message.id;
+            // Own messages carry the counterpart's receipt for the seen tick.
+            const seenBy = isOwn
+              ? (message.reads.find((receipt) => receipt.readerId !== myId) ?? null)
+              : null;
 
             return isEditing ? (
               <li key={message.id} className="flex flex-col gap-2 self-stretch">
@@ -139,8 +176,9 @@ export function MessageThread({ orderId, allowInternal = false }: MessageThreadP
                 key={message.id}
                 message={message}
                 isOwn={isOwn}
-                showSender={allowInternal}
+                seenBy={seenBy}
                 canModerate={canModerate}
+                deleting={deletingId === message.id}
                 onEdit={(target) => {
                   setEditing(target);
                   setEditBody(target.body);
@@ -167,10 +205,8 @@ export function MessageThread({ orderId, allowInternal = false }: MessageThreadP
           add: (files) => attachments.actions.add(files),
           remove: (key) => attachments.actions.remove(key),
           clear: () => attachments.actions.clear(),
-          uploadAll: async () => {
-            await attachments.actions.uploadAll();
-            return [];
-          },
+          // Must return the uploaded ids — MessageInput forwards them as fileIds.
+          uploadAll: () => attachments.actions.uploadAll(),
         }}
       />
     </section>

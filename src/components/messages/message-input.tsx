@@ -90,9 +90,16 @@ export function MessageInput({ onSend, sending, allowInternal = false, attachmen
         id="message-body"
         value={body}
         onChange={(event) => setBody(event.target.value)}
+        onKeyDown={(event) => {
+          // Ctrl/Cmd + Enter sends; plain Enter stays a newline.
+          if (event.key === "Enter" && (event.ctrlKey || event.metaKey)) {
+            event.preventDefault();
+            if (canSend) event.currentTarget.form?.requestSubmit();
+          }
+        }}
         maxLength={MESSAGES.maxLength}
         rows={2}
-        placeholder="Write a message…"
+        placeholder="Write a message… (Ctrl + Enter to send)"
         className="resize-none"
       />
       <div className="flex items-center justify-between gap-2">

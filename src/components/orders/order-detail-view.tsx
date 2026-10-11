@@ -7,6 +7,7 @@ import { formatMoney } from "@/lib/format";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import { OrderActions } from "@/components/orders/order-actions";
 import { OrderDeliverables } from "@/components/orders/order-deliverables";
+import { PaymentCard } from "@/components/payments/payment-card";
 import { MessageThread } from "@/components/messages/message-thread";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -92,6 +93,9 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
         advancePercent={order.advancePercent}
         quoteMessage={order.quoteMessage}
       />
+
+      {/* Renders nothing until the designer requests a charge (plan 2 P4). */}
+      <PaymentCard orderId={order.id} />
 
       <Section title="Package">
         <Row label="Package" value={order.package.name} />
