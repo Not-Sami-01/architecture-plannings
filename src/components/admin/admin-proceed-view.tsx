@@ -8,6 +8,11 @@ import { formatMoney } from "@/lib/format";
 import { useAdminOrderDetail } from "@/hooks/orders/use-admin-order-detail";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import { AdminPaymentsList } from "@/components/admin/admin-payments-list";
+import { AdminRevisionsCard } from "@/components/admin/admin-revisions-card";
+import {
+  DeliverDraftDialog,
+  RegisterFinalsDialog,
+} from "@/components/admin/deliver-draft-dialog";
 import { OrderDetailTimeline } from "@/components/admin/order-detail-timeline";
 import { OrderDetailUploads } from "@/components/admin/order-detail-uploads";
 import { ProceedDialog } from "@/components/admin/proceed-dialog";
@@ -76,14 +81,19 @@ export function AdminProceedView({ orderId }: AdminProceedViewProps) {
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {order.user.name ?? "No name"} · {order.user.email} · {order.package.name} ·{" "}
-            {formatMoney(order.package.price)}
+            {formatMoney(order.package.price, order.currency)}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <OrderStatusBadge status={order.status} />
+          {order.status === "IN_DESIGN" ? (
+            <DeliverDraftDialog order={order} />
+          ) : null}
+          <RegisterFinalsDialog order={order} />
           <ProceedDialog
             orderId={order.id}
             packagePrice={order.package.price}
+            currency={order.currency}
             status={order.status as OrderStatus}
           />
         </div>
@@ -101,7 +111,20 @@ export function AdminProceedView({ orderId }: AdminProceedViewProps) {
           <section className="rounded-xl border p-4">
             <p className="text-xs text-muted-foreground">Charges</p>
             <div className="mt-3">
-              <AdminPaymentsList orderId={order.id} />
+              <AdminPaymentsList orderId={order.id} currency={order.currency} />
+            </div>
+          </section>
+
+          <section className="rounded-xl border p-4">
+            <p className="text-xs text-muted-foreground">Revisions</p>
+            <div className="mt-3">
+              <AdminRevisionsCard
+                orderId={order.id}
+                currency={order.currency}
+                packagePrice={order.package.price}
+                orderStatus={order.status}
+                revisions={order.revisions}
+              />
             </div>
           </section>
 

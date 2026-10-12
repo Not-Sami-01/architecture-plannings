@@ -267,13 +267,13 @@ Uploads go **directly to storage** using presigned URLs, then are registered.
 
 ---
 
-## 5. Revisions
+## 5. Revisions (plan 3)
 
 | Method | Path | Access | Description |
 |--------|------|--------|-------------|
-| POST | `/api/orders/:id/revisions` | client | Request a revision |
-| GET | `/api/orders/:id/revisions` | client/admin | List revisions |
-| PATCH | `/api/admin/revisions/:id` | admin | Mark done / accept |
+| POST | `/api/orders/:id/revisions` | client(own) | Request a revision. Only from `DRAFT_DELIVERED` (else `409 INVALID_TRANSITION`). Up to 5 confirmed own `REVISION_REF` files. |
+| GET | `/api/orders/:id/revisions` | client(own)/admin | Revision thread incl. files + per-order `extraFeePaid` flag |
+| PATCH | `/api/admin/revisions/:id` | admin | `{ "action": "accept" }` — `REVISION_REQUESTED → IN_DESIGN` via the machine; stamps `acceptedAt/ById`; extra-fee revisions stay 409 until an `EXTRA_REVISION` payment is PAID (details: `{ paymentStatus }`) |
 
 ```json
 // POST /api/orders/ord_1/revisions
@@ -281,7 +281,7 @@ Uploads go **directly to storage** using presigned URLs, then are registered.
 // 201
 { "data": { "id": "rev_1", "number": 2, "status": "OPEN", "extraFeeRequired": false } }
 ```
-If the free limit is exceeded, the response is `409 REVISION_LIMIT_REACHED` with an `extraFee` in `details`, and the client can confirm the paid revision.
+When the package's free limit is used up the request is **still recorded** with `extraFeeRequired: true` and the order moves to `REVISION_REQUESTED` (PRD FR-21); acceptance is refused until the admin charges and verifies an `EXTRA_REVISION` payment (plan 3 decision 1). Re-delivering a draft auto-closes OPEN revisions.
 
 ---
 
@@ -383,8 +383,8 @@ Rules:
 | POST | `/api/admin/orders/:id/take` | admin | `{ "take": true \| false }` — assign the current admin to the order, or release (`null`). Not a status change; no OrderEvent. |
 | POST | `/api/admin/orders/:id/quote` | admin | Send quote |
 | POST | `/api/admin/orders/:id/status` | admin | Change status (validated) |
-| POST | `/api/admin/orders/:id/drafts` | admin | Register draft (triggers watermark job) |
-| POST | `/api/admin/orders/:id/finals` | admin | Register final files |
+| POST | `/api/admin/orders/:id/drafts` | admin | Deliver the draft — `{ "fileIds": [...] }` (confirmed admin `DRAFT_PREVIEW/DRAFT_ORIGINAL`, ≥1) + optional note; machine `IN_DESIGN → DRAFT_DELIVERED`; auto-closes OPEN revisions in the same transaction. No watermark job (plan 1 decision 4). |
+| POST | `/api/admin/orders/:id/finals` | admin | Register final files — `{ "fileIds": [...] }` (confirmed admin `FINAL`, ≥1, from `IN_DESIGN` onward); **no status change**, client downloads stay gated on `finalPaymentVerified` |
 | POST | `/api/admin/orders/:id/notes` | admin | Add internal note |
 | GET | `/api/admin/stats` | admin | Dashboard stats |
 
@@ -396,17 +396,24 @@ Rules:
 ```
 
 ```json
-// GET /api/admin/stats
+// GET /api/admin/stats (plan 3 §8b)
 {
   "data": {
-    "revenueThisMonth": 180000,
-    "revenueAllTime": 940000,
-    "ordersThisMonth": 12,
-    "byStatus": { "SUBMITTED": 3, "IN_DESIGN": 5, "DRAFT_DELIVERED": 2 },
-    "awaitingAction": 6
+    "statusCounts": { "SUBMITTED": 3, "IN_DESIGN": 5, "DRAFT_DELIVERED": 2, "CANCELLED": 0 },
+    "revenue": { "totalPaid": 940000, "advancePaid": 300000, "finalPaid": 515000, "extraRevisionPaid": 125000, "thisMonthPaid": 180000 },
+    "needsAttention": { "submitted": 3, "awaitingAdvance": 1, "inDesign": 5, "draftDelivered": 2, "awaitingFinalPayment": 1, "pendingPayments": 2, "openRevisions": 1 },
+    "recentOrders": [{ "id": "ord_1", "number": "AP-2026-0009", "status": "SUBMITTED", "createdAt": "2026-10-07T10:00:00.000Z", "clientName": "Sami", "clientEmail": "sami@example.com", "packagePrice": 10000, "currency": "PKR" }],
+    "avgRevisionsPerCompletedOrder": 1.3
   }
 }
 ```
+
+### 8b. Admin Settings (plan 3 §8c)
+
+| Method | Path | Access | Description |
+|--------|------|--------|-------------|
+| GET | `/api/settings` | public (rate-limited) | `{ "data": { "currency": "PKR" } }` — live site setting |
+| PATCH | `/api/admin/settings` | admin | `{ "currency": "USD" }` — allow-listed (`SUPPORTED_CURRENCIES`); relabel-only, amounts are never converted; in-flight orders keep their `Order.currency` snapshot; publishes `settings.updated` |
 
 ---
 
@@ -474,7 +481,7 @@ Ably delivers **id-only pings** that tell subscribed browsers which query keys t
 |--------|------|--------|-------------|
 | POST | `/api/realtime/token` | authenticated | `{ data: { enabled, tokenRequest } }` — signed Ably `TokenRequest` (single use, 60 min TTL, subscribe-only capability on `user:{id}` and, for admins, `role:admin`). `enabled: false` when realtime is not configured. |
 
-Client events (`REALTIME_EVENTS` in `constants.ts`): `quote.sent` / `order.status_changed` invalidate `orderKeys` + `adminOrderKeys`; `order.created` invalidates `adminOrderKeys`; `message.created` / `message.updated` / `message.deleted` invalidate that thread's `messageKeys`; `message.read` invalidates that thread's `messageKeys` + the unread count; `payment.created` / `payment.updated` invalidate the thread's `paymentKeys` (and on a verified FINAL payment, the order keys, so the download gate flips live). The browser SDK renews its token through the same endpoint (Ably `authCallback`).
+Client events (`REALTIME_EVENTS` in `constants.ts`): `quote.sent` / `order.status_changed` invalidate `orderKeys` + `adminOrderKeys` + admin stats; `order.created` invalidates `adminOrderKeys` + stats; `message.created` / `message.updated` / `message.deleted` invalidate that thread's `messageKeys`; `message.read` invalidates that thread's `messageKeys` + the unread count; `payment.created` / `payment.updated` invalidate the thread's `paymentKeys` + order keys + stats; `revision.requested` / `revision.accepted` / `draft.delivered` / `finals.registered` invalidate both parties' order keys + stats; `settings.updated` invalidates the settings key so every open tab re-renders money labels. The browser SDK renews its token through the same endpoint (Ably `authCallback`).
 
 ---
 

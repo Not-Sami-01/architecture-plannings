@@ -41,7 +41,7 @@ async function requireAdmin(user: ApiUser) {
 async function requireOrder(orderId: string) {
   const order = await prisma.order.findUnique({
     where: { id: orderId },
-    select: { id: true, userId: true, status: true },
+    select: { id: true, userId: true, status: true, currency: true },
   });
   if (!order) throw ApiError.notFound();
   return order;
@@ -63,7 +63,7 @@ export async function createOrderPayment(user: ApiUser, orderId: string, input: 
   }
 
   const label = PAYMENT_TYPE_LABELS[input.type as PaymentType];
-  const eventNote = `Charge created: ${label} — ${formatMoney(input.amount)}`;
+  const eventNote = `Charge created: ${label} — ${formatMoney(input.amount, order.currency)}`;
 
   const payment = await prisma.$transaction(async (tx) => {
     const created = await tx.payment.create({
@@ -176,7 +176,7 @@ export async function verifyPayment(user: ApiUser, paymentId: string, input: Ver
       type: true,
       amount: true,
       status: true,
-      order: { select: { status: true, userId: true } },
+      order: { select: { status: true, userId: true, currency: true } },
     },
   });
   if (!payment) throw ApiError.notFound();
@@ -187,8 +187,8 @@ export async function verifyPayment(user: ApiUser, paymentId: string, input: Ver
   const label = PAYMENT_TYPE_LABELS[payment.type as PaymentType];
   const eventNote =
     input.status === PAYMENT_STATUSES.PAID
-      ? `Payment verified: ${label} — ${formatMoney(payment.amount)}`
-      : `Payment rejected: ${label} — ${formatMoney(payment.amount)}${input.note ? ` · ${input.note}` : ""}`;
+      ? `Payment verified: ${label} — ${formatMoney(payment.amount, payment.order.currency)}`
+      : `Payment rejected: ${label} — ${formatMoney(payment.amount, payment.order.currency)}${input.note ? ` · ${input.note}` : ""}`;
 
   const updated = await prisma.$transaction(async (tx) => {
     const result = await tx.payment.update({

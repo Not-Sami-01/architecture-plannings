@@ -14,6 +14,7 @@ import {
 } from "@/content/services";
 import { listActivePackages } from "@/lib/packages";
 import { formatMoney } from "@/lib/format";
+import { getSiteSettings } from "@/lib/settings";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { Breadcrumbs } from "@/components/common/breadcrumbs";
 import { ClosingCta } from "@/components/common/closing-cta";
@@ -34,7 +35,10 @@ const CROSS = "✘";
 
 export default async function ServicesPage() {
   // null = fetch failed (distinct from a legitimately empty package list).
-  const packages = await listActivePackages().catch(() => null);
+  const [packages, { currency }] = await Promise.all([
+    listActivePackages().catch(() => null),
+    getSiteSettings(),
+  ]);
 
   return (
     <main>
@@ -125,7 +129,7 @@ export default async function ServicesPage() {
                 </th>
                 {packages.map((pkg) => (
                   <td key={pkg.slug} className="px-4 py-3 font-medium text-foreground">
-                    {formatMoney(pkg.price)}
+                    {formatMoney(pkg.price, currency)}
                   </td>
                 ))}
               </tr>

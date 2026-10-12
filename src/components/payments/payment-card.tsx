@@ -18,6 +18,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 type PaymentCardProps = {
   orderId: string;
+  /** Order currency snapshot (plan 3). */
+  currency: string;
 };
 
 function StatusDot({ status }: { status: PaymentSummary["status"] }) {
@@ -35,7 +37,7 @@ function StatusDot({ status }: { status: PaymentSummary["status"] }) {
  * client upload a transfer proof, and reflects the verification state live.
  * Renders nothing while the order has no payments.
  */
-export function PaymentCard({ orderId }: PaymentCardProps) {
+export function PaymentCard({ orderId, currency }: PaymentCardProps) {
   const payments = useOrderPayments(orderId);
   const proofUpload = useUploadPaymentProof(orderId);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -77,7 +79,7 @@ export function PaymentCard({ orderId }: PaymentCardProps) {
                   </span>
                 </div>
                 <span className="text-base font-semibold tabular-nums">
-                  {formatMoney(payment.amount)}
+                  {formatMoney(payment.amount, currency)}
                 </span>
               </div>
 

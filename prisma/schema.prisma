@@ -29,6 +29,7 @@ model User {
   verifiedPayments Payment[] @relation("VerifiedPayments")
   messages     Message[]
   messageReads MessageRead[]
+  acceptedRevisions Revision[] @relation("AcceptedRevisions")
   testimonials Testimonial[]
 
   @@index([role])
@@ -52,6 +53,16 @@ model Package {
   orders Order[]
 
   @@index([active, sortOrder])
+}
+
+// ---------- App settings (plan 3) ----------
+// Key/value store for admin-changeable app config. Keys live in
+// SETTINGS_KEYS (constants.ts); values are validated in src/lib/settings.ts.
+
+model SiteSetting {
+  key       String   @id
+  value     String
+  updatedAt DateTime @updatedAt
 }
 
 model PortfolioProject {
@@ -107,6 +118,10 @@ model Order {
   advancePercent Int     @default(40)
   quoteMessage   String?
   quotedAt       DateTime?
+
+  // Currency snapshot at creation (plan 3): display currency for this order's
+  // money (quote, payments). Never rewritten when the site currency changes.
+  currency String
 
   // Assignment (plan Phase D1): the admin who "took" the order.
   assignedToId String?
@@ -182,12 +197,19 @@ model Revision {
   number    Int
   message   String
   status    RevisionStatus @default(OPEN)
-  createdAt DateTime       @default(now())
+  // Beyond the package's free limit: admin quotes an EXTRA_REVISION charge;
+  // acceptRevision refuses until that payment is PAID (plan 3, PRD FR-21).
+  extraFeeRequired Boolean   @default(false)
+  acceptedAt       DateTime?
+  acceptedById     String?
+  createdAt        DateTime  @default(now())
 
-  order Order       @relation(fields: [orderId], references: [id])
-  files OrderFile[]
+  order       Order  @relation(fields: [orderId], references: [id])
+  acceptedBy  User?  @relation("AcceptedRevisions", fields: [acceptedById], references: [id])
+  files       OrderFile[]
 
   @@unique([orderId, number])
+  @@index([orderId])
 }
 
 model Payment {

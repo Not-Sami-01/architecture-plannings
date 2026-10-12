@@ -26,7 +26,7 @@ type ProceedDropFilesProps = {
 };
 
 const DROP_KINDS: { kind: FileKind; label: string }[] = [
-  { kind: FILE_KINDS.DRAFT_PREVIEW, label: "Draft preview (watermarked)" },
+  { kind: FILE_KINDS.DRAFT_PREVIEW, label: "Draft preview" },
   { kind: FILE_KINDS.DRAFT_ORIGINAL, label: "Draft original" },
   { kind: FILE_KINDS.FINAL, label: "Final drawings" },
   { kind: FILE_KINDS.REVISION_REF, label: "Revision reference" },

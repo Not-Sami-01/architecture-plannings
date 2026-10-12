@@ -124,3 +124,28 @@ export const statusChangeSchema = z.object({
 });
 
 export type StatusChangeInput = z.infer<typeof statusChangeSchema>;
+
+/** POST /api/admin/orders/:id/drafts (plan 3 P3). */
+export const registerDraftSchema = z.object({
+  fileIds: z
+    .array(z.string().min(1))
+    .min(1, "Pick at least one draft file.")
+    .max(20),
+  note: z
+    .string()
+    .trim()
+    .max(1000, "Keep the delivery note under 1000 characters.")
+    .optional(),
+});
+
+export type RegisterDraftInput = z.infer<typeof registerDraftSchema>;
+
+/** POST /api/admin/orders/:id/finals (plan 3 P3). */
+export const registerFinalsSchema = z.object({
+  fileIds: z
+    .array(z.string().min(1))
+    .min(1, "Pick at least one final file.")
+    .max(50),
+});
+
+export type RegisterFinalsInput = z.infer<typeof registerFinalsSchema>;

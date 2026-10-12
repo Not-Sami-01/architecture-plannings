@@ -3,7 +3,7 @@
 import { BadgeCheckIcon, CheckIcon } from "lucide-react";
 import { useWatch } from "react-hook-form";
 
-import { formatMoney } from "@/lib/format";
+import { useMoney } from "@/hooks/settings/use-money";
 import {
   Card,
   CardContent,
@@ -35,6 +35,7 @@ export function OrderFormStepPackage({
   // React Compiler memoizes `form.watch()` on the stable `form` identity, so it
   // would never update (facebook/react#29144). `useWatch` subscribes via state.
   const selected = useWatch({ control: form.control, name: "packageId" });
+  const money = useMoney();
 
   if (loading) {
     return (
@@ -104,7 +105,7 @@ export function OrderFormStepPackage({
             </CardHeader>
             <CardContent className="flex flex-col gap-3">
               <p className="text-2xl font-semibold tracking-tight">
-                {formatMoney(pkg.price)}
+                {money(pkg.price)}
               </p>
               <ul className="flex flex-col gap-1.5 text-sm">
                 {pkg.deliverables.map((deliverable) => (

@@ -30,9 +30,22 @@ export type ClientOrderDetail = {
   totalPrice: number | null;
   advancePercent: number;
   quoteMessage: string | null;
+  currency: string;
+  revisionCount: number;
   createdAt: string;
   package: { name: string; revisionLimit: number };
   files: { id: string; filename: string; mime: string; size: number; kind: string }[];
+  revisions: {
+    id: string;
+    number: number;
+    status: string;
+    message: string;
+    extraFeeRequired: boolean;
+    extraFeePaid?: boolean;
+    acceptedAt: string | null;
+    createdAt: string;
+    files: { id: string; filename: string; mime: string; size: number }[];
+  }[];
 };
 
 /** GET /api/orders/:id — ownership-safe client detail (404 for strangers' orders). */

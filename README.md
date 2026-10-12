@@ -220,11 +220,11 @@ Status changes only happen through `lib/orders/status.ts`. Every change writes a
 
 ## Roadmap
 
-> Checked = fully shipped. Details for the latest work: `PLAN.md` rows 20–25.
+> Checked = fully shipped. Details for the latest work: `PLAN.md` rows 20–26.
 
 - [x] **Phase 1:** Auth (Clerk), packages, order form with uploads, admin order list
 - [ ] **Phase 2:** Client dashboard ✅, status machine + quote flow ✅, **email notifications pending** (Resend deferred)
-- [ ] **Phase 3:** Per-order chat ✅ (admin internal notes, **chat attachments + edit/delete moderation**, **read receipts + unread badge**), admin **Users/Chats/Files** panels, **order take/edit/hard-delete**, **deliverables gating**, **proceed page** (`/admin/orders/[id]/proceed` — status + charge + uploads + chat in one place) — watermarked drafts and revisions pending
+- [ ] **Phase 3:** Per-order chat ✅ (admin internal notes, **chat attachments + edit/delete moderation**, **read receipts + unread badge**), admin **Users/Chats/Files** panels, **order take/edit/hard-delete**, **deliverables gating**, **proceed page** (`/admin/orders/[id]/proceed` — status + charges + uploads + revisions + chat), **revisions loop** ✅ (client request → admin accept, extra-fee gate via EXTRA_REVISION charge, auto-close on re-delivery), **draft delivery + finals registration** ✅, **admin dashboard** (`/admin` stats overview) ✅, **site settings/сurrency** ✅ (`/admin/settings`, per-order currency snapshot) — watermarked drafts pending
 - [ ] **Phase 4:** Manual payment requests ✅ (admin charge → client proof upload → verify/reject; verified FINAL unlocks final downloads). Gateway + webhooks pending
 - [ ] **Phase 5:** Portfolio CMS, stats, invoices, polish
 

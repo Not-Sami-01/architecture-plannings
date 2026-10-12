@@ -67,6 +67,8 @@ export function serviceSchema(input: {
   name: string;
   description: string;
   path: string;
+  /** Live site currency (plan 3); defaults to the constants fallback. */
+  currency?: string;
   offers?: { price: number };
 }): JsonLdNode {
   return {
@@ -82,7 +84,7 @@ export function serviceSchema(input: {
           offers: {
             "@type": "Offer",
             price: input.offers.price,
-            priceCurrency: APP.currency,
+            priceCurrency: input.currency ?? APP.currency,
             url: absoluteUrl(input.path),
           },
         }

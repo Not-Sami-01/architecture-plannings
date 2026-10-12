@@ -16,13 +16,15 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 type AdminPaymentsListProps = {
   orderId: string;
+  /** Order currency snapshot (plan 3). */
+  currency: string;
 };
 
 /**
  * Proceed-page charges (plan 2 P4): every payment of the order with its proof
  * and verify/reject controls while one is still pending.
  */
-export function AdminPaymentsList({ orderId }: AdminPaymentsListProps) {
+export function AdminPaymentsList({ orderId, currency }: AdminPaymentsListProps) {
   const payments = useOrderPayments(orderId);
   const verify = useAdminVerifyPayment(orderId);
 
@@ -80,7 +82,7 @@ export function AdminPaymentsList({ orderId }: AdminPaymentsListProps) {
                 </Badge>
               </div>
               <span className="text-base font-semibold tabular-nums">
-                {formatMoney(payment.amount)}
+                {formatMoney(payment.amount, currency)}
               </span>
             </div>
 

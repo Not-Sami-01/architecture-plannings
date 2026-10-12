@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ROUTES } from "@/config/constants";
 import { PACKAGE_PAGES, packagePageSlugs } from "@/content/packages";
 import { listActivePackages } from "@/lib/packages";
+import { getSiteSettings } from "@/lib/settings";
 import { formatMoney } from "@/lib/format";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { serviceSchema } from "@/lib/seo/schema";
@@ -35,7 +36,11 @@ export default async function PackagePage({ params }: PackagePageProps) {
   const content = PACKAGE_PAGES[slug];
   if (!content) notFound();
 
-  const pkg = (await listActivePackages().catch(() => [])).find((p) => p.slug === content.slug);
+  const [pkgs, { currency }] = await Promise.all([
+    listActivePackages().catch(() => []),
+    getSiteSettings(),
+  ]);
+  const pkg = pkgs.find((p) => p.slug === content.slug);
 
   return (
     <main>
@@ -58,7 +63,9 @@ export default async function PackagePage({ params }: PackagePageProps) {
         </h2>
         {pkg ? (
           <div className="mt-6 rounded-xl border bg-card p-6">
-            <p className="text-3xl font-semibold tracking-tight">{formatMoney(pkg.price)}</p>
+            <p className="text-3xl font-semibold tracking-tight">
+              {formatMoney(pkg.price, currency)}
+            </p>
             <p className="mt-2 text-sm text-muted-foreground">
               {pkg.revisionLimit} free revisions are included — {content.pricingNote}
             </p>
@@ -88,6 +95,7 @@ export default async function PackagePage({ params }: PackagePageProps) {
             name: content.crumbLabel,
             description: content.seo.description,
             path: content.seo.path,
+            currency,
             ...(pkg ? { offers: { price: pkg.price } } : {}),
           }),
         ]}

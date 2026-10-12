@@ -4,22 +4,27 @@ import { REALTIME_EVENTS } from "@/config/constants";
 import { orderKeys } from "@/hooks/orders/order-keys";
 import { adminOrderKeys } from "@/hooks/orders/admin-order-keys";
 import { messageKeys } from "@/hooks/messages/message-keys";
+import { paymentKeys } from "@/hooks/payments/payment-keys";
+import { settingsKeys } from "@/hooks/settings/settings-keys";
+import { adminStatsKeys } from "@/hooks/admin/admin-stats-keys";
 
 import { realtimeEventQueries } from "./realtime-queries";
 
 describe("realtimeEventQueries", () => {
-  it("a quote or status ping refreshes both the client and admin order views", () => {
+  it("a quote or status ping refreshes both order views and the dashboard", () => {
     for (const type of [REALTIME_EVENTS.quoteSent, REALTIME_EVENTS.statusChanged]) {
       expect(realtimeEventQueries({ type, refId: "ord_1" })).toEqual([
         orderKeys.all,
         adminOrderKeys.all,
+        adminStatsKeys.all,
       ]);
     }
   });
 
-  it("a new order pings only the admin views", () => {
+  it("a new order pings the admin views and the dashboard", () => {
     expect(realtimeEventQueries({ type: REALTIME_EVENTS.orderCreated, refId: "ord_2" })).toEqual([
       adminOrderKeys.all,
+      adminStatsKeys.all,
     ]);
   });
 
@@ -41,6 +46,38 @@ describe("realtimeEventQueries", () => {
       expect(realtimeEventQueries({ type, refId: "ord_3" })).toEqual([messageKeys.list("ord_3")]);
       expect(realtimeEventQueries({ type })).toEqual([]);
     }
+  });
+
+  it("payments refresh payment lists, both order views and the dashboard", () => {
+    for (const type of [REALTIME_EVENTS.paymentCreated, REALTIME_EVENTS.paymentUpdated]) {
+      expect(realtimeEventQueries({ type, refId: "ord_1" })).toEqual([
+        paymentKeys.all,
+        orderKeys.all,
+        adminOrderKeys.all,
+        adminStatsKeys.all,
+      ]);
+    }
+  });
+
+  it("revision and deliverable events refresh order views and the dashboard", () => {
+    for (const type of [
+      REALTIME_EVENTS.revisionRequested,
+      REALTIME_EVENTS.revisionAccepted,
+      REALTIME_EVENTS.draftDelivered,
+      REALTIME_EVENTS.finalsRegistered,
+    ]) {
+      expect(realtimeEventQueries({ type, refId: "ord_1" })).toEqual([
+        orderKeys.all,
+        adminOrderKeys.all,
+        adminStatsKeys.all,
+      ]);
+    }
+  });
+
+  it("a settings update refreshes the site settings query", () => {
+    expect(realtimeEventQueries({ type: REALTIME_EVENTS.settingsUpdated, refId: "currency" })).toEqual(
+      [settingsKeys.detail()],
+    );
   });
 
   it("ignores unknown or malformed event types", () => {

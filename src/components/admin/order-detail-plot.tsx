@@ -25,7 +25,7 @@ export function OrderDetailPlot({ order }: OrderDetailPlotProps) {
     { label: "Garage", value: order.garage ? "Yes" : "No" },
     { label: "Lounge", value: order.lounge ? "Yes" : "No" },
     { label: "Style", value: order.style },
-    { label: "Budget", value: order.budget != null ? formatMoney(order.budget) : "Not stated" },
+    { label: "Budget", value: order.budget != null ? formatMoney(order.budget, order.currency) : "Not stated" },
   ];
 
   return (

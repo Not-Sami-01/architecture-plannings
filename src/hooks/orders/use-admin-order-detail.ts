@@ -19,7 +19,11 @@ export type AdminRevisionRow = {
   id: string;
   number: number;
   status: string;
+  message: string;
+  extraFeeRequired: boolean;
+  acceptedAt: string | null;
   createdAt: string;
+  files: { id: string; filename: string; mime: string; size: number }[];
 };
 
 export type AdminPaymentRow = {
@@ -54,6 +58,7 @@ export type AdminOrderDetail = {
   advancePercent: number;
   quoteMessage: string | null;
   quotedAt: string | null;
+  currency: string;
   revisionCount: number;
   finalPaymentVerified: boolean;
   createdAt: string;

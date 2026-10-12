@@ -13,6 +13,7 @@ import {
   homeTrust,
 } from "@/content/home";
 import { listActivePackages } from "@/lib/packages";
+import { getSiteSettings } from "@/lib/settings";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { organizationSchema } from "@/lib/seo/schema";
 import { ClosingCta } from "@/components/common/closing-cta";
@@ -28,7 +29,10 @@ import { PlotSizeChips } from "@/components/marketing/plot-size-chips";
 export const metadata: Metadata = buildMetadata(homeSeo);
 
 export default async function HomePage() {
-  const packages = await listActivePackages().catch(() => []);
+  const [packages, { currency }] = await Promise.all([
+    listActivePackages().catch(() => []),
+    getSiteSettings(),
+  ]);
 
   return (
     <main>
@@ -82,6 +86,7 @@ export default async function HomePage() {
                 <PackageCard
                   key={pkg.id}
                   package={pkg}
+                  currency={currency}
                   featured={pkg.slug === homePackages.featuredSlug}
                   featuredLabel="Most popular"
                 />

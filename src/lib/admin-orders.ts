@@ -1,12 +1,25 @@
 import { prisma } from "@/lib/db";
 import { ApiError } from "@/lib/api/response";
-import { REALTIME_EVENTS, ROLES, ORDER_STATUSES } from "@/config/constants";
-import type { OrderStatus } from "@/config/constants";
+import {
+  FILE_KINDS,
+  ORDER_STATUSES,
+  REALTIME_EVENTS,
+  REVISION_STATUSES,
+  ROLES,
+} from "@/config/constants";
+import type { FileKind, OrderStatus } from "@/config/constants";
 import type { ApiUser } from "@/lib/api/types";
-import type { AdminOrderListQuery, AdminOrderUpdateInput, QuoteInput, StatusChangeInput } from "@/lib/validators/admin-orders";
+import type {
+  AdminOrderListQuery,
+  AdminOrderUpdateInput,
+  QuoteInput,
+  RegisterDraftInput,
+  RegisterFinalsInput,
+  StatusChangeInput,
+} from "@/lib/validators/admin-orders";
 import { assertTransition, applyStatusChange } from "@/lib/orders/status";
 import { deleteObject } from "@/lib/storage";
-import { publishUserEvent } from "@/lib/realtime";
+import { publishAdminsEvent, publishUserEvent } from "@/lib/realtime";
 
 /** Admin order reads, quote/status mutations, and lifecycle management (API.md §8). */
 
@@ -40,6 +53,7 @@ export async function listOrdersForAdmin(user: ApiUser, query: AdminOrderListQue
         createdAt: true,
         quotedAt: true,
         totalPrice: true,
+        currency: true,
         package: { select: { name: true } },
         user: { select: { id: true, name: true, email: true } },
         assignedTo: { select: { id: true, name: true, email: true } },
@@ -66,7 +80,19 @@ export async function getOrderForAdmin(user: ApiUser, orderId: string) {
         orderBy: { createdAt: "asc" },
       },
       events: { orderBy: { createdAt: "desc" } },
-      revisions: { orderBy: { createdAt: "desc" }, select: { id: true, number: true, status: true, createdAt: true } },
+      revisions: {
+        orderBy: { createdAt: "desc" },
+        select: {
+          id: true,
+          number: true,
+          status: true,
+          message: true,
+          extraFeeRequired: true,
+          acceptedAt: true,
+          createdAt: true,
+          files: { select: { id: true, filename: true, mime: true, size: true } },
+        },
+      },
       payments: { select: { id: true, type: true, amount: true, status: true, createdAt: true } },
     },
   });
@@ -255,4 +281,141 @@ export async function deleteOrderForAdmin(user: ApiUser, orderId: string) {
     type: REALTIME_EVENTS.statusChanged,
     refId: orderId,
   });
+}
+
+/**
+ * Confirms the submitted file ids exist on this order, are uploaded by an
+ * admin, are confirmed, and carry one of the expected kinds. Any mismatch is
+ * a 400 — the admin UI only offers valid files, so this is belt-and-braces
+ * against stale tabs and crafted requests.
+ */
+async function requireDeliverableFiles(orderId: string, fileIds: string[], kinds: FileKind[]) {
+  const files = await prisma.orderFile.findMany({
+    where: { id: { in: fileIds }, orderId },
+    select: { id: true, filename: true, kind: true, confirmedAt: true },
+  });
+
+  const byId = new Map(files.map((f) => [f.id, f]));
+  for (const fileId of fileIds) {
+    const file = byId.get(fileId);
+    if (!file || !file.confirmedAt || !kinds.includes(file.kind)) {
+      throw ApiError.badRequest(
+        "Those files are not ready to deliver. Re-upload them or refresh the page.",
+      );
+    }
+  }
+  return files;
+}
+
+/**
+ * Deliver the draft (plan 3 P3): IN_DESIGN → DRAFT_DELIVERED with the files
+ * and an optional note; open revisions are auto-closed in the same tx.
+ */
+export async function registerDraft(user: ApiUser, orderId: string, input: RegisterDraftInput) {
+  if (user.role !== ROLES.ADMIN) throw ApiError.notFound();
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: { id: true, status: true, userId: true },
+  });
+  if (!order) throw ApiError.notFound();
+
+  // The machine only allows DRAFT_DELIVERED from IN_DESIGN (409 INVALID_TRANSITION).
+  assertTransition(order.status, ORDER_STATUSES.DRAFT_DELIVERED);
+
+  const files = await requireDeliverableFiles(orderId, input.fileIds, [
+    FILE_KINDS.DRAFT_PREVIEW,
+    FILE_KINDS.DRAFT_ORIGINAL,
+  ]);
+  if (files.length === 0) {
+    throw ApiError.badRequest("Pick at least one draft file.");
+  }
+
+  const filenames = files.map((f) => f.filename).join(", ");
+  const note = input.note ? `${filenames} — ${input.note}` : filenames;
+
+  const result = await prisma.$transaction(async (tx) => {
+    const updated = await applyStatusChange(tx, {
+      orderId: order.id,
+      actorId: user.id,
+      from: order.status,
+      to: ORDER_STATUSES.DRAFT_DELIVERED,
+      note,
+    });
+
+    // A fresh draft supersedes any still-open revision (loop restarts clean).
+    await tx.revision.updateMany({
+      where: { orderId: order.id, status: REVISION_STATUSES.OPEN },
+      data: { status: REVISION_STATUSES.DONE },
+    });
+
+    return updated;
+  });
+
+  if (order.userId !== user.id) {
+    void publishUserEvent(order.userId, {
+      type: REALTIME_EVENTS.statusChanged,
+      refId: order.id,
+    });
+  }
+  void publishAdminsEvent({
+    type: REALTIME_EVENTS.draftDelivered,
+    refId: order.id,
+  });
+
+  return result;
+}
+
+/** Statuses from which finals may be registered (design must be under way). */
+const FINALS_ALLOWED: readonly OrderStatus[] = [
+  ORDER_STATUSES.IN_DESIGN,
+  ORDER_STATUSES.DRAFT_DELIVERED,
+  ORDER_STATUSES.REVISION_REQUESTED,
+  ORDER_STATUSES.AWAITING_FINAL_PAYMENT,
+];
+
+/**
+ * Register the final files (plan 3 P3): no status change — the COMPLETED edge
+ * stays gated on verified final payment. Leaves a timeline note listing the
+ * files so the client can see what is waiting for them.
+ */
+export async function registerFinals(user: ApiUser, orderId: string, input: RegisterFinalsInput) {
+  if (user.role !== ROLES.ADMIN) throw ApiError.notFound();
+
+  const order = await prisma.order.findUnique({
+    where: { id: orderId },
+    select: { id: true, status: true },
+  });
+  if (!order) throw ApiError.notFound();
+
+  if (!FINALS_ALLOWED.includes(order.status)) {
+    throw ApiError.badRequest(
+      "Final files can only be registered once the order is in design or later.",
+    );
+  }
+
+  const files = await requireDeliverableFiles(orderId, input.fileIds, [FILE_KINDS.FINAL]);
+  if (files.length === 0) {
+    throw ApiError.badRequest("Pick at least one final file.");
+  }
+
+  const filenames = files.map((f) => f.filename).join(", ");
+
+  // Same-status event: the timeline renders it as a note, not a transition.
+  await prisma.orderEvent.create({
+    data: {
+      orderId: order.id,
+      actorId: user.id,
+      fromStatus: order.status,
+      toStatus: order.status,
+      note: `Final files registered: ${filenames}`,
+    },
+  });
+
+  void publishAdminsEvent({
+    type: REALTIME_EVENTS.finalsRegistered,
+    refId: order.id,
+  });
+
+  return { orderId: order.id, fileCount: files.length };
 }

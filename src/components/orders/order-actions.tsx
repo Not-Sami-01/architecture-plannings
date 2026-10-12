@@ -13,6 +13,8 @@ type OrderActionsProps = {
   totalPrice: number | null;
   advancePercent: number;
   quoteMessage: string | null;
+  /** Order currency snapshot (plan 3) — quote money always displays in it. */
+  currency: string;
 };
 
 /**
@@ -25,6 +27,7 @@ export function OrderActions({
   totalPrice,
   advancePercent,
   quoteMessage,
+  currency,
 }: OrderActionsProps) {
   const { actions: acceptActions, loadings: acceptLoadings } = useAcceptQuote();
   const { actions: approveActions, loadings: approveLoadings } = useApproveDraft();
@@ -58,11 +61,11 @@ export function OrderActions({
           <dl className="flex flex-col gap-2 text-sm">
             <div className="flex items-center justify-between gap-3">
               <dt className="text-muted-foreground">Total price</dt>
-              <dd className="font-medium">{formatMoney(quote.total)}</dd>
+              <dd className="font-medium">{formatMoney(quote.total, currency)}</dd>
             </div>
             <div className="flex items-center justify-between gap-3">
               <dt className="text-muted-foreground">Advance ({advancePercent}%)</dt>
-              <dd className="font-medium">{formatMoney(quote.advance)}</dd>
+              <dd className="font-medium">{formatMoney(quote.advance, currency)}</dd>
             </div>
             {quoteMessage ? (
               <p className="whitespace-pre-wrap rounded-lg bg-muted p-3 text-xs text-muted-foreground">

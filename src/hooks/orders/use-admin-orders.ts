@@ -16,6 +16,7 @@ export type AdminOrderRow = {
   createdAt: string;
   quotedAt: string | null;
   totalPrice: number | null;
+  currency: string;
   package: { name: string };
   user: { id: string; name: string | null; email: string };
   assignedTo: { id: string; name: string | null; email: string } | null;

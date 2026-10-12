@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { CheckIcon } from "lucide-react";
 
-import { ROUTES } from "@/config/constants";
+import { APP, ROUTES } from "@/config/constants";
 import { formatMoney } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import {
@@ -26,13 +26,20 @@ type PackageCardPackage = {
 
 type PackageCardProps = {
   package: PackageCardPackage;
+  /** Live site currency (plan 3); server parents read getSiteSettings(). */
+  currency?: string;
   /** Highlighted card (ring + primary CTA), used on the home page. */
   featured?: boolean;
   /** Badge label shown above the title on a featured card. */
   featuredLabel?: string;
 };
 
-export function PackageCard({ package: pkg, featured, featuredLabel }: PackageCardProps) {
+export function PackageCard({
+  package: pkg,
+  currency = APP.currency,
+  featured,
+  featuredLabel,
+}: PackageCardProps) {
   return (
     <Card
       className={`flex h-full flex-col ${
@@ -49,7 +56,9 @@ export function PackageCard({ package: pkg, featured, featuredLabel }: PackageCa
         <CardDescription>{pkg.description}</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col gap-4">
-        <p className="text-3xl font-semibold tracking-tight">{formatMoney(pkg.price)}</p>
+        <p className="text-3xl font-semibold tracking-tight">
+          {formatMoney(pkg.price, currency)}
+        </p>
         <ul className="flex flex-col gap-2 text-sm">
           {pkg.deliverables.map((deliverable) => (
             <li key={deliverable} className="flex items-center gap-2">

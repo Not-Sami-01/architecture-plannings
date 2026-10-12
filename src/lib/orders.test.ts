@@ -11,6 +11,12 @@ vi.mock("@/lib/db", () => {
   return { prisma };
 });
 
+// createOrder snapshots the live site currency (plan 3); next/cache stays out
+// of the test graph.
+vi.mock("@/lib/settings", () => ({
+  getSiteSettings: vi.fn(async () => ({ currency: "PKR" })),
+}));
+
 import { prisma } from "@/lib/db";
 import { ORDER_STATUSES, ROLES } from "@/config/constants";
 import type { ApiUser } from "@/lib/api/types";
@@ -92,6 +98,19 @@ describe("createOrder", () => {
         toStatus: ORDER_STATUSES.SUBMITTED,
       },
     });
+  });
+
+  it("snapshots the live site currency onto the order (plan 3)", async () => {
+    const { getSiteSettings } = await import("@/lib/settings");
+    (getSiteSettings as unknown as Mock).mockResolvedValueOnce({ currency: "USD" });
+
+    await createOrder(user, input);
+
+    expect(orderCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ currency: "USD" }),
+      }),
+    );
   });
 
   it("rejects an unknown or inactive package before writing anything", async () => {

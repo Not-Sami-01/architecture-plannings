@@ -12,6 +12,7 @@ import type { ApiUser } from "@/lib/api/types";
 import type { OrderInput } from "@/lib/validators/order";
 import { applyStatusChange } from "@/lib/orders/status";
 import { publishAdminsEvent } from "@/lib/realtime";
+import { getSiteSettings } from "@/lib/settings";
 
 /** Order service (creation, ownership-safe reads, client-side transitions). */
 
@@ -35,6 +36,10 @@ export async function createOrder(user: ApiUser, input: OrderInput) {
   if (!pkg) {
     throw ApiError.badRequest("Please choose a valid package.");
   }
+
+  // Currency snapshot (plan 3): this order's money always displays in the
+  // currency that was live when the client submitted it.
+  const { currency } = await getSiteSettings();
 
   const order = await prisma.$transaction(async (tx) => {
     // FR-11: per-year sequence derived from the current count. Unique constraint
@@ -76,6 +81,7 @@ export async function createOrder(user: ApiUser, input: OrderInput) {
         style: input.style,
         budget: input.budget ? Number(input.budget) : null,
         notes: input.notes || null,
+        currency,
         // Attach client uploads (they were registered without an order).
         files: {
           connect: ownedFiles.map((file) => ({ id: file.id })),
@@ -121,6 +127,19 @@ export async function getOrderForUser(user: ApiUser, orderId: string) {
     where: { id: orderId },
     include: {
       package: { select: { id: true, name: true, revisionLimit: true } },
+      revisions: {
+        orderBy: { number: "asc" },
+        select: {
+          id: true,
+          number: true,
+          status: true,
+          message: true,
+          extraFeeRequired: true,
+          acceptedAt: true,
+          createdAt: true,
+          files: { select: { id: true, filename: true, mime: true, size: true } },
+        },
+      },
     },
   });
 

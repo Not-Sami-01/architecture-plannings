@@ -102,8 +102,8 @@ export function AdminOrderDetailView({ orderId }: AdminOrderDetailViewProps) {
             <p className="text-xs text-muted-foreground">Package</p>
             <p className="font-medium">{order.package.name}</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              List price {formatMoney(order.package.price)} · {order.package.revisionLimit} free
-              revisions
+              List price {formatMoney(order.package.price, order.currency)} ·{" "}
+              {order.package.revisionLimit} free revisions
             </p>
           </div>
           <div className="rounded-xl border p-4">
@@ -116,7 +116,7 @@ export function AdminOrderDetailView({ orderId }: AdminOrderDetailViewProps) {
               <>
                 <p className="font-medium">
                   {order.totalPrice != null
-                    ? `${formatMoney(order.totalPrice)} · ${order.advancePercent}% advance`
+                    ? `${formatMoney(order.totalPrice, order.currency)} · ${order.advancePercent}% advance`
                     : "No quote sent"}
                 </p>
                 {order.quoteMessage ? (

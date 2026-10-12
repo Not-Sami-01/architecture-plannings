@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { PackageIcon, PencilIcon, PlusIcon } from "lucide-react";
 
-import { formatMoney } from "@/lib/format";
+import { useMoney } from "@/hooks/settings/use-money";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,6 +22,7 @@ import { PackageFormDialog } from "@/components/admin/package-form-dialog";
 
 export function PackagesView() {
   const { data, loadings, query } = useAdminPackages();
+  const money = useMoney();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<AdminPackage | null>(null);
 
@@ -102,7 +103,7 @@ export function PackagesView() {
                       {pkg.slug} · {pkg.deliverables.length} deliverables
                     </span>
                   </TableCell>
-                  <TableCell className="font-mono text-sm">{formatMoney(pkg.price)}</TableCell>
+                  <TableCell className="font-mono text-sm">{money(pkg.price)}</TableCell>
                   <TableCell>{pkg.revisionLimit}</TableCell>
                   <TableCell>
                     <Badge variant={pkg.active ? "default" : "secondary"}>

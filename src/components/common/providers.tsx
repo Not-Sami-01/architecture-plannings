@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { publicConfig } from "@/config/public-config";
 
+import { CurrencyProvider } from "./currency-provider";
 import { RealtimeSync } from "./realtime-sync";
 import { ThemeProvider } from "./theme-provider";
 
@@ -33,11 +34,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
   return (
     <ThemeProvider>
       <QueryClientProvider client={queryClient}>
-        <RealtimeSync />
-        {children}
-        {publicConfig.isDev ? (
-          <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
-        ) : null}
+        <CurrencyProvider>
+          <RealtimeSync />
+          {children}
+          {publicConfig.isDev ? (
+            <ReactQueryDevtools initialIsOpen={false} buttonPosition="bottom-left" />
+          ) : null}
+        </CurrencyProvider>
       </QueryClientProvider>
     </ThemeProvider>
   );

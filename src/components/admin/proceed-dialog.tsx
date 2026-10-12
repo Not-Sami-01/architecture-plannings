@@ -19,6 +19,8 @@ import { ProceedDropFiles } from "./proceed-drop-files";
 type ProceedDialogProps = {
   orderId: string;
   packagePrice: number;
+  /** Order currency snapshot (plan 3). */
+  currency: string;
   status: OrderStatus;
 };
 
@@ -28,7 +30,7 @@ type ProceedView = "menu" | "drop" | "charge";
  * The "Proceed" hub (plan 2 P5): one button opens the options — drop deliverable
  * files or charge the client — without leaving the order context.
  */
-export function ProceedDialog({ orderId, packagePrice, status }: ProceedDialogProps) {
+export function ProceedDialog({ orderId, packagePrice, currency, status }: ProceedDialogProps) {
   const [open, setOpen] = useState(false);
   const [view, setView] = useState<ProceedView>("menu");
 
@@ -122,6 +124,7 @@ export function ProceedDialog({ orderId, packagePrice, status }: ProceedDialogPr
             <ProceedChargeForm
               orderId={orderId}
               packagePrice={packagePrice}
+              currency={currency}
               status={status}
               onDone={close}
             />

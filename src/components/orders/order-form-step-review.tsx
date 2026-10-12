@@ -1,10 +1,9 @@
 "use client";
 
-
-
 import { useWatch } from "react-hook-form";
 
-import { formatBytes, formatMoney } from "@/lib/format";
+import { formatBytes } from "@/lib/format";
+import { useMoney } from "@/hooks/settings/use-money";
 import type { StagedFile } from "@/lib/staged-files";
 import type { OrderFormInstance } from "@/components/orders/order-form";
 import type { PackageSummary } from "@/hooks/packages/use-packages";
@@ -28,6 +27,7 @@ function Row({ label, value }: { label: string; value: React.ReactNode }) {
 export function OrderFormStepReview({ form, packages, files }: OrderFormStepReviewProps) {
   // `form.watch()` would be memoized on `form` by React Compiler (facebook/react#29144).
   const values = useWatch({ control: form.control });
+  const money = useMoney();
 
   const pkg = packages.find((candidate) => candidate.id === values.packageId);
 
@@ -35,7 +35,7 @@ export function OrderFormStepReview({ form, packages, files }: OrderFormStepRevi
     <div className="flex flex-col gap-6">
       <section className="flex flex-col gap-3 rounded-xl border p-5">
         <p className="font-medium">Package</p>
-        <Row label="Package" value={pkg ? `${pkg.name} — ${formatMoney(pkg.price)}` : "Not selected"} />
+        <Row label="Package" value={pkg ? `${pkg.name} — ${money(pkg.price)}` : "Not selected"} />
         <Row label="Included revisions" value={pkg ? pkg.revisionLimit : "—"} />
       </section>
 
@@ -63,7 +63,7 @@ export function OrderFormStepReview({ form, packages, files }: OrderFormStepRevi
       <section className="flex flex-col gap-3 rounded-xl border p-5">
         <p className="font-medium">Style &amp; notes</p>
         <Row label="Style" value={values.style} />
-        {values.budget ? <Row label="Budget" value={formatMoney(Number(values.budget))} /> : null}
+        {values.budget ? <Row label="Budget" value={money(Number(values.budget))} /> : null}
         {values.notes ? <Row label="Notes" value={values.notes} /> : null}
       </section>
 

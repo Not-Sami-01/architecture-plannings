@@ -77,8 +77,8 @@ export class ApiError extends Error {
     return new ApiError(404, message, ERROR_CODES.NOT_FOUND);
   }
 
-  static conflict(message = "That value is already in use.") {
-    return new ApiError(409, message, ERROR_CODES.CONFLICT);
+  static conflict(message = "That value is already in use.", details?: unknown) {
+    return new ApiError(409, message, ERROR_CODES.CONFLICT, details);
   }
 
   static invalidTransition(message = "That status change is not allowed.") {

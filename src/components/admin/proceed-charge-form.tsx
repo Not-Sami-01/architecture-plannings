@@ -32,6 +32,8 @@ type ProceedChargeFormProps = {
   orderId: string;
   /** The order's package list price — the prefill for a custom amount. */
   packagePrice: number;
+  /** Order currency snapshot (plan 3). */
+  currency: string;
   status: OrderStatus;
   onDone?: () => void;
 };
@@ -44,7 +46,13 @@ function defaultChargeType(status: OrderStatus): PaymentType {
 }
 
 /** Charge-user step of the Proceed dialog (plan 2 P4/P5). */
-export function ProceedChargeForm({ orderId, packagePrice, status, onDone }: ProceedChargeFormProps) {
+export function ProceedChargeForm({
+  orderId,
+  packagePrice,
+  currency,
+  status,
+  onDone,
+}: ProceedChargeFormProps) {
   const create = useAdminCreatePayment(orderId);
 
   const form = useForm<CreatePaymentFormValues>({
@@ -133,7 +141,7 @@ export function ProceedChargeForm({ orderId, packagePrice, status, onDone }: Pro
             className="w-fit text-xs text-muted-foreground underline underline-offset-2 hover:text-foreground"
             onClick={() => form.setValue("amount", packagePrice, { shouldValidate: true })}
           >
-            Reset to list price ({formatMoney(packagePrice)})
+            Reset to list price ({formatMoney(packagePrice, currency)})
           </button>
         ) : (
           <p className="text-xs text-muted-foreground">

@@ -8,10 +8,90 @@ export const APP = {
   tagline: "Custom house designs, delivered step by step",
   description:
     "Order custom house architecture designs: floor plans, elevations and full drawing sets, with a transparent process from quote to final delivery.",
+  /** Fallback currency until the SiteSetting row loads (plan 3). */
   currency: "PKR",
-  currencySymbol: "Rs",
   locale: "en-PK",
   orderNumberPrefix: "AP",
+} as const;
+
+/**
+ * Admin-selectable currencies (plan 3). Codes are ISO 4217; symbols come from
+ * Intl via formatMoney — only the code is stored (SiteSetting + Order.currency).
+ */
+export const SUPPORTED_CURRENCIES = [
+  { code: "USD", name: "US Dollar" },
+  { code: "CAD", name: "Canadian Dollar" },
+  { code: "EUR", name: "Euro" },
+  { code: "GBP", name: "British Pound" },
+  { code: "AUD", name: "Australian Dollar" },
+  { code: "NZD", name: "New Zealand Dollar" },
+  { code: "CHF", name: "Swiss Franc" },
+  { code: "JPY", name: "Japanese Yen" },
+  { code: "CNY", name: "Chinese Yuan" },
+  { code: "HKD", name: "Hong Kong Dollar" },
+  { code: "SGD", name: "Singapore Dollar" },
+  { code: "KRW", name: "South Korean Won" },
+  { code: "INR", name: "Indian Rupee" },
+  { code: "PKR", name: "Pakistani Rupee" },
+  { code: "BDT", name: "Bangladeshi Taka" },
+  { code: "LKR", name: "Sri Lankan Rupee" },
+  { code: "NPR", name: "Nepalese Rupee" },
+  { code: "AED", name: "UAE Dirham" },
+  { code: "SAR", name: "Saudi Riyal" },
+  { code: "QAR", name: "Qatari Riyal" },
+  { code: "KWD", name: "Kuwaiti Dinar" },
+  { code: "BHD", name: "Bahraini Dinar" },
+  { code: "OMR", name: "Omani Rial" },
+  { code: "JOD", name: "Jordanian Dinar" },
+  { code: "ILS", name: "Israeli New Shekel" },
+  { code: "TRY", name: "Turkish Lira" },
+  { code: "EGP", name: "Egyptian Pound" },
+  { code: "ZAR", name: "South African Rand" },
+  { code: "NGN", name: "Nigerian Naira" },
+  { code: "KES", name: "Kenyan Shilling" },
+  { code: "GHS", name: "Ghanaian Cedi" },
+  { code: "MAD", name: "Moroccan Dirham" },
+  { code: "TND", name: "Tunisian Dinar" },
+  { code: "BRL", name: "Brazilian Real" },
+  { code: "MXN", name: "Mexican Peso" },
+  { code: "ARS", name: "Argentine Peso" },
+  { code: "CLP", name: "Chilean Peso" },
+  { code: "COP", name: "Colombian Peso" },
+  { code: "PEN", name: "Peruvian Sol" },
+  { code: "SEK", name: "Swedish Krona" },
+  { code: "NOK", name: "Norwegian Krone" },
+  { code: "DKK", name: "Danish Krone" },
+  { code: "ISK", name: "Icelandic Krona" },
+  { code: "PLN", name: "Polish Zloty" },
+  { code: "CZK", name: "Czech Koruna" },
+  { code: "HUF", name: "Hungarian Forint" },
+  { code: "RON", name: "Romanian Leu" },
+  { code: "BGN", name: "Bulgarian Lev" },
+  { code: "RSD", name: "Serbian Dinar" },
+  { code: "UAH", name: "Ukrainian Hryvnia" },
+  { code: "RUB", name: "Russian Ruble" },
+  { code: "KZT", name: "Kazakhstani Tenge" },
+  { code: "THB", name: "Thai Baht" },
+  { code: "VND", name: "Vietnamese Dong" },
+  { code: "IDR", name: "Indonesian Rupiah" },
+  { code: "MYR", name: "Malaysian Ringgit" },
+  { code: "PHP", name: "Philippine Piso" },
+] as const;
+
+export type CurrencyCode = (typeof SUPPORTED_CURRENCIES)[number]["code"];
+
+export const isSupportedCurrency = (code: string): code is CurrencyCode =>
+  SUPPORTED_CURRENCIES.some((currency) => currency.code === code);
+
+/** Keys of the SiteSetting table (plan 3). */
+export const SETTINGS_KEYS = {
+  currency: "currency",
+} as const;
+
+/** Revision limits (PRD FR-20; free count comes from Package.revisionLimit). */
+export const REVISIONS = {
+  maxRefFiles: 5,
+  maxLength: 2000,
 } as const;
 
 export const ROLES = {
@@ -62,6 +142,7 @@ export const ROUTES = {
     files: "/admin/files",
     users: "/admin/users",
     packages: "/admin/packages",
+    settings: "/admin/settings",
     portfolio: "/admin/portfolio",
   },
 } as const;
@@ -220,6 +301,13 @@ export const REALTIME_EVENTS = {
   /** A charge was created / verified (refId = order id). */
   paymentCreated: "payment.created",
   paymentUpdated: "payment.updated",
+  /** Deliverables & revisions (plan 3; refId = order id). */
+  revisionRequested: "revision.requested",
+  revisionAccepted: "revision.accepted",
+  draftDelivered: "draft.delivered",
+  finalsRegistered: "finals.registered",
+  /** Site settings changed (plan 3; refId = the setting key). */
+  settingsUpdated: "settings.updated",
 } as const;
 
 export type RealtimeEventType =
@@ -341,6 +429,7 @@ export const API_ROUTES = {
   adminPackages: "/api/admin/packages",
   adminPackage: (id: string) => `/api/admin/packages/${id}`,
   session: "/api/session",
+  settings: "/api/settings",
   orders: "/api/orders",
   order: (id: string) => `/api/orders/${id}`,
   acceptQuote: (id: string) => `/api/orders/${id}/accept-quote`,
@@ -373,6 +462,7 @@ export const API_ROUTES = {
   adminPayment: (id: string) => `/api/admin/payments/${id}`,
   adminRevision: (id: string) => `/api/admin/revisions/${id}`,
   adminStats: "/api/admin/stats",
+  adminSettings: "/api/admin/settings",
   realtimeToken: "/api/realtime/token",
   portfolio: "/api/portfolio",
   adminPortfolio: "/api/admin/portfolio",

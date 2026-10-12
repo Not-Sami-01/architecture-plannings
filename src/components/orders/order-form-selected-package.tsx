@@ -3,7 +3,7 @@
 import { CheckIcon, LayersIcon } from "lucide-react";
 import { useWatch } from "react-hook-form";
 
-import { formatMoney } from "@/lib/format";
+import { useMoney } from "@/hooks/settings/use-money";
 import type { OrderFormInstance } from "@/components/orders/order-form";
 import type { PackageSummary } from "@/hooks/packages/use-packages";
 
@@ -20,6 +20,7 @@ type OrderFormSelectedPackageProps = {
  */
 export function OrderFormSelectedPackage({ form, packages, onChange }: OrderFormSelectedPackageProps) {
   const packageId = useWatch({ control: form.control, name: "packageId" });
+  const money = useMoney();
   const pkg = packages.find((candidate) => candidate.id === packageId);
 
   if (!pkg) return null;
@@ -33,7 +34,7 @@ export function OrderFormSelectedPackage({ form, packages, onChange }: OrderForm
           <CheckIcon className="size-4 text-primary" aria-hidden />
         </p>
         <p className="text-xs text-muted-foreground">
-          {formatMoney(pkg.price)} · {pkg.revisionLimit} free revisions
+          {money(pkg.price)} · {pkg.revisionLimit} free revisions
         </p>
       </div>
       {onChange ? (

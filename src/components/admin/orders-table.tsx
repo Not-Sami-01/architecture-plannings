@@ -68,7 +68,9 @@ export function OrdersTable({ orders }: OrdersTableProps) {
                   ? order.assignedTo.name ?? order.assignedTo.email
                   : "—"}
               </TableCell>
-              <TableCell>{order.totalPrice != null ? formatMoney(order.totalPrice) : "—"}</TableCell>
+              <TableCell>
+                {order.totalPrice != null ? formatMoney(order.totalPrice, order.currency) : "—"}
+              </TableCell>
               <TableCell>{order._count.files}</TableCell>
               <TableCell>{new Date(order.createdAt).toLocaleDateString()}</TableCell>
               <TableCell>

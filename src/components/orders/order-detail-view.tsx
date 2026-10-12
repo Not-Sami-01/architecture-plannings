@@ -6,6 +6,7 @@ import { useOrder } from "@/hooks/orders/use-order";
 import { formatMoney } from "@/lib/format";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import { OrderActions } from "@/components/orders/order-actions";
+import { OrderRevisionsCard } from "@/components/orders/order-revisions-card";
 import { OrderDeliverables } from "@/components/orders/order-deliverables";
 import { PaymentCard } from "@/components/payments/payment-card";
 import { MessageThread } from "@/components/messages/message-thread";
@@ -92,10 +93,11 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
         totalPrice={order.totalPrice}
         advancePercent={order.advancePercent}
         quoteMessage={order.quoteMessage}
+        currency={order.currency}
       />
 
       {/* Renders nothing until the designer requests a charge (plan 2 P4). */}
-      <PaymentCard orderId={order.id} />
+      <PaymentCard orderId={order.id} currency={order.currency} />
 
       <Section title="Package">
         <Row label="Package" value={order.package.name} />
@@ -142,9 +144,13 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
           label="Style"
           value={order.style.charAt(0) + order.style.slice(1).toLowerCase().replace(/_/g, " ")}
         />
-        {order.budget ? <Row label="Budget" value={formatMoney(order.budget)} /> : null}
+        {order.budget ? (
+          <Row label="Budget" value={formatMoney(order.budget, order.currency)} />
+        ) : null}
         {order.notes ? <Row label="Notes" value={order.notes} /> : null}
       </Section>      <OrderDeliverables order={order} />
+
+      <OrderRevisionsCard order={order} />
 
       <MessageThread orderId={order.id} />
     </div>

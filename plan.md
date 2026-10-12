@@ -1,7 +1,8 @@
 # Plans
 
 - **Plan 1** (below): Role Separation + Full Admin Panel Expansion — ✅ executed (see `PLAN.md` step 24).
-- **Plan 2** (bottom): Proceed Order Page, Chat UX, Read Receipts & Charge User — ✅ executed (see `PLAN.md` step 25).
+- **Plan 2** (middle): Proceed Order Page, Chat UX, Read Receipts & Charge User — ✅ executed (see `PLAN.md` step 25).
+- **Plan 3** (bottom): Deliverables, Revisions, Dashboard & Configurable Currency — ✅ executed (see `PLAN.md` step 26).
 
 ---
 
@@ -263,3 +264,83 @@ model MessageRead {
 - **Gates:** `pnpm lint && pnpm typecheck && pnpm test` + production build; migrate on local DB.
 
 **Explicitly out of scope:** auto status change on payment verify, client-side chat collapse, gateway/webhook payments (manual proof only), watermarking.
+
+---
+
+# Plan 3 — Deliverables, Revisions, Dashboard & Configurable Currency
+
+Status: ✅ **executed** (P0–P9; see `PLAN.md` step 26). Watermarking stays deferred (decision 2). Out of scope (unchanged): emails (plan 4), Stripe, invoices, FX conversion, portfolio CMS/testimonials.
+
+Decisions locked in:
+1. **Extra revisions are admin-quoted** — beyond-limit requests are still recorded (`extraFeeRequired: true`, status → `REVISION_REQUESTED`); the admin sets the amount with the existing EXTRA_REVISION charge dialog; `acceptRevision` is refused until that payment is PAID. (PRD FR-21.)
+2. **Watermarking stays deferred** (plan 1 decision 4). "Deliver draft" triggers no job; `DRAFT_PREVIEW` remains the client-visible draft kind. Drop-files label must stop saying "(watermarked)".
+3. **Gateway stays manual** — EXTRA_REVISION reuses the plan-2 charge flow verbatim.
+4. **Currency = global admin setting + per-order snapshot** — `Order.currency` frozen at creation; packages/marketing follow the live setting. Switching never converts amounts (relabel only; admin re-prices packages manually — helper text says so).
+5. Proceed page = delivery workspace (deliver-draft, register-finals, revision queue); `/admin/settings` = currency; `/admin` = real dashboard overview (no more redirect).
+
+## P0 — Hotfix: live DB migration ✅
+
+Plan 2's migration (`MessageRead`, `Payment.note`) had only been applied to the **local** DB; the app runs against the Prisma Cloud pooled DB, so every messages query selecting `reads` 500'd (P2021). Fixed: `migrate deploy` against the **direct** host (`pooled.db.prisma.io` → `db.prisma.io`, same credentials), verified `MessageRead`/`Payment.note` exist with 18 messages intact. Rule going forward: **deploy migrations to every DATABASE_URL the app uses** (local + cloud), direct URL for migrate, pooled for runtime.
+
+## P1 — Schema + constants
+
+- Migration (hand-written via `migrate diff --from-config-datasource --to-schema`, applied locally via `migrate deploy`; cloud after review):
+  - `SiteSetting { key String @id, value String, updatedAt DateTime @updatedAt }`, seeded `("currency","PKR")`.
+  - `Order.currency String` + `UPDATE "Order" SET currency='PKR'` backfill (no Prisma default — the service always sets it).
+  - `Revision`: `extraFeeRequired Boolean @default(false)`, `acceptedAt DateTime?`, `acceptedById String?` → `User` (SetNull).
+- `constants.ts`: `SUPPORTED_CURRENCIES` (~55 `{code,name}` — USD, CAD, EUR, GBP, AUD, NZD, CHF, JPY, CNY, HKD, SGD, KRW, INR, PKR, BDT, LKR, NPR, AED, SAR, QAR, KWD, BHD, OMR, JOD, ILS, TRY, EGP, ZAR, NGN, KES, GHS, MAD, TND, BRL, MXN, ARS, CLP, COP, PEN, SEK, NOK, DKK, ISK, PLN, CZK, HUF, RON, BGN, RSD, UAH, RUB, KZT, THB, VND, IDR, MYR, PHP…), `SETTINGS_KEYS = { currency: "currency" }`, `REVISIONS = { maxRefFiles: 5, maxLength: 2000 }`; `API_ROUTES` += `settings`, `adminSettings`, `revisions(orderId)`, `adminRevision(id)`, `adminOrderDrafts(id)`, `adminOrderFinals(id)`, `adminStats`; `ROUTES.admin` += `dashboard: "/admin"`, `settings: "/admin/settings"`; `REALTIME_EVENTS` += `revisionRequested`, `revisionAccepted`, `draftDelivered`, `finalsRegistered`, `settingsUpdated`; delete dead `APP.currencySymbol`.
+- `formatMoney(amount, currency = APP.currency)` — locale unchanged (`APP.locale`).
+
+## P2 — Settings service + currency plumbing
+
+- `src/lib/settings.ts`: `getSiteSettings()` (unstable_cache tag `settings`; fallback `APP.currency`), `setCurrency(user, code)` (admin-only; allow-list → 400; upsert; revalidateTag; fire-and-forget `settingsUpdated` ping).
+- Routes: public `GET /api/settings` (rate-limited) → `{ data: { currency } }`; `PATCH /api/admin/settings` (`settingsSchema { currency }`; authenticate+requireRole+validateBody).
+- Client: `use-settings.ts` (query, seeded from server), `CurrencyProvider` in `providers.tsx`, `useMoney()` → bound formatter, `use-update-settings`.
+- Call-site migration: client money components → `useMoney()` or `formatMoney(x, order.currency)` when an order is in scope; server pages (home/services/[slug]/package) + `seo/schema.ts` → `await getSiteSettings()`.
+- Snapshot: `createOrder` sets `currency` from settings; `ClientOrderDetail`/admin order selects gain `currency`; quote card, charges, payments list/card, orders table format with `order.currency`.
+
+## P3 — Drafts & finals
+
+- `registerDraft(user, orderId, { fileIds, note? })` in `admin-orders.ts`: admin-only; status must be `IN_DESIGN` (409); files confirmed admin `DRAFT_PREVIEW|DRAFT_ORIGINAL` on the order, ≥1 (400); one tx: `applyStatusChange(IN_DESIGN→DRAFT_DELIVERED)` + close OPEN revisions (`DONE`) + event note (filenames + note); pings `order.status_changed` + `draftDelivered`.
+- `registerFinals(user, orderId, { fileIds })`: ≥ `IN_DESIGN` (not COMPLETED/CANCELLED); confirmed admin `FINAL` files ≥1; **no status change** (gate stays `finalPaymentVerified`); event note + `finalsRegistered`.
+- Routes `POST /api/admin/orders/[id]/drafts` · `POST /api/admin/orders/[id]/finals`; validators `registerDraftSchema` (fileIds 1–20, note ≤1000) · `registerFinalsSchema` (1–50).
+
+## P4 — Revisions
+
+- `src/lib/revisions.ts`:
+  - `requestRevision(user, orderId, { message, fileIds })` — owner; only from `DRAFT_DELIVERED` (else 409 `INVALID_TRANSITION`); ≤5 confirmed own `REVISION_REF`s connected via `revisionId`; `extraFeeRequired = order.revisionCount >= package.revisionLimit`; `number = max+1`; `revisionCount++` + machine `DRAFT_DELIVERED→REVISION_REQUESTED` in one tx; pings admins. Returns `{ id, number, status, extraFeeRequired }`.
+  - `acceptRevision(user, revisionId)` — admin; if `extraFeeRequired`, require a PAID `EXTRA_REVISION` payment on the order (else 409 `details: { paymentStatus }`); machine `REVISION_REQUESTED→IN_DESIGN`; stamp `acceptedAt/ById`; ping owner.
+  - `listRevisions(user, orderId)` — thread access; includes files + extra payment status.
+- Routes `POST /api/orders/[id]/revisions` (client; validateBody + rate limit) · `GET /api/orders/[id]/revisions` · `PATCH /api/admin/revisions/[id]` (`{ action: "accept" }`); validators `revisionSchema` (message 1–2000, fileIds ≤5) · `acceptRevisionSchema`.
+
+## P5 — Client UI (revisions)
+
+- `order-actions.tsx` at `DRAFT_DELIVERED`: **Approve draft** + **Request revision** + "N of M free revisions left" (0 → "further revisions are quoted by the designer first").
+- New `revision-request-dialog.tsx` + `order-revision-form.tsx` (RHF+zod; ≤5 images via `stageFiles`/`useUploadFile` kind `REVISION_REF`) + `use-request-revision`.
+- New `order-revisions-card.tsx` after Deliverables; `getOrderForUser` select += `revisions`, `revisionCount`, `package.revisionLimit`, `currency`.
+
+## P6 — Admin UI (proceed page)
+
+- `admin-proceed-view.tsx`: **Deliver draft** (status `IN_DESIGN`; dialog: pick undelivered `DRAFT_*` files or drop new via `proceed-drop-files`, optional note → `use-admin-register-draft`); **Register finals** (≥ `IN_DESIGN`, `FINAL` files → `use-admin-register-finals`).
+- New `admin-revisions-card.tsx`: revision list, extra-fee badge, **Accept** (disabled + "Charge extra revision" pre-filling `ProceedChargeForm` type `EXTRA_REVISION` while unpaid) → `use-admin-accept-revision`; deliver auto-closes OPEN revisions server-side.
+- `proceed-drop-files.tsx` label: "Draft preview (watermarked)" → "Draft preview".
+- Realtime cases for `revisionRequested/revisionAccepted/draftDelivered/finalsRegistered` → `[orderKeys.detail(refId), adminOrderKeys.detail(refId)]` (+tests).
+
+## P7 — Admin dashboard
+
+- `src/lib/admin-stats.ts` `getAdminStats`: `statusCounts`, `revenue{totalPaid,advancePaid,finalPaid,extraRevisionPaid,thisMonthPaid}`, `needsAttention{submitted,awaitingAdvance,inDesign,draftDelivered,awaitingFinalPayment,pendingPayments,openRevisions}`, `recentOrders`(10), `avgRevisionsPerCompletedOrder` — groupBy/count/aggregate.
+- Route `GET /api/admin/stats`; hook `use-admin-stats` + `adminStatsKeys`; invalidated by `order.status_changed` / `payment.updated` / `revision.*` / `settingsUpdated`.
+- `/admin/page.tsx` real overview (redirect removed): `stats-card.tsx`, `stats-overview.tsx` (KPI grid + status funnel), `needs-attention-card.tsx` (links to `?status=`-filtered orders), `recent-orders-card.tsx`; skeleton + error/refetch.
+- `admin-shell.tsx` nav: **Dashboard · Orders · Chats · Files · Users · Pricing · Settings**; logo → `ROUTES.admin.dashboard`.
+
+## P8 — Admin settings page
+
+- `ROUTES.admin.settings`; page + `admin-settings-view.tsx` + `currency-card.tsx`: shadcn `Select` over `SUPPORTED_CURRENCIES` (typeahead; "Name (CODE)"), save → `use-update-settings` → PATCH → toast + live re-render via `settingsUpdated` → `settingsKeys` invalidation. Helper text: "Switching currency changes the label only — amounts are never converted. In-flight orders keep the currency they were created with."
+
+## P9 — Docs, tests, gates
+
+- **API.md**: §5 rewritten (request/accept + extraFee), §8 drafts/finals (drop "watermark job"), new §8b stats + §8c settings, §12 event list. **README** roadmap. **AGENTS.md** component list. **PLAN.md** step 26.
+- **Tests** (~+35, expect ~205–210): revisions service (limit math, extraFee, wrong status, file validation, stranger 404, accept-blocked-until-PAID, auto-close on re-deliver), drafts/finals guards, settings (allow-list, admin-only, snapshot), formatMoney currency param, admin-stats, validators, realtime rows.
+- **Gates**: `pnpm lint && pnpm typecheck && pnpm test && pnpm build`; local `migrate deploy`; **deploy migration to cloud direct URL too**; dev smoke: USD switch re-renders live; old orders keep PKR; revision loop request→charge→accept→re-deliver; `/admin` 200 with stats; chats still load.
+
+**Out of scope:** watermarking, emails (plan 4), Stripe, invoices, FX conversion, portfolio CMS/testimonials.

@@ -5,8 +5,10 @@ import { useClerk } from "@clerk/nextjs";
 import {
   ClipboardListIcon,
   FileIcon,
+  LayoutDashboardIcon,
   LogOutIcon,
   MessageSquareIcon,
+  SettingsIcon,
   TagsIcon,
   UsersIcon,
 } from "lucide-react";
@@ -21,11 +23,13 @@ type AdminShellProps = {
 };
 
 const NAV = [
+  { href: ROUTES.admin.root, label: "Dashboard", icon: LayoutDashboardIcon },
   { href: ROUTES.admin.orders, label: "Orders", icon: ClipboardListIcon },
   { href: ROUTES.admin.chats, label: "Chats", icon: MessageSquareIcon },
   { href: ROUTES.admin.files, label: "Files", icon: FileIcon },
   { href: ROUTES.admin.users, label: "Users", icon: UsersIcon },
   { href: ROUTES.admin.packages, label: "Pricing", icon: TagsIcon },
+  { href: ROUTES.admin.settings, label: "Settings", icon: SettingsIcon },
 ];
 
 /** Sidebar shell for the admin panel — deliberately unlike the client panel. */
@@ -40,7 +44,7 @@ export function AdminShell({ email, children }: AdminShellProps) {
     <div className="flex min-h-svh">
       <aside className="sticky top-0 hidden h-svh w-60 shrink-0 flex-col border-r bg-muted/30 md:flex">
         <div className="flex h-16 items-center gap-2 border-b px-4">
-          <Link href={ROUTES.admin.orders} className="truncate text-sm font-semibold tracking-tight">
+          <Link href={ROUTES.admin.root} className="truncate text-sm font-semibold tracking-tight">
             {APP.name}
           </Link>
           <span className="rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
@@ -81,7 +85,7 @@ export function AdminShell({ email, children }: AdminShellProps) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-16 items-center justify-between gap-3 border-b px-4 md:hidden">
           <div className="flex min-w-0 items-center gap-2">
-            <Link href={ROUTES.admin.orders} className="truncate text-sm font-semibold">
+            <Link href={ROUTES.admin.root} className="truncate text-sm font-semibold">
               {APP.name}
             </Link>
             <span className="rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
