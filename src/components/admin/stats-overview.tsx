@@ -11,7 +11,7 @@ import {
   WalletIcon,
 } from "lucide-react";
 
-import { ROUTES } from "@/config/constants";
+import { APP, ROUTES } from "@/config/constants";
 import { formatMoney } from "@/lib/format";
 import { useSettings } from "@/hooks/settings/use-settings";
 import { useAdminStats } from "@/hooks/admin/use-admin-stats";
@@ -51,7 +51,7 @@ function KpiCard({
 export function StatsOverview() {
   const { data: stats, loadings, query } = useAdminStats();
   const { data: settings } = useSettings();
-  const currency = settings?.currency ?? "PKR";
+  const currency = settings?.currency ?? APP.currency;
 
   if (loadings.loading) {
     return (

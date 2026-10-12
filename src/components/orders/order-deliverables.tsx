@@ -33,6 +33,39 @@ export function OrderDeliverables({ order }: OrderDeliverablesProps) {
       order.status === ORDER_STATUSES.DRAFT_DELIVERED) &&
     !drafts.some((file) => file.kind === "FINAL");
 
+  // Empty-state copy that matches where the order actually is — never tell a
+  // client "coming soon" about something they already have access to.
+  const waitingCopy = (() => {
+    switch (order.status) {
+      case ORDER_STATUSES.SUBMITTED:
+        return {
+          title: "Nothing to download yet",
+          description: "Files appear here once your quote is accepted and the draft is delivered.",
+        };
+      case ORDER_STATUSES.QUOTED:
+        return {
+          title: "Nothing to download yet",
+          description: "Accept the quote and pay the advance — your draft lands here.",
+        };
+      case ORDER_STATUSES.AWAITING_ADVANCE:
+        return {
+          title: "Nothing to download yet",
+          description: "Pay the advance and we start designing; the draft is delivered here.",
+        };
+      case ORDER_STATUSES.IN_DESIGN:
+        return {
+          title: "Your draft is being prepared",
+          description: "We'll notify you here as soon as the draft drawings are ready to review.",
+        };
+      default:
+        return {
+          title: "Drafts will appear here",
+          description:
+            "Once a draft is delivered you can preview and download it from this section.",
+        };
+    }
+  })();
+
   return (
     <Card>
       <CardHeader>
@@ -45,14 +78,12 @@ export function OrderDeliverables({ order }: OrderDeliverablesProps) {
         {drafts.length === 0 ? (
           finalLocked ? (
             <EmptyState
+              icon={FileCheckIcon}
               title="Finals unlock after the final payment"
               description="Complete the final payment to download your finished drawing set."
             />
           ) : (
-            <EmptyState
-              title="Drafts will appear here"
-              description="Once your draft is delivered you can preview and download it from this section."
-            />
+            <EmptyState icon={FileCheckIcon} {...waitingCopy} />
           )
         ) : (
           <ul className="divide-y rounded-lg border">
@@ -77,6 +108,12 @@ export function OrderDeliverables({ order }: OrderDeliverablesProps) {
             ))}
           </ul>
         )}
+
+        {drafts.length > 0 && finalLocked ? (
+          <p className="rounded-lg border border-dashed p-3 text-sm text-muted-foreground">
+            The final drawing set unlocks after the final payment is verified.
+          </p>
+        ) : null}
 
         {clientFiles.length > 0 ? (
           <div>

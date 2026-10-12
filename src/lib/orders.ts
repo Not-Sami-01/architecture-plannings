@@ -3,13 +3,16 @@ import { ApiError } from "@/lib/api/response";
 import {
   FILE_KINDS,
   ORDER_STATUSES,
+  PAGINATION,
+  PAYMENT_STATUSES,
+  PAYMENT_TYPES,
   REALTIME_EVENTS,
   ROLES,
   type FileKind,
   type OrderStatus,
 } from "@/config/constants";
 import type { ApiUser } from "@/lib/api/types";
-import type { OrderInput } from "@/lib/validators/order";
+import type { OrderInput, OrderListQuery } from "@/lib/validators/order";
 import { applyStatusChange } from "@/lib/orders/status";
 import { publishAdminsEvent } from "@/lib/realtime";
 import { getSiteSettings } from "@/lib/settings";
@@ -170,23 +173,75 @@ export async function getOrderForUser(user: ApiUser, orderId: string) {
     orderBy: { createdAt: "asc" },
   });
 
-  return { ...order, files };
+  // Extra-fee state is per order (one EXTRA_REVISION charge covers the
+  // over-limit revisions) — mirrors listRevisions so client and admin agree.
+  const extraFeeRequired = order.revisions.some((revision) => revision.extraFeeRequired);
+  const revisions = order.revisions;
+  let extraFeePaid = false;
+  if (extraFeeRequired) {
+    const extraPayments = await prisma.payment.findMany({
+      where: { orderId: order.id, type: PAYMENT_TYPES.EXTRA_REVISION },
+      select: { status: true },
+    });
+    extraFeePaid = extraPayments.some((payment) => payment.status === PAYMENT_STATUSES.PAID);
+  }
+
+  return {
+    ...order,
+    files,
+    revisions: revisions.map((revision) => ({
+      ...revision,
+      extraFeePaid: revision.extraFeeRequired && extraFeePaid,
+    })),
+  };
 }
 
-export async function listOrdersForUser(user: ApiUser) {
-  return prisma.order.findMany({
-    where: user.role === ROLES.ADMIN ? {} : { userId: user.id },
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      number: true,
-      status: true,
-      city: true,
-      createdAt: true,
-      package: { select: { name: true } },
-      user: { select: { name: true, email: true } },
-    },
-  });
+/**
+ * The client's own orders, filtered + paginated (dashboard list; mirrors the
+ * admin list shape — status filter, free-text search over the order number,
+ * city and package name, newest/oldest sort — so both lists behave alike).
+ */
+export async function listOrdersForUser(
+  user: ApiUser,
+  query: OrderListQuery = { page: 1, pageSize: PAGINATION.defaultPageSize, sort: "newest" },
+) {
+  if (user.role === ROLES.ADMIN) throw ApiError.forbidden("Admins have their own orders view.");
+
+  const where = {
+    userId: user.id,
+    ...(query.status ? { status: query.status } : {}),
+    ...(query.q
+      ? {
+          OR: [
+            { number: { contains: query.q, mode: "insensitive" as const } },
+            { city: { contains: query.q, mode: "insensitive" as const } },
+            { package: { name: { contains: query.q, mode: "insensitive" as const } } },
+          ],
+        }
+      : {}),
+  };
+
+  const [items, total] = await prisma.$transaction([
+    prisma.order.findMany({
+      where,
+      orderBy: { createdAt: query.sort === "oldest" ? "asc" : "desc" },
+      skip: (query.page - 1) * query.pageSize,
+      take: query.pageSize,
+      select: {
+        id: true,
+        number: true,
+        status: true,
+        city: true,
+        createdAt: true,
+        currency: true,
+        totalPrice: true,
+        package: { select: { name: true } },
+      },
+    }),
+    prisma.order.count({ where }),
+  ]);
+
+  return { items, meta: { page: query.page, pageSize: query.pageSize, total } };
 }
 
 /**

@@ -7,6 +7,7 @@ import { messageKeys } from "@/hooks/messages/message-keys";
 import { paymentKeys } from "@/hooks/payments/payment-keys";
 import { settingsKeys } from "@/hooks/settings/settings-keys";
 import { adminStatsKeys } from "@/hooks/admin/admin-stats-keys";
+import { adminThreadKeys } from "@/hooks/admin/admin-thread-keys";
 
 import { realtimeEventQueries } from "./realtime-queries";
 
@@ -28,16 +29,30 @@ describe("realtimeEventQueries", () => {
     ]);
   });
 
-  it("a new message pings that thread's list and both unread badges", () => {
+  it("a new message pings that thread, both unread badges and the admin chats list", () => {
     expect(realtimeEventQueries({ type: REALTIME_EVENTS.messageCreated, refId: "ord_3" })).toEqual(
-      [messageKeys.list("ord_3"), messageKeys.unread("ord_3")],
+      [
+        messageKeys.list("ord_3"),
+        messageKeys.unread("ord_3"),
+        adminThreadKeys.list({}),
+        orderKeys.all,
+      ],
     );
-    expect(realtimeEventQueries({ type: REALTIME_EVENTS.messageCreated })).toEqual([]);
+    // Even without a refId the admin list previews must refresh.
+    expect(realtimeEventQueries({ type: REALTIME_EVENTS.messageCreated })).toEqual([
+      adminThreadKeys.list({}),
+      orderKeys.all,
+    ]);
   });
 
-  it("read receipts refresh the thread and unread badges", () => {
+  it("read receipts refresh the thread, unread badges and the admin chats list", () => {
     expect(realtimeEventQueries({ type: REALTIME_EVENTS.messageRead, refId: "ord_3" })).toEqual(
-      [messageKeys.list("ord_3"), messageKeys.unread("ord_3")],
+      [
+        messageKeys.list("ord_3"),
+        messageKeys.unread("ord_3"),
+        adminThreadKeys.list({}),
+        orderKeys.all,
+      ],
     );
   });
 
@@ -74,9 +89,9 @@ describe("realtimeEventQueries", () => {
     }
   });
 
-  it("a settings update refreshes the site settings query", () => {
+  it("a settings update refreshes money labels everywhere, not just settings", () => {
     expect(realtimeEventQueries({ type: REALTIME_EVENTS.settingsUpdated, refId: "currency" })).toEqual(
-      [settingsKeys.detail()],
+      [settingsKeys.detail(), orderKeys.all, adminOrderKeys.all, adminStatsKeys.all],
     );
   });
 

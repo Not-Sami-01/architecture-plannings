@@ -5,6 +5,7 @@ import { messageKeys } from "@/hooks/messages/message-keys";
 import { paymentKeys } from "@/hooks/payments/payment-keys";
 import { settingsKeys } from "@/hooks/settings/settings-keys";
 import { adminStatsKeys } from "@/hooks/admin/admin-stats-keys";
+import { adminThreadKeys } from "@/hooks/admin/admin-thread-keys";
 
 /** Id-only ping as it arrives over the wire. */
 export type RealtimePing = {
@@ -28,13 +29,19 @@ export function realtimeEventQueries(
     // Admin list and dashboard react to a brand-new submission.
     case REALTIME_EVENTS.orderCreated:
       return [adminOrderKeys.all, adminStatsKeys.all];
-    // New message in a thread (refId is the order/thread id): the thread and
-    // both parties' unread badges change.
+    // New message or read receipt in a thread (refId is the order id): the
+    // thread, both parties' unread badges, the admin chats list (previews
+    // move to the top) and the order views' chat triggers change.
     case REALTIME_EVENTS.messageCreated:
     case REALTIME_EVENTS.messageRead:
       return event.refId
-        ? [messageKeys.list(event.refId), messageKeys.unread(event.refId)]
-        : [];
+        ? [
+            messageKeys.list(event.refId),
+            messageKeys.unread(event.refId),
+            adminThreadKeys.list({}),
+            orderKeys.all,
+          ]
+        : [adminThreadKeys.list({}), orderKeys.all];
     // Edits/deletes only change the thread itself.
     case REALTIME_EVENTS.messageUpdated:
     case REALTIME_EVENTS.messageDeleted:
@@ -49,9 +56,11 @@ export function realtimeEventQueries(
     case REALTIME_EVENTS.draftDelivered:
     case REALTIME_EVENTS.finalsRegistered:
       return [orderKeys.all, adminOrderKeys.all, adminStatsKeys.all];
-    // The site currency changed: every money label re-renders.
+    // The site currency changed: settings feed the CurrencyProvider label and
+    // the server-rendered marketing pages read getSiteSettings() on their next
+    // visit; the order views carry money too, so refresh them as well.
     case REALTIME_EVENTS.settingsUpdated:
-      return [settingsKeys.detail()];
+      return [settingsKeys.detail(), orderKeys.all, adminOrderKeys.all, adminStatsKeys.all];
     default:
       return [];
   }

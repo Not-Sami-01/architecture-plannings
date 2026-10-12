@@ -14,10 +14,12 @@ import { quoteFormSchema, type QuoteFormValues } from "@/lib/validators/admin-or
 
 type QuoteFormProps = {
   orderId: string;
+  /** Order currency snapshot (plan 3) — labels the money field. */
+  currency: string;
 };
 
 /** Send-quote panel shown while the order is SUBMITTED (API.md §8). */
-export function QuoteForm({ orderId }: QuoteFormProps) {
+export function QuoteForm({ orderId, currency }: QuoteFormProps) {
   const { actions, loadings } = useSendQuote();
 
   const form = useForm<QuoteFormValues>({
@@ -64,7 +66,7 @@ export function QuoteForm({ orderId }: QuoteFormProps) {
       <FieldGroup>
         <div className="grid gap-4 sm:grid-cols-2">
           <Field data-invalid={errors.totalPrice ? true : undefined}>
-            <FieldLabel htmlFor="quote-price">Total price (PKR)</FieldLabel>
+            <FieldLabel htmlFor="quote-price">Total price ({currency})</FieldLabel>
             <Input
               id="quote-price"
               type="number"

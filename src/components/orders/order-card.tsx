@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { ChevronRightIcon } from "lucide-react";
 
-import { ROUTES } from "@/config/constants";
+import { ORDER_STATUS_DETAIL, ROUTES } from "@/config/constants";
+import type { OrderStatus } from "@/config/constants";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import type { OrderListItem } from "@/hooks/orders/use-orders";
 
@@ -27,6 +28,10 @@ export function OrderCard({ order }: OrderCardProps) {
           {order.city ? ` · ${order.city}` : ""}
         </p>
         <p className="mt-1 text-xs text-muted-foreground">
+          {ORDER_STATUS_DETAIL[order.status as OrderStatus] ??
+            "Track this order's progress here."}
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground/80">
           Submitted {new Date(order.createdAt).toLocaleDateString()}
         </p>
       </div>

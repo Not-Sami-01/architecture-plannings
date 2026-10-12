@@ -3,11 +3,14 @@ import { z } from "zod";
 import {
   DIRECTIONS,
   KITCHEN_TYPES,
+  ORDER_STATUSES,
+  PAGINATION,
   PLOT_UNITS,
   ROAD_SIDES,
   STYLES,
   FILE_LIMITS,
 } from "@/config/constants";
+import type { OrderStatus } from "@/config/constants";
 
 /**
  * Order creation schema (FR-6–FR-11). Shared by the multi-step form
@@ -70,3 +73,30 @@ export type RequirementsInput = z.infer<typeof requirementsSchema>;
 export type OrderInput = z.infer<typeof orderSchema>;
 /** Alias for form usage; identical to OrderInput now that numbers are plain. */
 export type OrderFormValues = OrderInput;
+
+/**
+ * GET /api/orders query schema — the client's list. Optional status filter,
+ * bounded free-text search (number/city/package), newest/oldest sort and
+ * bounded pagination — mirrors the admin list query shape.
+ */
+export const orderListQuerySchema = z.object({
+  status: z
+    .preprocess(
+      (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+      z.enum(Object.values(ORDER_STATUSES) as [OrderStatus, ...OrderStatus[]]).optional(),
+    ),
+  q: z.preprocess(
+    (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
+    z.string().trim().max(120).optional(),
+  ),
+  sort: z.enum(["newest", "oldest"]).default("newest"),
+  page: z.coerce.number().int().min(1).default(PAGINATION.defaultPage),
+  pageSize: z.coerce
+    .number()
+    .int()
+    .min(1)
+    .max(PAGINATION.maxPageSize)
+    .default(PAGINATION.defaultPageSize),
+});
+
+export type OrderListQuery = z.infer<typeof orderListQuerySchema>;

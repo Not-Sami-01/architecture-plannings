@@ -28,7 +28,7 @@ export function useCreateOrder() {
     },
     onSuccess: (order) => {
       // Both panels list orders under different key prefixes.
-      queryClient.invalidateQueries({ queryKey: orderKeys.list() });
+      queryClient.invalidateQueries({ queryKey: orderKeys.all });
       queryClient.invalidateQueries({ queryKey: adminOrderKeys.all });
       toast.success(`Order ${order.number} submitted!`);
     },

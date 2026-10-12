@@ -173,6 +173,22 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   CANCELLED: "Cancelled",
 };
 
+/**
+ * One-line explanation of what each status means for the client (order
+ * cards, detail header, dashboards). Keep it action-oriented and short.
+ */
+export const ORDER_STATUS_DETAIL: Record<OrderStatus, string> = {
+  SUBMITTED: "We received your order and will send a quote shortly.",
+  QUOTED: "Your quote is ready — review the price and accept to begin.",
+  AWAITING_ADVANCE: "Quote accepted — pay the advance and we will start designing.",
+  IN_DESIGN: "Your drawings are being prepared — drafts are on the way.",
+  DRAFT_DELIVERED: "Your draft is ready — review it, then approve or request changes.",
+  REVISION_REQUESTED: "Revision requested — updated drawings are being prepared.",
+  AWAITING_FINAL_PAYMENT: "Draft approved — pay the balance to unlock the final files.",
+  COMPLETED: "All done — your full drawing set is ready to download.",
+  CANCELLED: "This order was cancelled.",
+};
+
 export const FILE_KINDS = {
   CLIENT: "CLIENT",
   DRAFT_PREVIEW: "DRAFT_PREVIEW",

@@ -83,7 +83,7 @@ export function AdminShell({ email, children }: AdminShellProps) {
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex h-16 items-center justify-between gap-3 border-b px-4 md:hidden">
+        <header className="flex min-h-16 flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b px-4 py-2 md:hidden">
           <div className="flex min-w-0 items-center gap-2">
             <Link href={ROUTES.admin.root} className="truncate text-sm font-semibold">
               {APP.name}
@@ -92,7 +92,8 @@ export function AdminShell({ email, children }: AdminShellProps) {
               Admin
             </span>
           </div>
-          <nav className="flex items-center gap-1" aria-label="Admin sections">
+          {/* Seven icons + actions: wrap instead of overflowing on narrow phones. */}
+          <nav className="flex flex-wrap items-center justify-end gap-1" aria-label="Admin sections">
             {NAV.map((item) => (
               <Link
                 key={item.href}

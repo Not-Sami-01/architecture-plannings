@@ -110,7 +110,7 @@ export function AdminOrderDetailView({ orderId }: AdminOrderDetailViewProps) {
             <p className="text-xs text-muted-foreground">Quote</p>
             {order.status === ORDER_STATUSES.SUBMITTED ? (
               <div className="mt-2">
-                <QuoteForm orderId={order.id} />
+                <QuoteForm orderId={order.id} currency={order.currency} />
               </div>
             ) : (
               <>

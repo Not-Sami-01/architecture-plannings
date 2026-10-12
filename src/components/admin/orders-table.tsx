@@ -24,7 +24,8 @@ type OrdersTableProps = {
 export function OrdersTable({ orders }: OrdersTableProps) {
   return (
     <div className="overflow-x-auto rounded-xl border">
-      <Table>
+      {/* Fixed floor keeps columns readable; the container scrolls below it. */}
+      <Table className="min-w-[900px]">
         <TableHeader>
           <TableRow>
             <TableHead>Number</TableHead>

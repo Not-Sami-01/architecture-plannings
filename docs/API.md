@@ -218,6 +218,27 @@ Response `201`:
 { "data": { "id": "ord_1", "number": "AP-2026-0042", "status": "SUBMITTED" } }
 ```
 
+**GET `/api/orders`** — my orders, filtered + paginated (mirrors the admin list query).
+
+Query: `?status=IN_DESIGN&q=AP-2026&sort=newest|oldest&page=1&pageSize=20`
+- `status` optional, one of `OrderStatus`; `q` free-text over number, city and package name (≤120 chars); `page ≥ 1`, `pageSize` 1–100 (defaults 1/20).
+
+Response `200`:
+```json
+{
+  "data": [
+    {
+      "id": "ord_1", "number": "AP-2026-0042", "status": "IN_DESIGN",
+      "city": "Lahore", "createdAt": "2026-10-07T10:00:00Z",
+      "currency": "PKR", "totalPrice": 25000,
+      "package": { "name": "Plan + Elevation" }
+    }
+  ],
+  "meta": { "page": 1, "pageSize": 20, "total": 12 }
+}
+```
+Admins calling it get `403` — the panel has `/api/admin/orders`.
+
 **GET `/api/orders/:id`**
 ```json
 {

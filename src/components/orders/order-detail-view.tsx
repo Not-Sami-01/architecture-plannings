@@ -4,6 +4,7 @@ import { AlertTriangleIcon } from "lucide-react";
 
 import { useOrder } from "@/hooks/orders/use-order";
 import { formatMoney } from "@/lib/format";
+import { ORDER_STATUS_DETAIL, type OrderStatus } from "@/config/constants";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import { OrderActions } from "@/components/orders/order-actions";
 import { OrderRevisionsCard } from "@/components/orders/order-revisions-card";
@@ -77,11 +78,15 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-wrap items-center justify-between gap-3">
+      <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <h1 className="text-3xl font-semibold tracking-tight">{order.number}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Submitted {new Date(order.createdAt).toLocaleDateString()}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {ORDER_STATUS_DETAIL[order.status as OrderStatus] ??
+              "This order's status will update as work progresses."}
           </p>
         </div>
         <OrderStatusBadge status={order.status} />

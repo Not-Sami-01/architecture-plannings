@@ -97,7 +97,7 @@ export function ProceedChargeForm({
       <FieldGroup className="gap-4">
         <div className="grid gap-4 sm:grid-cols-2">
           <Field data-invalid={errors.amount ? true : undefined}>
-            <FieldLabel htmlFor="charge-amount">Amount (PKR)</FieldLabel>
+            <FieldLabel htmlFor="charge-amount">Amount ({currency})</FieldLabel>
             <Input
               id="charge-amount"
               type="number"

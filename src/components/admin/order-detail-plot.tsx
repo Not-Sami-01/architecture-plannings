@@ -9,10 +9,12 @@ import {
 
 type OrderDetailPlotProps = {
   order: AdminOrderDetail;
+  /** Card heading — the order detail calls it "Plot & requirements". */
+  title?: string;
 };
 
 /** Read-only presentation of FR-7/FR-8 answers (admin order detail, Phase 1.9). */
-export function OrderDetailPlot({ order }: OrderDetailPlotProps) {
+export function OrderDetailPlot({ order, title = "Plot & requirements" }: OrderDetailPlotProps) {
   const rows: { label: string; value: string }[] = [
     { label: "Plot", value: `${order.plotWidth} × ${order.plotLength} ${order.plotUnit}` },
     { label: "Facing", value: order.facing },
@@ -31,7 +33,7 @@ export function OrderDetailPlot({ order }: OrderDetailPlotProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">Plot &amp; requirements</CardTitle>
+        <CardTitle className="text-base">{title}</CardTitle>
       </CardHeader>
       <CardContent>
         <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm md:grid-cols-3">

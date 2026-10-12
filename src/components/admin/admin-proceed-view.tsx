@@ -14,6 +14,7 @@ import {
   RegisterFinalsDialog,
 } from "@/components/admin/deliver-draft-dialog";
 import { OrderDetailTimeline } from "@/components/admin/order-detail-timeline";
+import { OrderDetailPlot } from "@/components/admin/order-detail-plot";
 import { OrderDetailUploads } from "@/components/admin/order-detail-uploads";
 import { ProceedDialog } from "@/components/admin/proceed-dialog";
 import { StatusControls } from "@/components/admin/status-controls";
@@ -74,17 +75,17 @@ export function AdminProceedView({ orderId }: AdminProceedViewProps) {
         ← Back to order detail
       </Link>
 
-      <header className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-semibold tracking-tight">
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
             Proceed {order.number}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 break-words text-sm text-muted-foreground">
             {order.user.name ?? "No name"} · {order.user.email} · {order.package.name} ·{" "}
             {formatMoney(order.package.price, order.currency)}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           <OrderStatusBadge status={order.status} />
           {order.status === "IN_DESIGN" ? (
             <DeliverDraftDialog order={order} />
@@ -127,6 +128,9 @@ export function AdminProceedView({ orderId }: AdminProceedViewProps) {
               />
             </div>
           </section>
+
+          {/* The client's brief — the answers the designer works from (FR-7/FR-8). */}
+          <OrderDetailPlot order={order} title="Project information" />
 
           <OrderDetailUploads files={order.files} orderId={order.id} />
           <OrderDetailTimeline events={order.events} />

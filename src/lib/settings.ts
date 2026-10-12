@@ -56,11 +56,13 @@ export async function setCurrency(user: ApiUser, code: string) {
     create: { key: SETTINGS_KEYS.currency, value: code },
   });
 
-  // Next 16 requires an explicit cacheLife profile; "max" expires immediately.
-  revalidateTag(SETTINGS_CACHE_TAG, "max");
+  // Next 16: "max" is stale-while-revalidate (old currency labels keep
+  // being served) — this is a route handler, so expire immediately instead.
+  // The next marketing/dashboard read is a blocking cache miss.
+  revalidateTag(SETTINGS_CACHE_TAG, { expire: 0 });
 
   // Admins see the change instantly; other clients pick it up on their next
-  // settings fetch (staleTime below) — order money is snapshot-safe anyway.
+  // settings fetch (`use-settings` staleTime) — order money is snapshot-safe.
   void publishAdminsEvent({
     type: REALTIME_EVENTS.settingsUpdated,
     refId: SETTINGS_KEYS.currency,

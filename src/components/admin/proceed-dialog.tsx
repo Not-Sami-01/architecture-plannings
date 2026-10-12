@@ -59,7 +59,7 @@ export function ProceedDialog({ orderId, packagePrice, currency, status }: Proce
       </Button>
 
       <Dialog open={open} onOpenChange={(next) => (next ? setOpen(next) : close())}>
-        <DialogContent className="max-h-[85vh] overflow-y-auto">
+        <DialogContent className="max-h-[85vh] overflow-y-auto p-4 sm:max-w-lg sm:p-6">
           <DialogHeader>
             {view !== "menu" ? (
               <button

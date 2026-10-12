@@ -23,8 +23,8 @@ function RevisionRow({ revision }: { revision: ClientOrderDetail["revisions"][nu
         <span className="text-sm font-medium">Revision #{revision.number}</span>
         <div className="flex items-center gap-2">
           {revision.extraFeeRequired ? (
-            <Badge variant="secondary" className="text-[10px]">
-              Extra fee quoted
+            <Badge variant={revision.extraFeePaid ? "secondary" : "destructive"} className="text-[10px]">
+              {revision.extraFeePaid ? "Extra fee paid" : "Extra fee due"}
             </Badge>
           ) : null}
           <Badge variant={isDone ? "default" : "secondary"} className="text-[10px]">

@@ -4,9 +4,15 @@ vi.mock("@/lib/db", () => {
   const prisma = {
     package: { findFirst: vi.fn() },
     orderFile: { findMany: vi.fn() },
-    order: { count: vi.fn(), create: vi.fn() },
+    order: { count: vi.fn(), create: vi.fn(), findMany: vi.fn(), findUnique: vi.fn() },
     orderEvent: { create: vi.fn() },
-    $transaction: vi.fn(async (fn: (tx: unknown) => Promise<unknown>) => fn(prisma)),
+    payment: { findMany: vi.fn() },
+    revision: { findMany: vi.fn() },
+    // Prisma's $transaction takes a callback or an array of already-started
+    // promises; listOrdersForUser uses the array form.
+    $transaction: vi.fn(async (fn: unknown) =>
+      typeof fn === "function" ? fn(prisma) : Promise.all(fn as Promise<unknown>[]),
+    ),
   };
   return { prisma };
 });
@@ -18,11 +24,15 @@ vi.mock("@/lib/settings", () => ({
 }));
 
 import { prisma } from "@/lib/db";
-import { ORDER_STATUSES, ROLES } from "@/config/constants";
+import { FILE_KINDS, ORDER_STATUSES, PAGINATION, ROLES } from "@/config/constants";
 import type { ApiUser } from "@/lib/api/types";
 import type { OrderInput } from "@/lib/validators/order";
 
-import { createOrder, generateOrderNumber } from "./orders";
+import { createOrder, generateOrderNumber, getOrderForUser, listOrdersForUser } from "./orders";
+
+const orderFindMany = prisma.order.findMany as unknown as Mock;
+const orderFindUnique = prisma.order.findUnique as unknown as Mock;
+const paymentFindMany = prisma.payment.findMany as unknown as Mock;
 
 const packageFindFirst = prisma.package.findFirst as unknown as Mock;
 const orderFileFindMany = prisma.orderFile.findMany as unknown as Mock;
@@ -68,6 +78,9 @@ beforeEach(() => {
     status: ORDER_STATUSES.SUBMITTED,
   });
   orderEventCreate.mockResolvedValue({ id: "evt_1" });
+  orderFindMany.mockResolvedValue([]);
+  orderFindUnique.mockResolvedValue(null);
+  paymentFindMany.mockResolvedValue([]);
 });
 
 describe("generateOrderNumber", () => {
@@ -152,5 +165,125 @@ describe("createOrder", () => {
         data: expect.objectContaining({ number: "AP-2026-0007" }),
       }),
     );
+  });
+});
+
+describe("listOrdersForUser", () => {
+  const query = { page: 1, pageSize: PAGINATION.defaultPageSize, sort: "newest" } as const;
+
+  it("refuses admins — they have their own orders view", async () => {
+    const admin: ApiUser = { id: "usr_admin", email: "admin@test.dev", role: ROLES.ADMIN };
+
+    await expect(listOrdersForUser(admin, { ...query })).rejects.toMatchObject({ status: 403 });
+    expect(orderFindMany).not.toHaveBeenCalled();
+  });
+
+  it("always scopes to the caller's own orders", async () => {
+    await listOrdersForUser(user, { ...query });
+
+    expect(orderFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ userId: user.id }) }),
+    );
+  });
+
+  it("combines status filter, free-text search and paging", async () => {
+    orderCount.mockResolvedValue(41);
+
+    const result = await listOrdersForUser(user, {
+      ...query,
+      page: 3,
+      status: ORDER_STATUSES.IN_DESIGN,
+      q: "Lahore",
+      sort: "oldest",
+    });
+
+    expect(orderFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          userId: user.id,
+          status: ORDER_STATUSES.IN_DESIGN,
+          OR: expect.any(Array),
+        }),
+        orderBy: { createdAt: "asc" },
+        skip: 2 * PAGINATION.defaultPageSize,
+        take: PAGINATION.defaultPageSize,
+      }),
+    );
+    expect(result.meta).toEqual({
+      page: 3,
+      pageSize: PAGINATION.defaultPageSize,
+      total: 41,
+    });
+  });
+
+  it("returns newest-first items with money fields by default", async () => {
+    orderFindMany.mockResolvedValue([
+      { id: "ord_2", number: "AP-2026-0002", status: ORDER_STATUSES.IN_DESIGN, currency: "PKR" },
+    ]);
+    orderCount.mockResolvedValue(1);
+
+    const result = await listOrdersForUser(user, { ...query });
+
+    expect(orderFindMany).toHaveBeenCalledWith(expect.objectContaining({ orderBy: { createdAt: "desc" } }));
+    expect(result.items[0]).toMatchObject({ id: "ord_2", currency: "PKR" });
+    expect(result.meta).toEqual({ page: 1, pageSize: PAGINATION.defaultPageSize, total: 1 });
+  });
+});
+
+describe("getOrderForUser", () => {
+  const orderRow = {
+    id: "ord_1",
+    userId: user.id,
+    status: ORDER_STATUSES.AWAITING_FINAL_PAYMENT,
+    finalPaymentVerified: false,
+    revisions: [
+      { id: "rev_1", number: 1, extraFeeRequired: true, files: [] },
+      { id: "rev_2", number: 2, extraFeeRequired: false, files: [] },
+    ],
+  };
+
+  it("hides everything but the client's own order (404)", async () => {
+    orderFindUnique.mockResolvedValue({ ...orderRow, userId: "usr_other" });
+
+    await expect(getOrderForUser(user, "ord_1")).rejects.toMatchObject({ status: 404 });
+    expect(orderFileFindMany).not.toHaveBeenCalled();
+  });
+
+  it("locks finals until the final payment is verified", async () => {
+    orderFindUnique.mockResolvedValue({ ...orderRow, revisions: [] });
+
+    await getOrderForUser(user, "ord_1");
+
+    expect(orderFileFindMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          kind: { in: [FILE_KINDS.CLIENT, FILE_KINDS.DRAFT_PREVIEW, FILE_KINDS.REVISION_REF] },
+        }),
+      }),
+    );
+  });
+
+  it("serves finals once the final payment is verified", async () => {
+    orderFindUnique.mockResolvedValue({ ...orderRow, revisions: [], finalPaymentVerified: true });
+
+    await getOrderForUser(user, "ord_1");
+
+    const call = orderFileFindMany.mock.calls[0]?.[0] as { where: { kind: { in: string[] } } };
+    expect(call.where.kind.in).toContain(FILE_KINDS.FINAL);
+  });
+
+  it("marks over-limit revisions paid only after an EXTRA_REVISION charge is PAID", async () => {
+    orderFindUnique.mockResolvedValue(orderRow);
+
+    paymentFindMany.mockResolvedValue([{ status: "PAID" }]);
+    const paid = await getOrderForUser(user, "ord_1");
+    expect(paid.revisions).toEqual([
+      expect.objectContaining({ id: "rev_1", extraFeePaid: true }),
+      expect.objectContaining({ id: "rev_2", extraFeePaid: false }),
+    ]);
+
+    paymentFindMany.mockResolvedValue([{ status: "PENDING" }]);
+    const unpaid = await getOrderForUser(user, "ord_1");
+    expect(unpaid.revisions[0]).toMatchObject({ extraFeePaid: false });
   });
 });
