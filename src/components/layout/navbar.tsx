@@ -4,13 +4,17 @@ import Link from "next/link";
 import { useState } from "react";
 import { MenuIcon, UserIcon, XIcon } from "lucide-react";
 
-import { APP, NAV_LINKS, ROUTES } from "@/config/constants";
+import { CTA, NAV_LINKS, ROUTES } from "@/config/constants";
 import { useSession } from "@/hooks/auth/use-session";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { Logo } from "@/components/common/logo";
 import { ThemeSwitcher } from "@/components/common/theme-switcher";
 
-/** Marketing navbar. Signed-in visitors get a profile shortcut instead of auth CTAs. */
+/**
+ * Floating glass navbar (brand §Digital expression: 85% paper tint, 18px blur,
+ * luminous edge, 20px radius). Signed-in visitors get a profile shortcut.
+ */
 export function Navbar() {
   const [open, setOpen] = useState(false);
   const { data: session } = useSession();
@@ -21,7 +25,7 @@ export function Navbar() {
         <Link
           key={link.href}
           href={link.href}
-          className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+          className="inline-flex min-h-11 items-center text-sm text-muted-foreground transition-colors hover:text-foreground"
           onClick={() => setOpen(false)}
         >
           {link.label}
@@ -46,26 +50,24 @@ export function Navbar() {
   );
 
   return (
-    <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-4">
-        <Link href={ROUTES.home} className="text-lg font-semibold tracking-tight">
-          {APP.name}
-        </Link>
+    <header className="sticky top-3 z-40 mx-auto w-[calc(100%-1.5rem)] max-w-5xl rounded-[20px] border border-glass-edge bg-glass/85 shadow-glass backdrop-blur-[18px]">
+      <div className="flex h-14 items-center justify-between gap-4 px-4">
+        <Logo />
 
-        <nav className="hidden items-center gap-6 md:flex" aria-label="Main">
+        <nav className="hidden items-center gap-4 xl:flex" aria-label="Main">
           {links}
         </nav>
 
-        <div className="hidden items-center gap-2 md:flex">
+        <div className="hidden items-center gap-1 xl:flex">
           <ThemeSwitcher />
           {authAction}
-          <Button render={<Link href={ROUTES.newOrder} />}>Start an order</Button>
+          <Button render={<Link href={ROUTES.newOrder} />}>{CTA.primary}</Button>
         </div>
 
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger
             aria-label={open ? "Close menu" : "Open menu"}
-            className="inline-flex size-10 items-center justify-center rounded-lg hover:bg-muted md:hidden"
+            className="inline-flex size-11 items-center justify-center rounded-lg hover:bg-muted xl:hidden"
           >
             {open ? <XIcon className="size-5" /> : <MenuIcon className="size-5" />}
           </SheetTrigger>
@@ -95,7 +97,7 @@ export function Navbar() {
                   )}
                 </Button>
                 <Button render={<Link href={ROUTES.newOrder} />} onClick={() => setOpen(false)}>
-                  Start an order
+                  {CTA.primary}
                 </Button>
               </div>
             </nav>

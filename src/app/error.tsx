@@ -13,7 +13,7 @@ export default function Error({ reset }: { error: Error & { digest?: string }; r
   return (
     <main className="flex flex-1 items-center justify-center px-4 py-16">
       <div className="mx-auto max-w-md text-center" role="alert">
-        <h1 className="text-2xl font-semibold tracking-tight">Something went wrong</h1>
+        <h1 className="font-display text-3xl tracking-tight">Something went wrong</h1>
         <p className="mt-2 text-muted-foreground">{DEFAULT_ERROR_MESSAGE}</p>
         <div className="mt-6 flex flex-wrap justify-center gap-3">
           <Button onClick={reset}>Try again</Button>

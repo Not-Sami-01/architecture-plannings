@@ -12,7 +12,7 @@ type FaqSectionProps = {
   className?: string;
 };
 
-/** FAQ list + FAQPage JSON-LD. Every public page should include one (CONTENT.md §3). */
+/** FAQ as hairline-ruled rows + FAQPage JSON-LD. Every public page should include one (CONTENT.md §3). */
 export function FaqSection({
   items,
   heading = "Frequently asked questions",
@@ -24,19 +24,19 @@ export function FaqSection({
 
   return (
     <section aria-labelledby={id} className={className}>
-      <h2 id={id} className="text-2xl font-semibold tracking-tight">
+      <h2 id={id} className="font-display text-3xl leading-tight tracking-tight md:text-4xl">
         {heading}
       </h2>
-      <div className="mt-6 flex flex-col gap-3">
+      <dl className="mt-8 border-t">
         {items.map((item) => (
-          <div key={item.question} className="rounded-xl border bg-card p-5">
-            <p className="font-medium">{item.question}</p>
-            <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+          <div key={item.question} className="border-b py-5">
+            <dt className="font-medium">{item.question}</dt>
+            <dd className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
               <InlineText text={item.answer} />
-            </p>
+            </dd>
           </div>
         ))}
-      </div>
+      </dl>
       {schema ? <JsonLd data={faqSchema(items)} /> : null}
     </section>
   );

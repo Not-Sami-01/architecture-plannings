@@ -23,14 +23,14 @@ export function ContentSections({ blocks, className }: ContentSectionsProps) {
               <h2
                 key={index}
                 id={block.id}
-                className="mt-10 scroll-mt-24 text-2xl font-semibold tracking-tight first:mt-0"
+                className="mt-12 scroll-mt-24 font-display text-3xl leading-tight tracking-tight first:mt-0 md:text-4xl"
               >
                 {block.text}
               </h2>
             );
           case "h3":
             return (
-              <h3 key={index} className="mt-6 text-lg font-semibold tracking-tight">
+              <h3 key={index} className="mt-8 font-display text-2xl leading-snug tracking-tight">
                 {block.text}
               </h3>
             );
@@ -67,17 +67,17 @@ export function ContentSections({ blocks, className }: ContentSectionsProps) {
             );
           case "steps":
             return (
-              <ol key={index} className="flex flex-col gap-4">
+              <ol key={index} className="mt-2 flex flex-col">
                 {block.items.map((step, stepIndex) => (
-                  <li key={step.title} className="rounded-xl border bg-card p-5">
-                    <p className="flex items-center gap-2 font-medium">
-                      <span className="flex size-7 items-center justify-center rounded-lg bg-primary/10 text-sm text-primary">
-                        {stepIndex + 1}
+                  <li key={step.title} className="border-t py-5">
+                    <p className="flex items-baseline gap-3 font-display text-xl leading-snug">
+                      <span className="font-mono text-xs text-accent-foreground" aria-hidden>
+                        {String(stepIndex + 1).padStart(2, "0")}
                       </span>
                       {step.title}
                     </p>
                     {step.text ? (
-                      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+                      <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted-foreground">
                         <InlineText text={step.text} />
                       </p>
                     ) : null}
@@ -123,7 +123,7 @@ export function ContentSections({ blocks, className }: ContentSectionsProps) {
             return (
               <p
                 key={index}
-                className="rounded-xl border border-dashed bg-muted/30 p-4 text-sm leading-relaxed text-muted-foreground"
+                className="border-l-2 border-primary/60 bg-muted/60 p-4 text-sm leading-relaxed text-muted-foreground"
               >
                 <InlineText text={block.text} />
               </p>

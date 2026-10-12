@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { auth } from "@clerk/nextjs/server";
 
-import { ROUTES } from "@/config/constants";
+import { CTA, ROUTES } from "@/config/constants";
 import { resolveApiUser } from "@/lib/users";
 import { Button } from "@/components/ui/button";
 import { OrderList } from "@/components/orders/order-list";
@@ -16,14 +16,14 @@ export default async function DashboardPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-semibold tracking-tight">
+          <h1 className="font-display text-3xl tracking-tight md:text-4xl">
             Welcome{name ? `, ${name}` : ""}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Your orders and their current status.
           </p>
         </div>
-        <Button render={<Link href={ROUTES.newOrder} />}>Start an order</Button>
+        <Button render={<Link href={ROUTES.newOrder} />}>{CTA.primary}</Button>
       </div>
       <OrderList />
     </div>

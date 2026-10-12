@@ -34,13 +34,13 @@ export default function GuidesPage() {
 
           return (
             <section key={category} className="mb-12" aria-labelledby={`category-${category}`}>
-              <h2 id={`category-${category}`} className="text-2xl font-semibold tracking-tight">
+              <h2 id={`category-${category}`} className="font-display text-3xl leading-snug tracking-tight">
                 {category}
               </h2>
               <div className="mt-6 grid gap-6 md:grid-cols-2">
                 {guides.map((guide) => (
                   <article key={guide.slug} className="flex flex-col rounded-xl border bg-card p-5">
-                    <h3 className="font-medium">
+                    <h3 className="font-display text-xl leading-snug">
                       <Link
                         href={ROUTES.guide(guide.slug)}
                         className="text-foreground hover:text-primary"

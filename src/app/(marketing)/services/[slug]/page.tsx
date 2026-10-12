@@ -58,7 +58,7 @@ export default async function PackagePage({ params }: PackagePageProps) {
       </article>
 
       <section className="mx-auto w-full max-w-3xl px-4 pb-12" aria-labelledby="pricing">
-        <h2 id="pricing" className="text-2xl font-semibold tracking-tight">
+        <h2 id="pricing" className="font-display text-3xl leading-snug tracking-tight">
           {content.pricingHeading}
         </h2>
         {pkg ? (

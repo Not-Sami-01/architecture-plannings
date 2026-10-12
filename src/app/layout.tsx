@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
-import { GeistSans } from "geist/font/sans";
+import { DM_Serif_Display, Inter } from "next/font/google";
 import { GeistMono } from "geist/font/mono";
 
 import { Providers } from "@/components/common/providers";
@@ -20,13 +20,28 @@ export const metadata: Metadata = {
   description: APP.description,
 };
 
+/** Brand typography (DESIGN.md): DM Serif Display for ideas, Inter for everything else. */
+const inter = Inter({
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-sans",
+});
+
+const dmSerifDisplay = DM_Serif_Display({
+  weight: "400",
+  style: ["normal", "italic"],
+  subsets: ["latin"],
+  display: "swap",
+  variable: "--font-serif",
+});
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html
       lang="en"
       // next-themes + the palette script mutate <html> classes pre-hydration.
       suppressHydrationWarning
-      className={`${GeistSans.variable} ${GeistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${dmSerifDisplay.variable} ${GeistMono.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />

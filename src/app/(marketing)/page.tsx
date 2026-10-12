@@ -34,27 +34,48 @@ export default async function HomePage() {
     getSiteSettings(),
   ]);
 
+  const featuredPackage =
+    packages.find((pkg) => pkg.slug === homePackages.featuredSlug) ?? packages[0] ?? null;
+
   return (
     <main>
-      <HomeHero />
+      <HomeHero featuredPackage={featuredPackage} currency={currency} />
 
-      <section className="border-y bg-muted py-16" aria-labelledby="process-heading">
+      <section className="py-16 md:py-24" aria-labelledby="packages-heading">
         <div className="mx-auto w-full max-w-6xl px-4">
-          <p className="text-xs font-medium uppercase tracking-widest text-accent-foreground">
-            {homeProcess.eyebrow}
-          </p>
-          <h2
-            id="process-heading"
-            className="mt-3 text-2xl font-semibold tracking-tight md:text-3xl"
-          >
-            {homeProcess.heading}
-          </h2>
-          <p className="mt-3 max-w-2xl text-muted-foreground">{homeProcess.text}</p>
-          <NumberedCards items={homeProcess.cards} className="mt-8" />
-          <div className="mt-8">
-            <Button variant="outline" render={<Link href={homeProcess.cta.href} />}>
-              {homeProcess.cta.label}
-            </Button>
+          <div className="grid gap-6 md:grid-cols-12">
+            <div className="md:col-span-7">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-foreground">
+                {homePackages.eyebrow}
+              </p>
+              <h2
+                id="packages-heading"
+                className="mt-4 font-display text-3xl leading-[1.08] tracking-tight md:text-4xl"
+              >
+                {homePackages.heading}
+              </h2>
+            </div>
+            <p className="max-w-2xl self-end leading-relaxed text-muted-foreground md:col-span-5">
+              {homePackages.text}
+            </p>
+          </div>
+
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            {packages.length > 0 ? (
+              packages.map((pkg) => (
+                <PackageCard
+                  key={pkg.id}
+                  package={pkg}
+                  currency={currency}
+                  featured={pkg.slug === homePackages.featuredSlug}
+                  featuredLabel="Most popular"
+                />
+              ))
+            ) : (
+              <p className="rounded-lg border border-dashed p-10 text-center text-muted-foreground md:col-span-3">
+                Packages are being updated. Start an order and we will quote you directly.
+              </p>
+            )}
           </div>
         </div>
       </section>
@@ -67,58 +88,68 @@ export default async function HomePage() {
         cta={homeBanner.cta}
       />
 
-      <section className="py-16" aria-labelledby="packages-heading">
+      <section className="border-y bg-muted py-16 md:py-24" aria-labelledby="plot-size-heading">
         <div className="mx-auto w-full max-w-6xl px-4">
-          <p className="text-xs font-medium uppercase tracking-widest text-accent-foreground">
-            {homePackages.eyebrow}
-          </p>
-          <h2
-            id="packages-heading"
-            className="mt-3 text-2xl font-semibold tracking-tight md:text-3xl"
-          >
-            {homePackages.heading}
-          </h2>
-          <p className="mt-3 max-w-2xl text-muted-foreground">{homePackages.text}</p>
-
-          <div className="mt-8 grid gap-6 md:grid-cols-3">
-            {packages.length > 0 ? (
-              packages.map((pkg) => (
-                <PackageCard
-                  key={pkg.id}
-                  package={pkg}
-                  currency={currency}
-                  featured={pkg.slug === homePackages.featuredSlug}
-                  featuredLabel="Most popular"
-                />
-              ))
-            ) : (
-              <p className="rounded-xl border border-dashed p-10 text-center text-muted-foreground md:col-span-3">
-                Packages are being updated. Start an order and we will quote you directly.
-              </p>
-            )}
+          <div className="grid gap-6 md:grid-cols-12">
+            <h2
+              id="plot-size-heading"
+              className="font-display text-3xl leading-[1.08] tracking-tight md:col-span-7 md:text-4xl"
+            >
+              {homePlotSize.heading}
+            </h2>
+            <p className="max-w-2xl self-end leading-relaxed text-muted-foreground md:col-span-5">
+              {homePlotSize.text}
+            </p>
           </div>
-        </div>
-      </section>
-
-      <section className="border-y bg-muted py-16" aria-labelledby="plot-size-heading">
-        <div className="mx-auto w-full max-w-6xl px-4">
-          <h2 id="plot-size-heading" className="text-2xl font-semibold tracking-tight md:text-3xl">
-            {homePlotSize.heading}
-          </h2>
-          <p className="mt-3 max-w-2xl text-muted-foreground">{homePlotSize.text}</p>
           <PlotSizeChips />
         </div>
       </section>
 
-      <section className="py-16" aria-labelledby="trust-heading">
+      <section className="bg-hero py-16 text-hero-ink md:py-24" aria-labelledby="process-heading">
         <div className="mx-auto w-full max-w-6xl px-4">
-          <h2 id="trust-heading" className="text-2xl font-semibold tracking-tight md:text-3xl">
+          <div className="grid gap-6 md:grid-cols-12">
+            <div className="md:col-span-7">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-hero-accent">
+                {homeProcess.eyebrow}
+              </p>
+              <h2
+                id="process-heading"
+                className="mt-4 font-display text-3xl leading-[1.08] tracking-tight md:text-4xl"
+              >
+                {homeProcess.heading}
+              </h2>
+            </div>
+            <p className="max-w-2xl self-end leading-relaxed text-hero-ink/70 md:col-span-5">
+              {homeProcess.text}
+            </p>
+          </div>
+
+          <NumberedCards items={homeProcess.cards} tone="dark" className="mt-12" />
+
+          <div className="mt-10">
+            <Button
+              variant="outline"
+              className="border-hero-ink/30 bg-transparent text-hero-ink hover:bg-hero-ink/10 hover:text-hero-ink"
+              render={<Link href={homeProcess.cta.href} />}
+            >
+              {homeProcess.cta.label}
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-16 md:py-24" aria-labelledby="trust-heading">
+        <div className="mx-auto w-full max-w-6xl px-4">
+          <h2
+            id="trust-heading"
+            className="max-w-3xl font-display text-3xl leading-[1.08] tracking-tight md:text-4xl"
+          >
             {homeTrust.heading}
           </h2>
-          <div className="mt-8 grid gap-6 md:grid-cols-3">
+          <div className="mt-10 grid gap-x-8 gap-y-8 md:grid-cols-3">
             {homeTrust.cards.map((card) => (
-              <div key={card.title} className="rounded-xl border bg-card p-5">
-                <p className="font-medium">{card.title}</p>
+              <div key={card.title} className="border-t pt-4">
+                <p className="font-display text-xl leading-snug">{card.title}</p>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{card.text}</p>
               </div>
             ))}
@@ -126,7 +157,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-y bg-muted py-16">
+      <section className="border-y bg-muted py-16 md:py-24">
         <div className="mx-auto w-full max-w-3xl px-4">
           <FaqSection items={homeQuickAnswers} heading="Quick answers" id="quick-answers" />
         </div>

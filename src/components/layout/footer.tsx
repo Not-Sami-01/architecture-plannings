@@ -1,52 +1,56 @@
 import Link from "next/link";
 
 import { APP, NAV_LINKS, ROUTES } from "@/config/constants";
+import { Logo } from "@/components/common/logo";
 import { SiteDisclaimer } from "@/components/common/site-disclaimer";
 import { publicConfig } from "@/config/public-config";
 
 export function Footer() {
   return (
-    <footer className="border-t bg-muted/30">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-8 px-4 py-10 md:flex-row md:justify-between">
+    <footer className="bg-hero text-hero-ink">
+      <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-14 md:flex-row md:justify-between">
         <div className="max-w-xs">
-          <p className="text-base font-semibold">{APP.name}</p>
-          <p className="mt-2 text-sm text-muted-foreground">{APP.tagline}</p>
+          <Logo />
+          <p className="mt-3 text-sm leading-relaxed text-hero-ink/60">{APP.tagline}</p>
         </div>
 
-        <nav className="grid grid-cols-2 gap-x-10 gap-y-2" aria-label="Footer">
+        <nav className="grid grid-cols-2 gap-x-10 gap-y-1" aria-label="Footer">
           {NAV_LINKS.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="text-sm text-muted-foreground hover:text-foreground"
+              className="inline-flex min-h-11 items-center text-sm text-hero-ink/70 transition-colors hover:text-hero-ink"
             >
               {link.label}
             </Link>
           ))}
         </nav>
 
-        <div className="text-sm text-muted-foreground">
-          <p className="font-medium text-foreground">Questions?</p>
+        <div className="text-sm text-hero-ink/70">
+          <p className="font-display text-lg text-hero-ink">Questions?</p>
           {publicConfig.whatsappNumber ? (
             <a
               href={`https://wa.me/${publicConfig.whatsappNumber}`}
-              className="underline underline-offset-4"
+              className="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-hero-ink"
               target="_blank"
               rel="noopener noreferrer"
             >
               Message us on WhatsApp
             </a>
           ) : (
-            <Link href={ROUTES.contact} className="underline underline-offset-4">
+            <Link
+              href={ROUTES.contact}
+              className="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-hero-ink"
+            >
               Contact us
             </Link>
           )}
         </div>
       </div>
-      <div className="border-t py-4">
+      <div className="border-t border-hero-ink/10 py-5">
         <div className="mx-auto w-full max-w-6xl px-4">
-          <SiteDisclaimer className="text-center" />
-          <p className="mt-2 text-center text-xs text-muted-foreground">
+          <SiteDisclaimer className="text-center text-hero-ink/50" />
+          <p className="mt-2 text-center text-xs text-hero-ink/50">
             © {new Date().getFullYear()} {APP.name}. All rights reserved.
           </p>
         </div>

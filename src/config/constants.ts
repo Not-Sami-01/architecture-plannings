@@ -366,11 +366,11 @@ export const THEME_MODES = {
 export type ThemeMode = (typeof THEME_MODES)[keyof typeof THEME_MODES];
 
 export const THEME_SCHEMES = [
-  { id: "default", label: "Blueprint", lightSwatch: ["#24467a", "#a94a27"], darkSwatch: ["#5b8ddd", "#bc5a35"] },
-  { id: "ocean", label: "Ocean", lightSwatch: ["#0e7490", "#c2410c"], darkSwatch: ["#22d3ee", "#f97316"] },
-  { id: "forest", label: "Forest", lightSwatch: ["#15803d", "#b45309"], darkSwatch: ["#4ade80", "#f59e0b"] },
-  { id: "violet", label: "Violet", lightSwatch: ["#7c3aed", "#db2777"], darkSwatch: ["#a78bfa", "#f472b6"] },
-  { id: "rose", label: "Rose", lightSwatch: ["#be123c", "#9f1239"], darkSwatch: ["#fb7185", "#f43f5e"] },
+  { id: "default", label: "Patina", lightSwatch: ["#28665f", "#202723"], darkSwatch: ["#58a69d", "#83a49e"] },
+  { id: "ocean", label: "Ocean", lightSwatch: ["#0e7490", "#155e75"], darkSwatch: ["#22d3ee", "#67e8f9"] },
+  { id: "forest", label: "Forest", lightSwatch: ["#15803d", "#166534"], darkSwatch: ["#4ade80", "#86efac"] },
+  { id: "violet", label: "Violet", lightSwatch: ["#7c3aed", "#6d28d9"], darkSwatch: ["#a78bfa", "#c4b5fd"] },
+  { id: "rose", label: "Rose", lightSwatch: ["#be123c", "#9f1239"], darkSwatch: ["#fb7185", "#fda4af"] },
 ] as const;
 
 export type ThemeSchemeId = (typeof THEME_SCHEMES)[number]["id"];
@@ -439,6 +439,9 @@ export const CTA = {
 /** Required on the footer and on every package and guide page (CONTENT.md). */
 export const DISCLAIMER =
   "Our drawings are design drawings. Local approval requirements (such as society or development authority rules) may apply. Please confirm them before construction.";
+
+/** Stand-in image for any section that needs a render we do not have yet. */
+export const PLACEHOLDER_IMAGE = "https://placehold.net/400x400.png";
 
 export const API_ROUTES = {
   packages: "/api/packages",

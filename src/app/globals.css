@@ -10,9 +10,13 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
-  /* Editorial serif for display headlines (hero, banners). */
-  --font-display: ui-serif, "Iowan Old Style", Georgia, Cambria, "Times New Roman", serif;
-  /* Cinematic hero surface: stays dark in both themes. */
+  /* Brand display face: DM Serif Display (self-hosted via next/font). */
+  --font-display: var(--font-serif);
+  /* Brand glass recipe (DESIGN.md §Digital expression). */
+  --color-glass: var(--glass);
+  --color-glass-edge: var(--glass-edge);
+  --shadow-glass: var(--glass-shadow);
+  /* Graphite band: dark sections, image bands and the footer. */
   --color-hero: var(--hero);
   --color-hero-ink: var(--hero-ink);
   --color-hero-accent: var(--hero-accent);
@@ -33,6 +37,8 @@
   --color-input: var(--input);
   --color-border: var(--border);
   --color-destructive: var(--destructive);
+  --color-cta-band-foreground: var(--cta-band-foreground);
+  --color-cta-band: var(--cta-band);
   --color-cta-foreground: var(--cta-foreground);
   --color-cta: var(--cta);
   --color-accent-foreground: var(--accent-foreground);
@@ -56,55 +62,68 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Light: the DESIGN.md palette — paper #FBF8F2, ink #1F2A3D, blueprint navy
-   #24467A, terracotta CTA #A94A27, sand #F1ECE2, hairline #E3DBCB. */
+/* Light: the brand identity palette — Chalk #F3F1EB (canvas), Graphite #202723
+   (text + dark surfaces), Paper #FAF9F5 (cards), Limestone #DAD7CC (quiet
+   fills + hairlines), Patina #28665F (actions, links, active states).
+   Ratio target: 70% stone & paper / 20% ink / 10% patina. */
 :root {
   color-scheme: light;
-  --background: #fbf8f2;
-  --foreground: #1f2a3d;
-  --card: #ffffff;
-  --card-foreground: #1f2a3d;
-  --popover: #ffffff;
-  --popover-foreground: #1f2a3d;
-  --primary: #24467a;
-  --primary-foreground: #fbf8f2;
-  --secondary: #f1ece2;
-  --secondary-foreground: #1f2a3d;
-  --muted: #f1ece2;
-  --muted-foreground: #4a566b;
-  --accent: #f7e9e0;
-  --accent-foreground: #a94a27;
+  --background: #f3f1eb;
+  --foreground: #202723;
+  --card: #faf9f5;
+  --card-foreground: #202723;
+  --popover: #faf9f5;
+  --popover-foreground: #202723;
+  /* Patina: actions, active states, links, progress. */
+  --primary: #28665f;
+  --primary-foreground: #faf9f5;
+  /* Limestone: quiet fills, material-led backgrounds. */
+  --secondary: #dad7cc;
+  --secondary-foreground: #202723;
+  --muted: #dad7cc;
+  /* Graphite at ~72% over Chalk — AA 5.5:1 on the canvas. */
+  --muted-foreground: #5b605b;
+  /* Patina at 12% over Paper — chips and active fills. */
+  --accent: #e1e7e3;
+  --accent-foreground: #28665f;
   --destructive: oklch(0.577 0.245 27.325);
-  --border: #e3dbcb;
-  --input: #e3dbcb;
-  --ring: #24467a;
-  /* Terracotta CTA: hero + closing-band buttons only; everything else stays navy. */
-  --cta: #a94a27;
+  --border: #dad7cc;
+  --input: #c7c3b4;
+  --ring: #28665f;
+  /* Patina + white for CTAs (brand §Digital expression). */
+  --cta: #28665f;
   --cta-foreground: #ffffff;
-  --cta-shadow: #7b3419;
-  --chart-1: #24467a;
-  --chart-2: oklch(0.62 0.14 45);
-  --chart-3: oklch(0.55 0.1 170);
-  --chart-4: oklch(0.72 0.12 85);
-  --chart-5: oklch(0.45 0.08 300);
-  --radius: 0.625rem;
-  --sidebar: #fbf8f2;
-  --sidebar-foreground: #1f2a3d;
-  --sidebar-primary: #24467a;
-  --sidebar-primary-foreground: #fbf8f2;
-  --sidebar-accent: #f7e9e0;
-  --sidebar-accent-foreground: #a94a27;
-  --sidebar-border: #e3dbcb;
-  --sidebar-ring: #24467a;
-  /* Hero (light theme): deep blueprint navy, paper ink, warm terracotta glow. */
-  --hero: #1b2a4a;
-  --hero-ink: #fbf8f2;
-  --hero-accent: #e5a67e;
+  --cta-shadow: #1c4a45;
+  /* Limestone closing band. */
+  --cta-band: #dad7cc;
+  --cta-band-foreground: #202723;
+  --chart-1: #28665f;
+  --chart-2: #202723;
+  --chart-3: #83a49e;
+  --chart-4: #b9b5a4;
+  --chart-5: #6f7a6a;
+  --radius: 0.375rem;
+  --sidebar: #faf9f5;
+  --sidebar-foreground: #202723;
+  --sidebar-primary: #28665f;
+  --sidebar-primary-foreground: #faf9f5;
+  --sidebar-accent: #e1e7e3;
+  --sidebar-accent-foreground: #28665f;
+  --sidebar-border: #dad7cc;
+  --sidebar-ring: #28665f;
+  /* Graphite band (dark sections + footer), Chalk ink, lightened Patina. */
+  --hero: #202723;
+  --hero-ink: #f3f1eb;
+  --hero-accent: #83a49e;
+  /* Glass recipe: 85% paper tint, 18px blur, luminous edge, soft shadow. */
+  --glass: #faf9f5;
+  --glass-edge: rgb(255 255 255 / 0.55);
+  --glass-shadow: 0 14px 34px -14px rgb(32 39 35 / 0.22);
 }
 
 /* ── Color schemes (light) ────────────────────────────────────────────────
    Each `scheme-{id}` class swaps the brand hues (primary/ring/accent/charts
-   + sidebar brand tokens). Surfaces, borders, CTA and hero stay constant.
+   + sidebar brand tokens). Surfaces, borders, CTA, band and hero stay constant.
    Declared after :root (so schemes win in light mode) and before .dark
    (so the default dark block wins when no scheme dark block exists). */
 
@@ -164,48 +183,55 @@
   --sidebar-ring: #be123c;
 }
 
-/* Dark: deep slate-blue backgrounds, off-white ink, brighter terracotta. */
+/* Dark: deep graphite surfaces, chalk ink, lightened patina actions. */
 .dark {
   color-scheme: dark;
-  --background: oklch(0.17 0.02 255);
-  --foreground: oklch(0.94 0.01 85);
-  --card: oklch(0.21 0.025 255);
-  --card-foreground: oklch(0.94 0.01 85);
-  --popover: oklch(0.21 0.025 255);
-  --popover-foreground: oklch(0.94 0.01 85);
-  --primary: oklch(0.68 0.12 255);
-  --primary-foreground: oklch(0.16 0.03 255);
-  --secondary: oklch(0.26 0.03 255);
-  --secondary-foreground: oklch(0.94 0.01 85);
-  --muted: oklch(0.26 0.03 255);
-  --muted-foreground: oklch(0.68 0.02 255);
-  --accent: oklch(0.32 0.05 45);
-  --accent-foreground: oklch(0.9 0.06 60);
+  --background: #191e1b;
+  --foreground: #f3f1eb;
+  --card: #222925;
+  --card-foreground: #f3f1eb;
+  --popover: #222925;
+  --popover-foreground: #f3f1eb;
+  --primary: #58a69d;
+  --primary-foreground: #141917;
+  --secondary: #2a322d;
+  --secondary-foreground: #f3f1eb;
+  --muted: #2a322d;
+  --muted-foreground: #a2aaa4;
+  --accent: #2f3a34;
+  --accent-foreground: #83a49e;
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 12%);
-  --input: oklch(1 0 0 / 16%);
-  --ring: oklch(0.68 0.12 255);
-  --chart-1: oklch(0.68 0.12 255);
-  --chart-2: oklch(0.7 0.14 45);
-  --chart-3: oklch(0.65 0.1 170);
-  --chart-4: oklch(0.78 0.12 85);
-  --chart-5: oklch(0.6 0.08 300);
-  --sidebar: oklch(0.19 0.025 255);
-  --sidebar-foreground: oklch(0.94 0.01 85);
-  --sidebar-primary: oklch(0.68 0.12 255);
-  --sidebar-primary-foreground: oklch(0.16 0.03 255);
-  --sidebar-accent: oklch(0.32 0.05 45);
-  --sidebar-accent-foreground: oklch(0.9 0.06 60);
-  --sidebar-border: oklch(1 0 0 / 12%);
-  --sidebar-ring: oklch(0.68 0.12 255);
-  /* Terracotta CTA brightened for dark surfaces (white text stays AA). */
-  --cta: #bc5a35;
-  --cta-foreground: #ffffff;
-  --cta-shadow: #7b3419;
-  /* Hero (dark theme): deeper still, brighter warm accent for contrast. */
-  --hero: oklch(0.12 0.03 258);
-  --hero-ink: oklch(0.97 0.005 90);
-  --hero-accent: oklch(0.8 0.07 55);
+  --border: rgb(243 241 235 / 12%);
+  --input: rgb(243 241 235 / 18%);
+  --ring: #58a69d;
+  --chart-1: #58a69d;
+  --chart-2: #a2aaa4;
+  --chart-3: #83a49e;
+  --chart-4: #b9b5a4;
+  --chart-5: #6f7a6a;
+  --sidebar: #1d2320;
+  --sidebar-foreground: #f3f1eb;
+  --sidebar-primary: #58a69d;
+  --sidebar-primary-foreground: #141917;
+  --sidebar-accent: #2f3a34;
+  --sidebar-accent-foreground: #83a49e;
+  --sidebar-border: rgb(243 241 235 / 12%);
+  --sidebar-ring: #58a69d;
+  /* Patina brightened so white-on-ink CTAs stay AA on dark surfaces. */
+  --cta: #58a69d;
+  --cta-foreground: #141917;
+  --cta-shadow: #2e5b55;
+  /* Band inverts to a deep graphite panel. */
+  --cta-band: #262e29;
+  --cta-band-foreground: #f3f1eb;
+  /* Graphite band, chalk ink, lightened patina accent. */
+  --hero: #141917;
+  --hero-ink: #f3f1eb;
+  --hero-accent: #83a49e;
+  /* Glass on dark: graphite tint, faint chalk edge, deeper shadow. */
+  --glass: #222925;
+  --glass-edge: rgb(243 241 235 / 0.08);
+  --glass-shadow: 0 14px 34px -14px rgb(0 0 0 / 0.45);
 }
 
 /* ── Color schemes (dark) ─────────────────────────────────────────────────

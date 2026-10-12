@@ -1,18 +1,12 @@
 import Link from "next/link";
+import Image from "next/image";
 import { CheckIcon } from "lucide-react";
 
-import { APP, ROUTES } from "@/config/constants";
+import { APP, PLACEHOLDER_IMAGE, ROUTES } from "@/config/constants";
 import { formatMoney } from "@/lib/format";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "cn";
 
 type PackageCardPackage = {
   id: string;
@@ -41,44 +35,48 @@ export function PackageCard({
   featuredLabel,
 }: PackageCardProps) {
   return (
-    <Card
-      className={`flex h-full flex-col ${
-        featured ? "border-primary bg-primary/5 ring-2 ring-primary/40" : ""
-      }`}
+    <article
+      className={cn(
+        "flex h-full flex-col overflow-hidden rounded-lg border bg-card",
+        featured && "border-primary ring-1 ring-primary/40"
+      )}
     >
-      <CardHeader>
-        {featured && featuredLabel ? (
-          <Badge variant="secondary" className="mb-1 w-fit uppercase tracking-widest">
-            {featuredLabel}
-          </Badge>
-        ) : null}
-        <CardTitle>{pkg.name}</CardTitle>
-        <CardDescription>{pkg.description}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-1 flex-col gap-4">
-        <p className="text-3xl font-semibold tracking-tight">
-          {formatMoney(pkg.price, currency)}
-        </p>
+      <Image
+        src={PLACEHOLDER_IMAGE}
+        alt=""
+        width={400}
+        height={300}
+        className="aspect-[4/3] w-full border-b object-cover"
+      />
+      <div className="flex flex-1 flex-col gap-4 p-5">
+        <div>
+          {featured && featuredLabel ? (
+            <Badge variant="secondary" className="mb-2 w-fit uppercase tracking-widest">
+              {featuredLabel}
+            </Badge>
+          ) : null}
+          <h3 className="font-display text-2xl leading-snug tracking-tight">{pkg.name}</h3>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{pkg.description}</p>
+        </div>
+        <p className="text-2xl font-semibold tracking-tight">{formatMoney(pkg.price, currency)}</p>
         <ul className="flex flex-col gap-2 text-sm">
           {pkg.deliverables.map((deliverable) => (
-            <li key={deliverable} className="flex items-center gap-2">
-              <CheckIcon className="size-4 text-primary" aria-hidden />
-              {deliverable}
+            <li key={deliverable} className="flex items-start gap-2">
+              <CheckIcon className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+              <span>{deliverable}</span>
             </li>
           ))}
         </ul>
-        <Badge variant="secondary" className="w-fit">
+        <Badge variant="secondary" className="mt-auto w-fit">
           {pkg.revisionLimit} free revisions
         </Badge>
-      </CardContent>
-      <CardFooter>
         <Button
           className="w-full"
           render={<Link href={`${ROUTES.newOrder}?package=${pkg.slug}`} />}
         >
           Choose {pkg.name}
         </Button>
-      </CardFooter>
-    </Card>
+      </div>
+    </article>
   );
 }

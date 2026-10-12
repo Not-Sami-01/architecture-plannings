@@ -119,6 +119,8 @@ export const homeHero = {
   titleAccent: "One click to begin.",
   lead: "Tell us about your plot once. We handle the quote, the design, the revisions and your final drawings, all in one place, from your phone.",
   note: "Under 5 minutes · No payment until you accept your quote",
+  /** Alt text for the hero photo (accessibility). */
+  imageAlt: "Modern house design at dusk — a glass and concrete facade with warm interior lighting",
   links: [
     { label: "Rather chat? Ask on WhatsApp", href: ROUTES.contact },
     { label: "Create account", href: ROUTES.register },

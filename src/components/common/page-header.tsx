@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ArrowRightIcon } from "lucide-react";
 
 type PageHeaderProps = {
   title: string;
@@ -9,27 +10,35 @@ type PageHeaderProps = {
   links?: readonly { label: string; href: string }[];
 };
 
+/** Editorial page title: tracked eyebrow, serif headline, lead paragraph, text links. */
 export function PageHeader({ title, description, eyebrow, links }: PageHeaderProps) {
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-10">
+    <div className="mx-auto w-full max-w-6xl border-b px-4 pb-10 pt-10 md:pb-14 md:pt-16">
       {eyebrow ? (
-        <p className="mb-3 text-xs font-medium uppercase tracking-widest text-accent-foreground">
+        <p className="mb-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-foreground">
           {eyebrow}
         </p>
       ) : null}
-      <h1 className="text-3xl font-semibold tracking-tight md:text-4xl">{title}</h1>
-      {description ? (
-        <p className="mt-3 max-w-2xl leading-relaxed text-muted-foreground">{description}</p>
-      ) : null}
+      <div className="grid gap-6 md:grid-cols-12">
+        <h1 className="font-display text-4xl leading-[1.06] tracking-tight md:col-span-7 md:text-5xl">
+          {title}
+        </h1>
+        {description ? (
+          <p className="max-w-2xl self-end text-base leading-relaxed text-muted-foreground md:col-span-5">
+            {description}
+          </p>
+        ) : null}
+      </div>
       {links && links.length > 0 ? (
-        <p className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-sm">
+        <p className="mt-6 flex flex-wrap gap-x-6 gap-y-1">
           {links.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className="font-medium text-primary underline underline-offset-4 hover:text-primary/80"
+              className="inline-flex min-h-11 items-center gap-1.5 text-sm font-medium text-primary transition-colors hover:text-primary/80"
             >
               {link.label}
+              <ArrowRightIcon className="size-4" aria-hidden />
             </Link>
           ))}
         </p>

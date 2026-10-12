@@ -13,7 +13,7 @@ type ImageBannerProps = {
   cta?: { label: string; href: string };
 };
 
-/** Full-bleed image band with a themed scrim and left-aligned copy. */
+/** Full-bleed photo band on the near-black surface, with left-aligned editorial copy. */
 export function ImageBanner({ imageSrc, eyebrow, heading, text, cta }: ImageBannerProps) {
   return (
     <section className="relative isolate overflow-hidden bg-hero text-hero-ink">
@@ -28,20 +28,22 @@ export function ImageBanner({ imageSrc, eyebrow, heading, text, cta }: ImageBann
       />
       <div
         aria-hidden
-        className="absolute inset-0 -z-10 bg-gradient-to-b from-hero/70 via-hero/85 to-hero md:bg-gradient-to-r md:from-hero md:via-hero/80 md:to-hero/10"
+        className="absolute inset-0 -z-10 bg-gradient-to-b from-hero/90 via-hero/85 to-hero/95 md:bg-gradient-to-r md:from-hero md:via-hero/85 md:to-hero/40"
       />
 
       <div className="mx-auto w-full max-w-6xl px-4 py-20 md:py-28">
         <div className="max-w-xl">
-          <p className="font-mono text-xs uppercase tracking-widest text-hero-accent">{eyebrow}</p>
-          <h2 className="mt-4 font-display text-3xl leading-tight tracking-tight md:text-4xl">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-hero-accent">
+            {eyebrow}
+          </p>
+          <h2 className="mt-4 font-display text-3xl leading-[1.08] tracking-tight md:text-5xl">
             {heading}
           </h2>
-          <p className="mt-4 leading-relaxed text-hero-ink/75">{text}</p>
+          <p className="mt-5 leading-relaxed text-hero-ink/75">{text}</p>
           {cta ? (
             <Button
-              className="mt-7 rounded-full border border-hero-ink/25 bg-hero-ink/10 px-5 text-hero-ink backdrop-blur hover:bg-hero-ink/20"
-              variant="ghost"
+              className="mt-8 border-hero-ink/30 bg-hero-ink/10 text-hero-ink hover:bg-hero-ink/20 hover:text-hero-ink"
+              variant="outline"
               render={<Link href={cta.href} />}
             >
               {cta.label}

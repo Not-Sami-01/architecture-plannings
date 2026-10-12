@@ -117,7 +117,7 @@ export default function ContactPage() {
         </section>
 
         <section className="mt-12" aria-labelledby="prepare">
-          <h2 id="prepare" className="text-2xl font-semibold tracking-tight">
+          <h2 id="prepare" className="font-display text-3xl leading-snug tracking-tight">
             Before you contact us
           </h2>
           <p className="mt-2 text-muted-foreground">
@@ -131,7 +131,7 @@ export default function ContactPage() {
         </section>
 
         <section className="mt-12" aria-labelledby="not-sure">
-          <h2 id="not-sure" className="text-2xl font-semibold tracking-tight">
+          <h2 id="not-sure" className="font-display text-3xl leading-snug tracking-tight">
             Not sure where to start?
           </h2>
           <ul className="mt-4 flex flex-col gap-2 text-muted-foreground">
@@ -148,7 +148,7 @@ export default function ContactPage() {
 
         {SITE_FACTS.serviceAreas ? (
           <section className="mt-12" aria-labelledby="service-area">
-            <h2 id="service-area" className="text-2xl font-semibold tracking-tight">
+            <h2 id="service-area" className="font-display text-3xl leading-snug tracking-tight">
               Service area
             </h2>
             <p className="mt-2 leading-relaxed text-muted-foreground">

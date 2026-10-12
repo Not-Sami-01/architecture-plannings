@@ -3,8 +3,9 @@
 import Link from "next/link";
 import { useClerk } from "@clerk/nextjs";
 
-import { APP, ROUTES } from "@/config/constants";
+import { ROUTES } from "@/config/constants";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/common/logo";
 import { ThemeSwitcher } from "@/components/common/theme-switcher";
 
 type ClientShellProps = {
@@ -22,12 +23,7 @@ export function ClientShell({ name, children }: ClientShellProps) {
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
         <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between gap-4 px-4">
           <div className="flex min-w-0 items-center gap-6">
-            <Link
-              href={ROUTES.dashboard}
-              className="truncate text-lg font-semibold tracking-tight"
-            >
-              {APP.name}
-            </Link>
+            <Logo href={ROUTES.dashboard} />
             <nav
               className="hidden items-center gap-4 md:flex"
               aria-label="Dashboard"

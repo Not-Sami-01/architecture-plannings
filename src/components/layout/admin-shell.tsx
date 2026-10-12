@@ -13,7 +13,8 @@ import {
   UsersIcon,
 } from "lucide-react";
 
-import { APP, ROUTES } from "@/config/constants";
+import { ROUTES } from "@/config/constants";
+import { Logo } from "@/components/common/logo";
 import { ThemeSwitcher } from "@/components/common/theme-switcher";
 
 type AdminShellProps = {
@@ -44,9 +45,7 @@ export function AdminShell({ email, children }: AdminShellProps) {
     <div className="flex min-h-svh">
       <aside className="sticky top-0 hidden h-svh w-60 shrink-0 flex-col border-r bg-muted/30 md:flex">
         <div className="flex h-16 items-center gap-2 border-b px-4">
-          <Link href={ROUTES.admin.root} className="truncate text-sm font-semibold tracking-tight">
-            {APP.name}
-          </Link>
+          <Logo href={ROUTES.admin.root} />
           <span className="rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
             Admin
           </span>
@@ -85,9 +84,7 @@ export function AdminShell({ email, children }: AdminShellProps) {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex min-h-16 flex-wrap items-center justify-between gap-x-3 gap-y-2 border-b px-4 py-2 md:hidden">
           <div className="flex min-w-0 items-center gap-2">
-            <Link href={ROUTES.admin.root} className="truncate text-sm font-semibold">
-              {APP.name}
-            </Link>
+            <Logo href={ROUTES.admin.root} />
             <span className="rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
               Admin
             </span>
