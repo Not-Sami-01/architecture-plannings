@@ -30,7 +30,7 @@ All project docs live in [`docs/`](docs/). Only this `README.md` stays at the re
 - **Auth:** Clerk (email/password + social providers configured in the Clerk dashboard), role-based (CLIENT, ADMIN) with roles owned by our DB
 - **File storage:** Cloudflare R2 / S3 (private bucket, signed URLs) or UploadThing
 - **Email:** Resend + React Email templates
-- **UI:** Tailwind CSS + shadcn/ui (the only component library)
+- **UI:** Tailwind CSS + shadcn/ui (the only component library); brand tokens in `src/app/globals.css` (see `docs/DESIGN.md`)
 - **Server state:** TanStack Query, with one hook per API call
 - **HTTP client:** axios, used only inside the `api` util
 - **Validation:** Zod (shared between forms and API)
@@ -188,6 +188,7 @@ Open http://localhost:3000.
 - **API routes:** handler functions are wrapped and exported as `export const GET = withMiddleware(getHandler, [authenticate])`.
 - **Data fetching:** components use feature hooks returning `{ data, loadings, actions, query }`; hooks call the `api` util. See `RULES.md`.
 - **Components:** one component per file, kebab-case file names, grouped by feature, presentational only.
+- **Design tokens:** hex values live only in `src/app/globals.css`; components use token Tailwind classes (`bg-card`, `border-border`, `text-accent-foreground`, …). Fonts are self-hosted via `next/font/google` (DM Serif Display + Inter). Sections without a real photo use `PLACEHOLDER_IMAGE` (`placehold.net`). See `docs/DESIGN.md`.
 
 ### API in 30 seconds
 
@@ -226,9 +227,10 @@ Status changes only happen through `lib/orders/status.ts`. Every change writes a
 
 ## Roadmap
 
-> Checked = fully shipped. Details for the latest work: `docs/PLAN.md` rows 20–26.
+> Checked = fully shipped. Details for the latest work: `docs/PLAN.md` rows 20–28.
 
 - [x] **Phase 1:** Auth (Clerk), packages, order form with uploads, admin order list
+- [x] **Visual redesign:** whole-app restyle to the ArchiPlan-Studio identity (Chalk/Graphite/Limestone/Paper/Patina tokens, DM Serif Display + Inter, glass navbar, brand logo + favicon, home page rebuilt to the mock) — `docs/PLAN.md` row 28
 - [ ] **Phase 2:** Client dashboard ✅, status machine + quote flow ✅, **email notifications pending** (Resend deferred)
 - [ ] **Phase 3:** Per-order chat ✅ (admin internal notes, **chat attachments + edit/delete moderation**, **read receipts + unread badge**), admin **Users/Chats/Files** panels, **order take/edit/hard-delete**, **deliverables gating**, **proceed page** (`/admin/orders/[id]/proceed` — status + charges + uploads + revisions + chat), **revisions loop** ✅ (client request → admin accept, extra-fee gate via EXTRA_REVISION charge, auto-close on re-delivery), **draft delivery + finals registration** ✅, **admin dashboard** (`/admin` stats overview) ✅, **site settings/сurrency** ✅ (`/admin/settings`, per-order currency snapshot) — watermarked drafts pending
 - [ ] **Phase 4:** Manual payment requests ✅ (admin charge → client proof upload → verify/reject; verified FINAL unlocks final downloads). Gateway + webhooks pending

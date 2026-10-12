@@ -138,9 +138,9 @@ The UI is built from **small, file-based components**. One component per file.
 ```
 src/components/
 ├── ui/            # shadcn/ui primitives (button, input, dialog...)
-├── common/        # shared building blocks (logo, whatsapp-button, empty-state, page-header)
-├── layout/        # navbar, footer, dashboard-sidebar, admin-sidebar
-├── marketing/     # hero-section, package-card, portfolio-card, how-it-works-steps...
+├── common/        # shared building blocks (logo, theme-switcher, page-header, closing-cta, faq-section, content-sections, whatsapp-button, empty-state)
+├── layout/        # navbar, footer, client-shell, admin-shell, dashboard-sidebar, admin-sidebar
+├── marketing/     # home-hero, image-banner, package-card, numbered-cards, process-steps, plot-size-chips, portfolio-card...
 ├── orders/        # order-card, order-status-badge, order-timeline, order-form-step-plot...
 ├── files/         # file-dropzone, file-list, draft-preview
 ├── payments/      # payment-card, proof-upload
@@ -182,9 +182,9 @@ Rules:
 
 ## UI Rules
 
-- Follow `DESIGN.md`: color tokens, typography, spacing, component specs.
+- Follow `DESIGN.md`: color tokens, typography, spacing, component specs, glass recipe.
 - Use shadcn/ui primitives from `src/components/ui`. Do not add another component library.
-- Use Tailwind classes with design tokens, never hard-coded hex values.
+- Use Tailwind classes with design tokens, never hard-coded hex values. Fonts come from `next/font/google` (DM Serif Display + Inter). Missing photos use `PLACEHOLDER_IMAGE` from `constants.ts` (`placehold.net`, allowed in `next.config.ts`) — never random image URLs.
 - Mobile first. Test at 375px.
 - Every list needs a loading skeleton and an empty state. Every form needs inline validation and a pending state.
 - Accessibility: labels on all inputs, visible focus, alt text on images, touch targets of at least 44px.
