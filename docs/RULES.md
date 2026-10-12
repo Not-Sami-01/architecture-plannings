@@ -15,7 +15,7 @@ Related docs: `AGENTS.md` (agent workflow), `API.md` (endpoints and middleware),
 | HTTP client | **axios** | Used in exactly one place: the `api` util |
 | Forms | React Hook Form + Zod | Same Zod schemas as the server |
 | Styling | Tailwind CSS | Tokens from `DESIGN.md`; hex values only in `src/app/globals.css`, never in components |
-| Fonts | `next/font/google` | DM Serif Display (display/headings, `font-display`) + Inter (body/UI); Geist Mono for identifiers only. No other font packages |
+| Fonts | `next/font/google` | Space Grotesk (display/headings, `font-display` + `font-medium`) + Inter (body/UI); Geist Mono for identifiers only. No other font packages |
 
 Do not add a second data-fetching library (SWR, Redux Toolkit Query, etc.), a second component library (MUI, Chakra, Ant, etc.), or a second HTTP client.
 

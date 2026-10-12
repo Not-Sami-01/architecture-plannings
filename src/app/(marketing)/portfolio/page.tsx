@@ -60,14 +60,14 @@ export default function PortfolioPage() {
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-4 pb-12" aria-labelledby="each-project">
-        <h2 id="each-project" className="font-display text-3xl leading-snug tracking-tight">
+        <h2 id="each-project" className="font-display font-medium text-3xl leading-snug tracking-tight">
           What you will see in each project
         </h2>
         <ContentSections className="mt-4" blocks={[{ kind: "ul", items: portfolioProjectFields }]} />
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-4 pb-12" aria-labelledby="how-to-use">
-        <h2 id="how-to-use" className="font-display text-3xl leading-snug tracking-tight">
+        <h2 id="how-to-use" className="font-display font-medium text-3xl leading-snug tracking-tight">
           How to use the portfolio
         </h2>
         <ContentSections className="mt-4" blocks={[{ kind: "ol", items: portfolioHowToUse }]} />

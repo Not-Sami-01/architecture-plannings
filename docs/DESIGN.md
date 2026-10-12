@@ -51,13 +51,13 @@ Schemes are declared in `THEME_SCHEMES` (`src/config/constants.ts`) with swatch 
 
 ## Typography
 
-Brand pairing: **DM Serif Display + Inter** — "editorial warmth for ideas, precision for everything else."
+**Space Grotesk + Inter** — crisp architectural headlines with precise everything else. (Client decision: replaces the identity sheet's DM Serif Display, which read poorly in practice; Space Grotesk feels more modern and architectural.)
 
-- **Display:** **DM Serif Display** (400 normal + italic, self-hosted via `next/font/google` → `--font-serif`, utility `font-display`) for **every** marketing `h1`/`h2`, card titles, the wordmark and closing-band headings. Italic carries accent headline lines. Never add `font-semibold` to serif headings — the face has one weight.
+- **Display:** **Space Grotesk** (variable 300–700, self-hosted via `next/font/google` → `--font-display`, utility `font-display`) for **every** marketing `h1`/`h2`, card titles, the wordmark and closing-band headings. Display headings sit at **weight 500** (`font-display font-medium`). Space Grotesk has **no italics** — hierarchy comes from scale and color, never synthesized oblique.
 - **Body / UI:** **Inter** (variable, self-hosted → `--font-sans`) for body, nav, tables, forms and dashboards.
 - **Mono:** Geist Mono for identifiers (order numbers) and `01`/`02` step numerals only.
 - **Labels / eyebrows:** Inter Semibold 11/16, uppercase, tracked — `text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-foreground` (`text-hero-accent` on Graphite bands).
-- Scale (brand reference in parentheses): hero `text-4xl → lg:text-7xl leading-[1.05]` (88/95); page titles `text-4xl md:text-5xl` (48/52); section titles `text-3xl md:text-4xl`; card titles `font-display text-xl/2xl`; body `text-base`/`text-sm` (16/24).
+- Scale: hero `text-4xl → lg:text-7xl leading-[1.05]`; page titles `text-4xl md:text-5xl`; section titles `text-3xl md:text-4xl`; card titles `font-display font-medium text-xl/2xl`; body `text-base`/`text-sm`.
 
 ## Spacing & radius
 
@@ -78,11 +78,11 @@ Use glass for **floating navigation, image captions and a single featured panel*
 | Radius | 20px (`rounded-[20px]`) |
 | Shadow | soft (`shadow-glass`) |
 
-Implemented in `navbar.tsx` (floating bar) and the home hero's featured-package panel. Tokens: `--glass`, `--glass-edge`, `--glass-shadow`.
+Implemented in `navbar.tsx` (the floating bar). One glass surface at a time — nothing else on screen is glass. Tokens: `--glass`, `--glass-edge`, `--glass-shadow`.
 
 ## Brand mark
 
-The supplied brick **A** keeps its light field and original proportions — no redraws, gradients or distortion. Assets live in `public/logo/` (variants `Group 1…8.svg`, circular `favicon.svg`); the canonical web mark is `public/logo/mark.svg` (A on its white field, `#131413`), rendered by `common/logo.tsx` through `next/image` (`unoptimized` — it is an SVG) at 28px with the wordmark in DM Serif Display. The browser icon is `src/app/icon.svg` (Next's icon convention) from the supplied `favicon.svg`. Used by the navbar, footer, client shell and admin shell.
+The supplied brick **A** keeps its light field and original proportions — no redraws, gradients or distortion. Assets live in `public/logo/` (variants `Group 1…8.svg`, `favicon.svg`, `favicon-32px.svg`); the web marks are `mark.svg` (A on its white field — light surfaces) and `mark-dark.svg` (white A on black — dark bands like the footer), selected via the `Logo` component's `tone` prop and rendered through `next/image` (`unoptimized` — they are SVGs) at 28px with the wordmark in Space Grotesk. The browser icon is `src/app/icon.svg` (Next's icon convention) from the supplied `favicon-32px.svg`. The lockup appears on the navbar, footer, auth pages, both shells, and the 404/error pages.
 
 ## Component conventions
 

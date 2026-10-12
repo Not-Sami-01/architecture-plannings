@@ -36,7 +36,7 @@ export function ImageBanner({ imageSrc, eyebrow, heading, text, cta }: ImageBann
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-hero-accent">
             {eyebrow}
           </p>
-          <h2 className="mt-4 font-display text-3xl leading-[1.08] tracking-tight md:text-5xl">
+          <h2 className="mt-4 font-display font-medium text-3xl leading-[1.08] tracking-tight md:text-5xl">
             {heading}
           </h2>
           <p className="mt-5 leading-relaxed text-hero-ink/75">{text}</p>

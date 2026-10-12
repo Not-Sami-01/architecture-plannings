@@ -55,7 +55,7 @@ export function PackageCard({
               {featuredLabel}
             </Badge>
           ) : null}
-          <h3 className="font-display text-2xl leading-snug tracking-tight">{pkg.name}</h3>
+          <h3 className="font-display font-medium text-2xl leading-snug tracking-tight">{pkg.name}</h3>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{pkg.description}</p>
         </div>
         <p className="text-2xl font-semibold tracking-tight">{formatMoney(pkg.price, currency)}</p>

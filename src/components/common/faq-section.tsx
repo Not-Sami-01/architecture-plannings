@@ -24,7 +24,7 @@ export function FaqSection({
 
   return (
     <section aria-labelledby={id} className={className}>
-      <h2 id={id} className="font-display text-3xl leading-tight tracking-tight md:text-4xl">
+      <h2 id={id} className="font-display font-medium text-3xl leading-tight tracking-tight md:text-4xl">
         {heading}
       </h2>
       <dl className="mt-8 border-t">

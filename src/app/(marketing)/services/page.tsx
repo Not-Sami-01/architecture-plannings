@@ -55,7 +55,7 @@ export default async function ServicesPage() {
       />
 
       <section className="mx-auto w-full max-w-6xl px-4 pb-12" aria-labelledby="compare">
-        <h2 id="compare" className="font-display text-3xl leading-snug tracking-tight">
+        <h2 id="compare" className="font-display font-medium text-3xl leading-snug tracking-tight">
           Compare our house plan design packages
         </h2>
         {packages === null ? (
@@ -157,7 +157,7 @@ export default async function ServicesPage() {
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-4 pb-12" aria-labelledby="which-package">
-        <h2 id="which-package" className="font-display text-3xl leading-snug tracking-tight">
+        <h2 id="which-package" className="font-display font-medium text-3xl leading-snug tracking-tight">
           Which package should I choose?
         </h2>
         <div className="mt-6 grid gap-6 md:grid-cols-3">
@@ -184,7 +184,7 @@ export default async function ServicesPage() {
       </section>
 
       <section className="mx-auto w-full max-w-6xl px-4 pb-12" aria-labelledby="price-factors">
-        <h2 id="price-factors" className="font-display text-3xl leading-snug tracking-tight">
+        <h2 id="price-factors" className="font-display font-medium text-3xl leading-snug tracking-tight">
           What affects the price of a house plan?
         </h2>
         <ContentSections

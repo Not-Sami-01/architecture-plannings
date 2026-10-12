@@ -125,7 +125,7 @@ export const homeHero = {
     { label: "Rather chat? Ask on WhatsApp", href: ROUTES.contact },
     { label: "Create account", href: ROUTES.register },
   ],
-  /** Four quick-step glass cards along the bottom of the hero. */
+  /** Four quick steps on the bottom edge of the hero band. */
   steps: [
     { title: "Share your plot" },
     { title: "Get your quote" },

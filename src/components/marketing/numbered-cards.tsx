@@ -30,7 +30,7 @@ export function NumberedCards({ items, columns = 5, tone = "light", className }:
           >
             {String(index + 1).padStart(2, "0")}
           </span>
-          <p className={cn("mt-3 font-display text-xl leading-snug", dark && "text-hero-ink")}>
+          <p className={cn("mt-3 font-display font-medium text-xl leading-snug", dark && "text-hero-ink")}>
             {item.title}
           </p>
           <p

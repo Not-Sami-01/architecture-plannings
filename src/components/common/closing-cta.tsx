@@ -22,7 +22,7 @@ export function ClosingCta({
       aria-labelledby="closing-cta"
     >
       <div className="mx-auto flex w-full max-w-6xl flex-col items-center gap-5 px-4 py-16 text-center md:py-24">
-        <h2 id="closing-cta" className="max-w-3xl font-display text-4xl leading-[1.08] tracking-tight md:text-5xl">
+        <h2 id="closing-cta" className="max-w-3xl font-display font-medium text-4xl leading-[1.08] tracking-tight md:text-5xl">
           {heading}
         </h2>
         <p className="max-w-xl leading-relaxed text-cta-band-foreground/75">{text}</p>

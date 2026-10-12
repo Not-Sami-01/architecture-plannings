@@ -37,7 +37,7 @@ export default function HowItWorksPage() {
 
       <section className="pb-16" aria-labelledby="steps-heading">
         <div className="mx-auto mb-8 w-full max-w-6xl px-4">
-          <h2 id="steps-heading" className="font-display text-3xl leading-snug tracking-tight">
+          <h2 id="steps-heading" className="font-display font-medium text-3xl leading-snug tracking-tight">
             The five steps
           </h2>
         </div>

@@ -184,7 +184,7 @@ Rules:
 
 - Follow `DESIGN.md`: color tokens, typography, spacing, component specs, glass recipe.
 - Use shadcn/ui primitives from `src/components/ui`. Do not add another component library.
-- Use Tailwind classes with design tokens, never hard-coded hex values. Fonts come from `next/font/google` (DM Serif Display + Inter). Missing photos use `PLACEHOLDER_IMAGE` from `constants.ts` (`placehold.net`, allowed in `next.config.ts`) — never random image URLs.
+- Use Tailwind classes with design tokens, never hard-coded hex values. Fonts come from `next/font/google` (Space Grotesk for display at weight 500 + Inter for body). Missing photos use `PLACEHOLDER_IMAGE` from `constants.ts` (`placehold.net`, allowed in `next.config.ts`) — never random image URLs.
 - Mobile first. Test at 375px.
 - Every list needs a loading skeleton and an empty state. Every form needs inline validation and a pending state.
 - Accessibility: labels on all inputs, visible focus, alt text on images, touch targets of at least 44px.

@@ -23,14 +23,14 @@ export function ContentSections({ blocks, className }: ContentSectionsProps) {
               <h2
                 key={index}
                 id={block.id}
-                className="mt-12 scroll-mt-24 font-display text-3xl leading-tight tracking-tight first:mt-0 md:text-4xl"
+                className="mt-12 scroll-mt-24 font-display font-medium text-3xl leading-tight tracking-tight first:mt-0 md:text-4xl"
               >
                 {block.text}
               </h2>
             );
           case "h3":
             return (
-              <h3 key={index} className="mt-8 font-display text-2xl leading-snug tracking-tight">
+              <h3 key={index} className="mt-8 font-display font-medium text-2xl leading-snug tracking-tight">
                 {block.text}
               </h3>
             );
@@ -70,7 +70,7 @@ export function ContentSections({ blocks, className }: ContentSectionsProps) {
               <ol key={index} className="mt-2 flex flex-col">
                 {block.items.map((step, stepIndex) => (
                   <li key={step.title} className="border-t py-5">
-                    <p className="flex items-baseline gap-3 font-display text-xl leading-snug">
+                    <p className="flex items-baseline gap-3 font-display font-medium text-xl leading-snug">
                       <span className="font-mono text-xs text-accent-foreground" aria-hidden>
                         {String(stepIndex + 1).padStart(2, "0")}
                       </span>

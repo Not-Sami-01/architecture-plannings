@@ -4,19 +4,28 @@ import Image from "next/image";
 import { APP, ROUTES } from "@/config/constants";
 import { cn } from "cn";
 
+/** Brick-A mark variants supplied in the brand kit (public/logo/). */
+const MARKS = {
+  /** Black A on its original white field — light surfaces. */
+  "on-light": "/logo/mark.svg",
+  /** White A on a black field — dark surfaces (footer band). */
+  "on-dark": "/logo/mark-dark.svg",
+} as const;
+
 type LogoProps = {
   /** Link target (defaults to the home page). */
   href?: string;
+  /** Which mark variant fits the surface behind the logo. */
+  tone?: keyof typeof MARKS;
   className?: string;
 };
 
 /**
- * Brand lockup: the supplied brick "A" on its original white field
- * (public/logo/mark.svg — no redrawing or recolouring, per the identity
- * rules) plus the wordmark in DM Serif Display. Used by the navbar, footer
- * and both shells.
+ * Brand lockup: the supplied brick "A" (no redrawing or recolouring, per the
+ * identity rules) plus the wordmark in Space Grotesk. Used by the navbar,
+ * footer, auth pages, both shells and the 404/error pages.
  */
-export function Logo({ href = ROUTES.home, className }: LogoProps) {
+export function Logo({ href = ROUTES.home, tone = "on-light", className }: LogoProps) {
   return (
     <Link
       href={href}
@@ -24,7 +33,7 @@ export function Logo({ href = ROUTES.home, className }: LogoProps) {
       className={cn("inline-flex min-h-11 items-center gap-2.5", className)}
     >
       <Image
-        src="/logo/mark.svg"
+        src={MARKS[tone]}
         alt=""
         aria-hidden
         width={28}
@@ -32,8 +41,8 @@ export function Logo({ href = ROUTES.home, className }: LogoProps) {
         unoptimized
         className="size-7 shrink-0 rounded-[0.25rem]"
       />
-      {/* Inherits the surface ink: graphite on the marketing shell, chalk on the footer band. */}
-      <span className="truncate font-display text-lg leading-none tracking-tight">
+      {/* Inherits the surface ink: graphite on light surfaces, chalk on the footer band. */}
+      <span className="truncate font-display font-medium text-lg leading-none tracking-tight">
         {APP.name}
       </span>
     </Link>

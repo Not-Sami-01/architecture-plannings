@@ -34,12 +34,9 @@ export default async function HomePage() {
     getSiteSettings(),
   ]);
 
-  const featuredPackage =
-    packages.find((pkg) => pkg.slug === homePackages.featuredSlug) ?? packages[0] ?? null;
-
   return (
     <main>
-      <HomeHero featuredPackage={featuredPackage} currency={currency} />
+      <HomeHero />
 
       <section className="py-16 md:py-24" aria-labelledby="packages-heading">
         <div className="mx-auto w-full max-w-6xl px-4">
@@ -50,7 +47,7 @@ export default async function HomePage() {
               </p>
               <h2
                 id="packages-heading"
-                className="mt-4 font-display text-3xl leading-[1.08] tracking-tight md:text-4xl"
+                className="mt-4 font-display font-medium text-3xl leading-[1.08] tracking-tight md:text-4xl"
               >
                 {homePackages.heading}
               </h2>
@@ -93,7 +90,7 @@ export default async function HomePage() {
           <div className="grid gap-6 md:grid-cols-12">
             <h2
               id="plot-size-heading"
-              className="font-display text-3xl leading-[1.08] tracking-tight md:col-span-7 md:text-4xl"
+              className="font-display font-medium text-3xl leading-[1.08] tracking-tight md:col-span-7 md:text-4xl"
             >
               {homePlotSize.heading}
             </h2>
@@ -114,7 +111,7 @@ export default async function HomePage() {
               </p>
               <h2
                 id="process-heading"
-                className="mt-4 font-display text-3xl leading-[1.08] tracking-tight md:text-4xl"
+                className="mt-4 font-display font-medium text-3xl leading-[1.08] tracking-tight md:text-4xl"
               >
                 {homeProcess.heading}
               </h2>
@@ -142,14 +139,14 @@ export default async function HomePage() {
         <div className="mx-auto w-full max-w-6xl px-4">
           <h2
             id="trust-heading"
-            className="max-w-3xl font-display text-3xl leading-[1.08] tracking-tight md:text-4xl"
+            className="max-w-3xl font-display font-medium text-3xl leading-[1.08] tracking-tight md:text-4xl"
           >
             {homeTrust.heading}
           </h2>
           <div className="mt-10 grid gap-x-8 gap-y-8 md:grid-cols-3">
             {homeTrust.cards.map((card) => (
               <div key={card.title} className="border-t pt-4">
-                <p className="font-display text-xl leading-snug">{card.title}</p>
+                <p className="font-display font-medium text-xl leading-snug">{card.title}</p>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{card.text}</p>
               </div>
             ))}

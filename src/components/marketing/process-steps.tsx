@@ -21,7 +21,7 @@ export function ProcessSteps({ steps }: ProcessStepsProps) {
             <span className="font-mono text-xs text-accent-foreground" aria-hidden>
               {String(index + 1).padStart(2, "0")}
             </span>
-            <span className="font-display text-xl leading-snug">{step.title}</span>
+            <span className="font-display font-medium text-xl leading-snug">{step.title}</span>
           </p>
           {step.provides.length > 0 ? (
             <div className="mt-4">

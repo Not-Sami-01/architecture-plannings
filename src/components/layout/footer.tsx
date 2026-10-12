@@ -10,7 +10,7 @@ export function Footer() {
     <footer className="bg-hero text-hero-ink">
       <div className="mx-auto flex w-full max-w-6xl flex-col gap-10 px-4 py-14 md:flex-row md:justify-between">
         <div className="max-w-xs">
-          <Logo />
+          <Logo tone="on-dark" />
           <p className="mt-3 text-sm leading-relaxed text-hero-ink/60">{APP.tagline}</p>
         </div>
 
@@ -27,7 +27,7 @@ export function Footer() {
         </nav>
 
         <div className="text-sm text-hero-ink/70">
-          <p className="font-display text-lg text-hero-ink">Questions?</p>
+          <p className="font-display font-medium text-lg text-hero-ink">Questions?</p>
           {publicConfig.whatsappNumber ? (
             <a
               href={`https://wa.me/${publicConfig.whatsappNumber}`}

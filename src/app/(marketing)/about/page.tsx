@@ -47,7 +47,7 @@ export default function AboutPage() {
         {/* TODO(owner): fill `story` in src/content/site-facts.ts — the main trust signal on this page. */}
         {SITE_FACTS.story.length > 0 ? (
           <section aria-labelledby="our-story" className="mb-12">
-            <h2 id="our-story" className="font-display text-3xl leading-snug tracking-tight">
+            <h2 id="our-story" className="font-display font-medium text-3xl leading-snug tracking-tight">
               Our story
             </h2>
             <div className="mt-4 flex flex-col gap-4 leading-relaxed text-muted-foreground">
@@ -59,7 +59,7 @@ export default function AboutPage() {
         ) : null}
 
         <section aria-labelledby="beliefs" className="mb-12">
-          <h2 id="beliefs" className="font-display text-3xl leading-snug tracking-tight">
+          <h2 id="beliefs" className="font-display font-medium text-3xl leading-snug tracking-tight">
             What we believe
           </h2>
           <ul className="mt-4 flex flex-col gap-4">
@@ -73,7 +73,7 @@ export default function AboutPage() {
         </section>
 
         <section aria-labelledby="how-we-work" className="mb-12">
-          <h2 id="how-we-work" className="font-display text-3xl leading-snug tracking-tight">
+          <h2 id="how-we-work" className="font-display font-medium text-3xl leading-snug tracking-tight">
             How we work
           </h2>
           <ol className="mt-4 flex flex-col gap-3">
@@ -99,7 +99,7 @@ export default function AboutPage() {
         </section>
 
         <section aria-labelledby="what-we-design" className="mb-12">
-          <h2 id="what-we-design" className="font-display text-3xl leading-snug tracking-tight">
+          <h2 id="what-we-design" className="font-display font-medium text-3xl leading-snug tracking-tight">
             What we design
           </h2>
           <ul className="mt-4 flex flex-col gap-2 text-muted-foreground">
@@ -120,7 +120,7 @@ export default function AboutPage() {
 
         {credentials.length > 0 ? (
           <section aria-labelledby="experience" className="mb-12">
-            <h2 id="experience" className="font-display text-3xl leading-snug tracking-tight">
+            <h2 id="experience" className="font-display font-medium text-3xl leading-snug tracking-tight">
               Experience and credentials
             </h2>
             <ul className="mt-4 flex list-disc flex-col gap-2 pl-5 text-muted-foreground">
@@ -132,7 +132,7 @@ export default function AboutPage() {
         ) : null}
 
         <section aria-labelledby="who-we-work-with" className="mb-12">
-          <h2 id="who-we-work-with" className="font-display text-3xl leading-snug tracking-tight">
+          <h2 id="who-we-work-with" className="font-display font-medium text-3xl leading-snug tracking-tight">
             Who we work with
           </h2>
           <p className="mt-4 leading-relaxed text-muted-foreground">

@@ -16,7 +16,7 @@ export default async function DashboardPage() {
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="font-display text-3xl tracking-tight md:text-4xl">
+          <h1 className="font-display font-medium text-3xl tracking-tight md:text-4xl">
             Welcome{name ? `, ${name}` : ""}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">

@@ -10,8 +10,8 @@
   --font-sans: var(--font-sans);
   --font-mono: var(--font-geist-mono);
   --font-heading: var(--font-sans);
-  /* Brand display face: DM Serif Display (self-hosted via next/font). */
-  --font-display: var(--font-serif);
+  /* Brand display face: Space Grotesk (self-hosted via next/font), weight 500. */
+  --font-display: var(--font-display);
   /* Brand glass recipe (DESIGN.md §Digital expression). */
   --color-glass: var(--glass);
   --color-glass-edge: var(--glass-edge);

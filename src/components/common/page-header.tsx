@@ -20,7 +20,7 @@ export function PageHeader({ title, description, eyebrow, links }: PageHeaderPro
         </p>
       ) : null}
       <div className="grid gap-6 md:grid-cols-12">
-        <h1 className="font-display text-4xl leading-[1.06] tracking-tight md:col-span-7 md:text-5xl">
+        <h1 className="font-display font-medium text-4xl leading-[1.06] tracking-tight md:col-span-7 md:text-5xl">
           {title}
         </h1>
         {description ? (
