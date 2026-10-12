@@ -14,7 +14,7 @@ Read these before coding:
 | `API.md` | Adding or changing any endpoint or action |
 | `DESIGN.md` | Building or styling any UI |
 | `RULES.md` | **Mandatory** frontend rules: TanStack Query, shadcn/ui, hook-per-API-call, `api` util with axios |
-| `README.md` | Setup, scripts, structure |
+| `../README.md` (repo root) | Setup, scripts, structure |
 
 ## Stack
 
@@ -211,9 +211,9 @@ Rules:
 ## Workflow for Agents
 
 1. Restate the task and identify which docs (`PRD.md`, `API.md`, `DESIGN.md`) apply.
-2. Check the current build phase in `README.md` (roadmap). **Do not build features from a later phase** unless asked.
+2. Check the current build phase in the root `README.md` (roadmap). **Do not build features from a later phase** unless asked.
 3. Make the smallest change that fully solves the task. Avoid unrelated refactors.
-4. Update docs when behavior changes: `API.md` for endpoints, `.env.example` for variables, `README.md` for setup.
+4. Update docs when behavior changes: `API.md` for endpoints, `.env.example` for variables, the root `README.md` for setup.
 5. Run lint, typecheck, and tests.
 6. Summarize what changed, what was tested, and any follow-ups.
 

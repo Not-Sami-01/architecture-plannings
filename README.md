@@ -6,16 +6,22 @@ A full-stack web app where clients order custom house architecture designs (floo
 
 ## Documentation Map
 
+All project docs live in [`docs/`](docs/). Only this `README.md` stays at the repo root.
+
 | File | Purpose |
 |------|---------|
 | `README.md` | Setup, stack, structure (this file) |
-| `PRD.md` | Product requirements, user stories, phases |
-| `DESIGN.md` | Visual design system and UX rules |
-| `API.md` | Routes, server actions, request/response shapes |
-| `ABOUT.md` | Business story, copy and brand content |
-| `AGENTS.md` | Rules for AI coding agents working in this repo |
-| `RULES.md` | Mandatory frontend rules (TanStack Query, shadcn/ui, hooks, api util) |
-| `CONTENT.md` | SEO and content rules: keyword-rich genuine content, internal linking |
+| [`docs/PRD.md`](docs/PRD.md) | Product requirements, user stories, phases |
+| [`docs/DESIGN.md`](docs/DESIGN.md) | Visual design system and UX rules |
+| [`docs/API.md`](docs/API.md) | Routes, route handlers, request/response shapes |
+| `ABOUT.md` | Business story, copy and brand content (does not exist yet) |
+| [`docs/AGENTS.md`](docs/AGENTS.md) | Rules for AI coding agents working in this repo |
+| [`docs/RULES.md`](docs/RULES.md) | Mandatory frontend rules (TanStack Query, shadcn/ui, hooks, api util) |
+| [`docs/CONTENT.md`](docs/CONTENT.md) | SEO and content rules: keyword-rich genuine content, internal linking |
+| [`docs/SECURITY.md`](docs/SECURITY.md) | Security policy, vulnerability reporting, engineering standards |
+| [`docs/PLAN.md`](docs/PLAN.md) | Build plan and shipped features |
+| [`docs/plan.md`](docs/plan.md) | Executed plan phases 1–3 |
+| [`docs/CLAUDE.md`](docs/CLAUDE.md) | Alias pointing at `docs/AGENTS.md` for Claude Code |
 
 ## Tech Stack
 
@@ -168,7 +174,7 @@ Open http://localhost:3000.
 │   │   ├── orders/               # Status machine, order services
 │   │   ├── staged-files.ts       # Client-side upload staging for the order wizard
 │   │   └── validators/           # Zod schemas
-│   ├── hooks/                    # One hook per API call, grouped by feature (see RULES.md)
+│   ├── hooks/                    # One hook per API call, grouped by feature (see docs/RULES.md)
 │   └── proxy.ts                  # clerkMiddleware: session + `?next` redirect for panels
 ├── public/
 ├── .env.example
@@ -220,7 +226,7 @@ Status changes only happen through `lib/orders/status.ts`. Every change writes a
 
 ## Roadmap
 
-> Checked = fully shipped. Details for the latest work: `PLAN.md` rows 20–26.
+> Checked = fully shipped. Details for the latest work: `docs/PLAN.md` rows 20–26.
 
 - [x] **Phase 1:** Auth (Clerk), packages, order form with uploads, admin order list
 - [ ] **Phase 2:** Client dashboard ✅, status machine + quote flow ✅, **email notifications pending** (Resend deferred)
