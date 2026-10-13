@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { MenuIcon, UserIcon, XIcon } from "lucide-react";
+import { MenuIcon, XIcon } from "lucide-react";
+import { UserButton } from "@clerk/nextjs";
 
-import { CTA, NAV_LINKS, ROUTES } from "@/config/constants";
+import { CTA, NAV_LINKS, ROLES, ROUTES } from "@/config/constants";
 import { useSession } from "@/hooks/auth/use-session";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -13,7 +14,9 @@ import { ThemeSwitcher } from "@/components/common/theme-switcher";
 
 /**
  * Floating glass navbar (brand §Digital expression: 85% paper tint, 18px blur,
- * luminous edge, 20px radius). Signed-in visitors get a profile shortcut.
+ * luminous edge, 20px radius). Signed-in visitors get a Dashboard link plus
+ * Clerk's UserButton (avatar menu → Manage account navigates to /account,
+ * sign out lives in the same menu).
  */
 export function Navbar() {
   const [open, setOpen] = useState(false);
@@ -34,15 +37,35 @@ export function Navbar() {
     </>
   );
 
+  const dashboardHref = session
+    ? session.role === ROLES.ADMIN
+      ? ROUTES.admin.root
+      : ROUTES.dashboard
+    : ROUTES.login;
+
+  const accountButton = (
+    <UserButton
+      userProfileMode="navigation"
+      userProfileUrl={ROUTES.account}
+      appearance={{
+        elements: {
+          avatarBox: "size-8",
+        },
+      }}
+    />
+  );
+
   const authAction = session ? (
-    <Button
-      variant="ghost"
-      render={<Link href={ROUTES.dashboard} />}
-      aria-label="Open your dashboard"
-    >
-      <UserIcon className="mr-1 size-4" aria-hidden />
-      Profile
-    </Button>
+    <>
+      <Button
+        variant="ghost"
+        render={<Link href={dashboardHref} />}
+        aria-label="Open your dashboard"
+      >
+        Dashboard
+      </Button>
+      {accountButton}
+    </>
   ) : (
     <Button variant="ghost" render={<Link href={ROUTES.login} />}>
       Sign in
@@ -80,22 +103,28 @@ export function Navbar() {
                   <span className="text-sm font-medium text-muted-foreground">Appearance</span>
                   <ThemeSwitcher />
                 </div>
-                <Button
-                  variant="outline"
-                  render={
-                    <Link href={session ? ROUTES.dashboard : ROUTES.login} />
-                  }
-                  onClick={() => setOpen(false)}
-                >
-                  {session ? (
-                    <>
-                      <UserIcon className="mr-1 size-4" aria-hidden />
-                      Profile
-                    </>
-                  ) : (
-                    "Sign in"
-                  )}
-                </Button>
+                {session ? (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <Button
+                        variant="outline"
+                        render={<Link href={dashboardHref} />}
+                        onClick={() => setOpen(false)}
+                      >
+                        Dashboard
+                      </Button>
+                      {accountButton}
+                    </div>
+                  </>
+                ) : (
+                  <Button
+                    variant="outline"
+                    render={<Link href={ROUTES.login} />}
+                    onClick={() => setOpen(false)}
+                  >
+                    Sign in
+                  </Button>
+                )}
                 <Button render={<Link href={ROUTES.newOrder} />} onClick={() => setOpen(false)}>
                   {CTA.primary}
                 </Button>

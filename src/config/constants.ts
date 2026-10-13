@@ -135,6 +135,8 @@ export const ROUTES = {
   dashboard: "/dashboard",
   dashboardOrders: "/dashboard/orders",
   dashboardOrder: (id: string) => `/dashboard/orders/${id}`,
+  /** Clerk UserProfile page (any signed-in role — clients AND admins). */
+  account: "/account",
   newOrder: "/order/new",
   admin: {
     root: "/admin",

@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useClerk } from "@clerk/nextjs";
+import { UserButton } from "@clerk/nextjs";
 
 import { ROUTES } from "@/config/constants";
-import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/common/logo";
 import { ThemeSwitcher } from "@/components/common/theme-switcher";
 
@@ -16,8 +15,6 @@ type ClientShellProps = {
 
 /** Header + main shell for the client panel (dashboard and its sub-pages). */
 export function ClientShell({ name, children }: ClientShellProps) {
-  const { signOut } = useClerk();
-
   return (
     <div className="flex min-h-svh flex-col">
       <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -47,15 +44,15 @@ export function ClientShell({ name, children }: ClientShellProps) {
             <span className="hidden max-w-40 truncate text-sm text-muted-foreground sm:inline">
               {name}
             </span>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                void signOut({ redirectUrl: ROUTES.home });
+            <UserButton
+              userProfileMode="navigation"
+              userProfileUrl={ROUTES.account}
+              appearance={{
+                elements: {
+                  avatarBox: "size-8",
+                },
               }}
-            >
-              Sign out
-            </Button>
+            />
           </div>
         </div>
       </header>
