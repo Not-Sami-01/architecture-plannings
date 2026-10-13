@@ -145,7 +145,7 @@ src/components/
 ├── files/         # file-dropzone, file-list, draft-preview
 ├── payments/      # payment-card, proof-upload
 ├── messages/      # message-thread, message-bubble, message-input
-└── admin/         # orders-table, status-controls, stats-card, portfolio-editor, blog-editor, post-form, posts-table...
+└── admin/         # orders-table, status-controls, stats-card, portfolio-form, portfolio-table, blog-editor, post-form, posts-table...
 ```
 
 Rules:

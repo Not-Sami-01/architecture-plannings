@@ -5,6 +5,7 @@ import { useClerk } from "@clerk/nextjs";
 import {
   ClipboardListIcon,
   FileIcon,
+  ImageIcon,
   LayoutDashboardIcon,
   LogOutIcon,
   MessageSquareIcon,
@@ -31,6 +32,7 @@ const NAV = [
   { href: ROUTES.admin.files, label: "Files", icon: FileIcon },
   { href: ROUTES.admin.users, label: "Users", icon: UsersIcon },
   { href: ROUTES.admin.packages, label: "Pricing", icon: TagsIcon },
+  { href: ROUTES.admin.portfolio, label: "Portfolio", icon: ImageIcon },
   { href: ROUTES.admin.blog, label: "Blog", icon: NewspaperIcon },
   { href: ROUTES.admin.settings, label: "Settings", icon: SettingsIcon },
 ];

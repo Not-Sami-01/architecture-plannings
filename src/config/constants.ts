@@ -104,6 +104,7 @@ export type Role = (typeof ROLES)[keyof typeof ROLES];
 export const ROUTES = {
   home: "/",
   portfolio: "/portfolio",
+  portfolioProject: (slug: string) => `/portfolio/${slug}`,
   services: "/services",
   howItWorks: "/how-it-works",
   about: "/about",
@@ -151,6 +152,8 @@ export const ROUTES = {
     packages: "/admin/packages",
     settings: "/admin/settings",
     portfolio: "/admin/portfolio",
+    portfolioNew: "/admin/portfolio/new",
+    portfolioEdit: (id: string) => `/admin/portfolio/${id}`,
     blog: "/admin/blog",
     blogNew: "/admin/blog/new",
     blogEdit: (id: string) => `/admin/blog/${id}`,
@@ -209,6 +212,8 @@ export const FILE_KINDS = {
   CHAT_ATTACHMENT: "CHAT_ATTACHMENT",
   // Blog covers + in-content images (plan 6). Admin-only; never on an order.
   POST_IMAGE: "POST_IMAGE",
+  // Portfolio gallery images (Phase 5). Admin-only; never on an order.
+  PORTFOLIO_IMAGE: "PORTFOLIO_IMAGE",
 } as const;
 
 export type FileKind = (typeof FILE_KINDS)[keyof typeof FILE_KINDS];
@@ -347,6 +352,61 @@ export const READING_TIME = { wordsPerMinute: 200 } as const;
 
 /** Cache tag for every public blog read — revalidateTag'd on each write. */
 export const POSTS_CACHE_TAG = "posts";
+
+/**
+ * Portfolio gallery image spec (Phase 5): same fixed 4:3 crop as the pricing
+ * card so the admin dialog config is shared and grid rows stay uniform.
+ */
+export const PORTFOLIO_IMAGE = {
+  width: 1200,
+  height: 900,
+  aspect: 4 / 3,
+  mimeTypes: ["image/jpeg", "image/png", "image/webp"] as const,
+  maxSourceBytes: 5 * 1024 * 1024,
+  recommended: "Recommended: 1200 × 900 px (4:3), JPG or PNG, up to 5 MB",
+  label: "Project image",
+  maxPerProject: 8,
+} as const;
+
+/** Fixed project categories (schema `category` is a string; UI offers this list). */
+export const PORTFOLIO_CATEGORIES = [
+  "Full house",
+  "Floor plan",
+  "Elevation",
+  "3D view",
+] as const;
+
+export type PortfolioCategory = (typeof PORTFOLIO_CATEGORIES)[number];
+
+/** Plot sizes offered in the admin form + filter pills. */
+export const PORTFOLIO_PLOT_SIZES = [
+  "3 marla",
+  "5 marla",
+  "7 marla",
+  "10 marla",
+  "1 kanal",
+  "2 kanal",
+  "Other",
+] as const;
+
+export type PortfolioPlotSize = (typeof PORTFOLIO_PLOT_SIZES)[number];
+
+/** HouseStyle enum → display label + lowercase filter token. */
+export const PORTFOLIO_STYLE_OPTIONS: readonly {
+  value: "MODERN" | "CLASSIC" | "MINIMAL" | "SPANISH" | "ARABIC" | "OTHER";
+  label: string;
+  token: string;
+}[] = [
+  { value: "MODERN", label: "Modern", token: "modern" },
+  { value: "CLASSIC", label: "Classic", token: "classic" },
+  { value: "MINIMAL", label: "Minimal", token: "minimal" },
+  { value: "SPANISH", label: "Spanish", token: "spanish" },
+  { value: "ARABIC", label: "Arabic", token: "arabic" },
+  { value: "OTHER", label: "Other", token: "other" },
+];
+
+/** Cache tag for every public portfolio read — revalidateTag'd on each write. */
+export const PORTFOLIO_CACHE_TAG = "portfolio";
 
 export const PAGINATION = {
   defaultPage: 1,
@@ -548,8 +608,12 @@ export const API_ROUTES = {
   adminSettings: "/api/admin/settings",
   realtimeToken: "/api/realtime/token",
   portfolio: "/api/portfolio",
+  portfolioProject: (slug: string) => `/api/portfolio/${slug}`,
+  portfolioImage: (id: string) => `/api/portfolio/images/${id}`,
   adminPortfolio: "/api/admin/portfolio",
+  adminPortfolioItem: (id: string) => `/api/admin/portfolio/${id}`,
   adminPortfolioReorder: "/api/admin/portfolio/reorder",
+  adminPortfolioImage: "/api/admin/portfolio/images",
   contact: "/api/contact",
   adminPosts: "/api/admin/posts",
   adminPost: (id: string) => `/api/admin/posts/${id}`,

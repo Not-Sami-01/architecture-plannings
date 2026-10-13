@@ -483,14 +483,22 @@ Open a thread at `/admin/chats/[orderId]`; the per-order messages endpoints abov
 
 ## 10. Portfolio
 
+Public reads are also called directly from marketing Server Components (`listVisibleProjects` / `getVisibleProjectBySlug` in `src/lib/portfolio.ts` — cached with `PORTFOLIO_CACHE_TAG`). Images are `OrderFile` rows of kind `PORTFOLIO_IMAGE`; `PortfolioProject.images` stores their IDs in display order (first = cover).
+
 | Method | Path | Access | Description |
 |--------|------|--------|-------------|
-| GET | `/api/portfolio` | public | List visible projects (`category`, `plotSize`, `style` filters) |
-| GET | `/api/portfolio/:slug` | public | Project detail |
-| POST | `/api/admin/portfolio` | admin | Create |
-| PATCH | `/api/admin/portfolio/:id` | admin | Update |
-| POST | `/api/admin/portfolio/reorder` | admin | Reorder (`{ "ids": ["p1","p2"] }`) |
-| DELETE | `/api/admin/portfolio/:id` | admin | Delete |
+| GET | `/api/portfolio` | public | Visible projects (`plot`, `style`, `category` filters — lowercase tokens like `5-marla` / `modern`) |
+| GET | `/api/portfolio/:slug` | public | Visible project detail (404 when hidden/missing) |
+| GET | `/api/portfolio/images/:fileId` | public | Serve a gallery image (immutable cache; kind-checked) |
+| GET | `/api/admin/portfolio` | admin | Every project (hidden included), display order |
+| POST | `/api/admin/portfolio` | admin | Create (`{ title, slug?, category, plotSize, style, description?, featured?, visible?, imageIds? }`; slug auto-derived, locked after create; `sortOrder` = max+1) |
+| GET | `/api/admin/portfolio/:id` | admin | Full record for the edit form |
+| PATCH | `/api/admin/portfolio/:id` | admin | Partial update (slug ignored — immutable); changed `imageIds` purge removed files |
+| DELETE | `/api/admin/portfolio/:id` | admin | Hard delete + purge gallery images (rows + objects) |
+| POST | `/api/admin/portfolio/reorder` | admin | `{ "ids": [...] }` — must include every project exactly once |
+| POST | `/api/admin/portfolio/images` | admin | Multipart gallery upload (cropped 4:3 1200×900, ≤8 per project) |
+
+Admin UI: `/admin/portfolio` (list — reorder arrows, featured/visible switches, delete dialog), `/admin/portfolio/new`, `/admin/portfolio/[id]`.
 
 ---
 

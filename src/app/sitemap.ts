@@ -3,6 +3,7 @@ import type { MetadataRoute } from "next";
 import { ROUTES } from "@/config/constants";
 import { GUIDES } from "@/content/guides";
 import { listPublishedPosts, listPublishedTags } from "@/lib/posts";
+import { listVisibleProjectSlugs } from "@/lib/portfolio";
 import { absoluteUrl } from "@/lib/seo/metadata";
 
 /** Auto-generated sitemap of every indexable marketing page (CONTENT.md §6). */
@@ -23,9 +24,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ROUTES.plotPages.kanal1,
   ];
 
-  const [posts, tags] = await Promise.all([
+  const [posts, tags, projects] = await Promise.all([
     listPublishedPosts({ limit: 500 }).catch(() => []),
     listPublishedTags().catch(() => []),
+    listVisibleProjectSlugs().catch(() => []),
   ]);
 
   const staticEntries: MetadataRoute.Sitemap = [...staticPaths, ...GUIDES.map((g) => ROUTES.guide(g.slug))].map(
@@ -58,5 +60,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     })),
   ];
 
-  return [...staticEntries, ...blogEntries];
+  const portfolioEntries: MetadataRoute.Sitemap = projects.map((project) => ({
+    url: absoluteUrl(ROUTES.portfolioProject(project.slug)),
+    lastModified: project.updatedAt,
+    changeFrequency: "monthly" as const,
+    priority: 0.7,
+  }));
+
+  return [...staticEntries, ...blogEntries, ...portfolioEntries];
 }

@@ -105,18 +105,19 @@ model SiteSetting {
 }
 
 model PortfolioProject {
-  id        String     @id @default(cuid())
-  title     String
-  slug      String     @unique
-  category  String
-  plotSize  String
-  style     HouseStyle
-  images    String[]
-  featured  Boolean    @default(false)
-  visible   Boolean    @default(true)
-  sortOrder Int        @default(0)
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
+  id          String     @id @default(cuid())
+  title       String
+  slug        String     @unique
+  category    String
+  plotSize    String
+  style       HouseStyle
+  description String?
+  images      String[]
+  featured    Boolean    @default(false)
+  visible     Boolean    @default(true)
+  sortOrder   Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
 
   @@index([visible, sortOrder])
 }
@@ -355,6 +356,9 @@ enum FileKind {
   // Blog cover images and images embedded in post content (plan 6). Admin-only;
   // orderId stays null (the row belongs to a post, not an order).
   POST_IMAGE
+  // Portfolio gallery images (Phase 5). Admin-only; orderId stays null (the
+  // row belongs to a portfolio project, not an order).
+  PORTFOLIO_IMAGE
 }
 
 enum PaymentType {
