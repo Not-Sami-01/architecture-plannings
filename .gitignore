@@ -45,3 +45,7 @@ next-env.d.ts
 
 # local storage fallback
 .storage/
+
+# Local binaries accidentally dropped in the repo root
+*.AppImage
+*.flatpak
