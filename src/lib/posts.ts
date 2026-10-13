@@ -71,18 +71,48 @@ async function readPublishedTags(): Promise<string[]> {
   return [...new Set(rows.flatMap((row) => row.tags))].sort();
 }
 
-/** Cached public reads — invalidated by revalidateTag(POSTS_CACHE_TAG) on writes. */
-export const listPublishedPosts = unstable_cache(
+/**
+ * unstable_cache JSON-serializes what it stores, so Prisma Date fields come
+ * back as strings on cache hits (Date methods like toISOString disappear).
+ * Rehydrate at the service boundary so callers always see real Dates.
+ */
+function toDate(value: Date | string | null | undefined): Date | null {
+  if (!value) return null;
+  return value instanceof Date ? value : new Date(value);
+}
+
+function rehydratePostDates<
+  T extends { publishedAt: Date | string | null; updatedAt: Date | string },
+>(row: T): T {
+  return {
+    ...row,
+    publishedAt: toDate(row.publishedAt),
+    updatedAt: toDate(row.updatedAt) as T["updatedAt"],
+  };
+}
+
+const cachedListPublishedPosts = unstable_cache(
   readPublishedPosts,
   ["posts", "list-published"],
   { tags: [POSTS_CACHE_TAG] },
 );
 
-export const getPublishedPostBySlug = unstable_cache(
+const cachedPublishedPostBySlug = unstable_cache(
   readPublishedPostBySlug,
   ["posts", "by-slug"],
   { tags: [POSTS_CACHE_TAG] },
 );
+
+/** Cached public reads — invalidated by revalidateTag(POSTS_CACHE_TAG) on writes. */
+export async function listPublishedPosts(input: { tag?: string; limit: number }) {
+  const rows = await cachedListPublishedPosts(input);
+  return rows.map((row) => rehydratePostDates(row));
+}
+
+export async function getPublishedPostBySlug(slug: string) {
+  const row = await cachedPublishedPostBySlug(slug);
+  return row ? rehydratePostDates(row) : null;
+}
 
 export const listPublishedTags = unstable_cache(readPublishedTags, ["posts", "tags"], {
   tags: [POSTS_CACHE_TAG],
