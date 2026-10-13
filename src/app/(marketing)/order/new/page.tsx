@@ -31,7 +31,7 @@ export default async function NewOrderPage() {
         title="Start your order"
         description="Six short steps — package, plot, requirements, style, files, review. Your progress is saved in this browser as you go."
       />
-      <div className="mx-auto w-full max-w-3xl px-4 pb-20">
+      <div className="mx-auto w-full max-w-3xl px-4 pb-20 pt-10 md:pt-14">
         {/* OrderForm reads useSearchParams (package prefill) — needs a Suspense boundary for prerender. */}
         <Suspense
           fallback={

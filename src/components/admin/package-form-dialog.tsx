@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, useFormState, useWatch } from "react-hook-form";
 
+import { PACKAGE_IMAGE } from "@/config/constants";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -17,12 +19,15 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { ImageCropDialog } from "@/components/common/image-crop-dialog";
 import { useCreatePackage } from "@/hooks/packages/use-create-package";
 import { useUpdatePackage } from "@/hooks/packages/use-update-package";
+import { useUploadPackageImage } from "@/hooks/packages/use-upload-package-image";
 import type { AdminPackage } from "@/hooks/packages/use-admin-packages";
 import { ApiClientError } from "@/lib/api-client/api";
 import {
   packageFormSchema,
+  packageImageFileSchema,
   splitDeliverables,
   type CreatePackageInput,
   type PackageFormValues,
@@ -51,6 +56,12 @@ function toValues(pkg: AdminPackage | null): PackageFormValues {
 export function PackageFormDialog({ open, onOpenChange, pkg }: PackageFormDialogProps) {
   const { actions: createActions, loadings: createLoadings } = useCreatePackage();
   const { actions: updateActions, loadings: updateLoadings } = useUpdatePackage();
+  const { actions: imageActions, loadings: imageLoadings } = useUploadPackageImage();
+
+  // Card image: pick → crop (fixed 4:3) → upload. Object URL for the crop preview.
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [imageError, setImageError] = useState<string | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<PackageFormValues>({
     resolver: zodResolver(packageFormSchema),
@@ -66,6 +77,41 @@ export function PackageFormDialog({ open, onOpenChange, pkg }: PackageFormDialog
       form.reset(toValues(pkg));
     }
   }, [open, pkg, form]);
+
+  /** All close paths (footer button, ESC, overlay) release the object URL. */
+  const handleOpenChange = (isOpen: boolean) => {
+    if (!isOpen) {
+      if (cropSrc) URL.revokeObjectURL(cropSrc);
+      setCropSrc(null);
+      setImageError(null);
+    }
+    onOpenChange(isOpen);
+  };
+
+  const onPickImage = (file: File | null) => {
+    // Reset so picking the same file twice still fires onChange.
+    if (imageInputRef.current) imageInputRef.current.value = "";
+    if (!file || !pkg) return;
+    const parsed = packageImageFileSchema.safeParse({
+      filename: file.name,
+      mime: file.type,
+      size: file.size,
+    });
+    if (!parsed.success) {
+      setImageError(parsed.error.issues[0]?.message ?? PACKAGE_IMAGE.recommended);
+      return;
+    }
+    setImageError(null);
+    setCropSrc((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return URL.createObjectURL(file);
+    });
+  };
+
+  const onCropped = async (blob: Blob) => {
+    if (!pkg) return;
+    await imageActions.upload({ packageId: pkg.id, file: blob });
+  };
 
   const onSubmit = form.handleSubmit(async (values) => {
     const input: CreatePackageInput = {
@@ -99,7 +145,7 @@ export function PackageFormDialog({ open, onOpenChange, pkg }: PackageFormDialog
   });
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[90svh] overflow-y-auto sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>{pkg ? `Edit ${pkg.name}` : "New package"}</DialogTitle>
@@ -217,6 +263,77 @@ export function PackageFormDialog({ open, onOpenChange, pkg }: PackageFormDialog
               </Field>
             ) : null}
 
+            {pkg ? (
+              <div className="rounded-lg border p-3">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-medium">{PACKAGE_IMAGE.label}</p>
+                    <p className="text-xs text-muted-foreground">{PACKAGE_IMAGE.recommended}</p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={imageLoadings.uploading}
+                      onClick={() => imageInputRef.current?.click()}
+                    >
+                      {imageLoadings.uploading
+                        ? "Uploading…"
+                        : pkg.imageKey
+                          ? "Replace"
+                          : "Add image"}
+                    </Button>
+                    {pkg.imageKey ? (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        disabled={imageLoadings.clearing}
+                        onClick={() => imageActions.clear(pkg.id)}
+                      >
+                        {imageLoadings.clearing ? "Removing…" : "Remove"}
+                      </Button>
+                    ) : null}
+                  </div>
+                </div>
+
+                <div className="mt-3">
+                  {pkg.imageKey ? (
+                    <Image
+                      src={`/api/packages/${pkg.id}/image`}
+                      alt=""
+                      aria-hidden
+                      width={160}
+                      height={120}
+                      unoptimized
+                      className="aspect-[4/3] w-40 rounded-lg border object-cover"
+                    />
+                  ) : (
+                    <div
+                      className="grid aspect-[4/3] w-40 place-items-center rounded-lg border border-dashed bg-muted px-2 text-center text-xs text-muted-foreground"
+                      aria-hidden
+                    >
+                      No image yet
+                    </div>
+                  )}
+                </div>
+
+                <input
+                  ref={imageInputRef}
+                  type="file"
+                  accept={PACKAGE_IMAGE.mimeTypes.join(",")}
+                  className="sr-only"
+                  onChange={(event) => onPickImage(event.target.files?.[0] ?? null)}
+                />
+                {imageError ? <p className="mt-2 text-xs text-destructive">{imageError}</p> : null}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground">
+                Save the package first, then add a card image.
+              </p>
+            )}
+
             <DialogFooter>
               <Button
                 type="button"
@@ -232,6 +349,19 @@ export function PackageFormDialog({ open, onOpenChange, pkg }: PackageFormDialog
             </DialogFooter>
           </FieldGroup>
         </form>
+
+        <ImageCropDialog
+          open={cropSrc !== null}
+          onOpenChange={(isOpen) => {
+            if (!isOpen && cropSrc) {
+              URL.revokeObjectURL(cropSrc);
+              setCropSrc(null);
+            }
+          }}
+          src={cropSrc ?? ""}
+          onCropped={onCropped}
+          title={`Crop ${PACKAGE_IMAGE.label.toLowerCase()}`}
+        />
       </DialogContent>
     </Dialog>
   );

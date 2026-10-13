@@ -58,13 +58,58 @@ export function stageFiles(existing: StagedFile[], incoming: readonly File[]): S
   return { staged, rejected };
 }
 
+/**
+ * Admin staging for order uploads (plan 5 C): the wizard's batch rules with
+ * admin mime types and the higher size cap. Pure like the rest of this module.
+ */
+export function stageOrderFiles(
+  existing: StagedFile[],
+  incoming: readonly File[],
+  opts: { isAdmin: boolean },
+): StageFilesResult {
+  const staged = [...existing];
+  const rejected: StagedRejection[] = [];
+  const maxSize = opts.isAdmin ? FILE_LIMITS.adminMaxSizeBytes : FILE_LIMITS.clientMaxSizeBytes;
+  const mimes: readonly string[] = opts.isAdmin
+    ? [...CLIENT_MIME_TYPES, ...ADMIN_EXTRA_MIME_TYPES]
+    : (CLIENT_MIME_TYPES as readonly string[]);
+  const mimeHint = opts.isAdmin
+    ? "Supported: images, PDF, Office and CAD/archive formats."
+    : "use JPG, PNG or PDF.";
+
+  for (const file of incoming) {
+    if (staged.length >= FILE_LIMITS.maxClientFiles) {
+      rejected.push({
+        name: file.name,
+        reason: `Limit reached — up to ${FILE_LIMITS.maxClientFiles} files per batch.`,
+      });
+      continue;
+    }
+    const rejection = rejectCommonFile(file, mimes, maxSize, mimeHint);
+    if (rejection) {
+      rejected.push(rejection);
+      continue;
+    }
+    staged.push({
+      key: crypto.randomUUID(),
+      file,
+      name: file.name,
+      size: file.size,
+      mime: file.type,
+    });
+  }
+
+  return { staged, rejected };
+}
+
 function rejectCommonFile(
   file: File,
   allowedMimes: readonly string[],
   maxBytes: number,
+  mimeHint = "use JPG, PNG or PDF.",
 ): StagedRejection | null {
   if (!(allowedMimes as readonly string[]).includes(file.type)) {
-    return { name: file.name, reason: "Unsupported type — use JPG, PNG or PDF." };
+    return { name: file.name, reason: `Unsupported type — ${mimeHint}` };
   }
   if (file.size === 0) {
     return { name: file.name, reason: "File is empty." };

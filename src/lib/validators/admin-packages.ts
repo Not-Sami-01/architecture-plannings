@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import { PACKAGE_IMAGE } from "@/config/constants";
+
 /** Slug rule shared by the API and the admin form. */
 export const packageSlugSchema = z
   .string()
@@ -56,3 +58,20 @@ export const packageFormSchema = createPackageSchema.extend({
 });
 
 export type PackageFormValues = z.infer<typeof packageFormSchema>;
+
+/**
+ * File schema for the pricing-card image (the cropped 1200×900 blob the crop
+ * dialog uploads). Shared by the admin upload route's server-side validation
+ * and the client pre-check — the server re-checks regardless (SECURITY.md).
+ */
+export const packageImageFileSchema = z.object({
+  filename: z.string().trim().min(1).max(255),
+  mime: z.enum(PACKAGE_IMAGE.mimeTypes),
+  size: z
+    .number()
+    .int()
+    .positive("Choose an image first.")
+    .max(PACKAGE_IMAGE.maxSourceBytes, `Images must be ${Math.floor(PACKAGE_IMAGE.maxSourceBytes / 1024 / 1024)} MB or smaller.`),
+});
+
+export type PackageImageFileInput = z.infer<typeof packageImageFileSchema>;

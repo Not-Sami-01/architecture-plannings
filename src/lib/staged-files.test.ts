@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import { FILE_LIMITS } from "@/config/constants";
 
-import { stageFiles, type StagedFile } from "./staged-files";
+import { stageFiles, stageOrderFiles, type StagedFile } from "./staged-files";
 
 function makeFile(name: string, type: string, bytes = 100): File {
   return new File([new Uint8Array(bytes)], name, { type });
@@ -67,6 +67,37 @@ describe("stageFiles", () => {
     const { staged, rejected } = stageFiles(full, [makeFile("extra.jpg", "image/jpeg")]);
 
     expect(staged).toHaveLength(FILE_LIMITS.maxClientFiles);
+    expect(rejected[0].reason).toMatch(/Limit reached/);
+  });
+});
+
+describe("stageOrderFiles", () => {
+  it("accepts admin-only CAD types with an admin hint on rejection", () => {
+    const admin = stageOrderFiles([], [makeFile("plan.dwg", "image/vnd.dwg")], { isAdmin: true });
+    expect(admin.staged).toHaveLength(1);
+
+    const client = stageOrderFiles([], [makeFile("plan.dwg", "image/vnd.dwg")], {
+      isAdmin: false,
+    });
+    expect(client.staged).toHaveLength(0);
+    expect(client.rejected[0].reason).toMatch(/JPG, PNG or PDF/);
+  });
+
+  it("applies the admin size cap and the shared batch limit", () => {
+    const big = makeFile("scan.png", "image/png", FILE_LIMITS.clientMaxSizeBytes + 1);
+    expect(stageOrderFiles([], [big], { isAdmin: true }).staged).toHaveLength(1);
+    expect(stageOrderFiles([], [big], { isAdmin: false }).rejected[0].reason).toMatch(/Too large/);
+
+    const full = Array.from({ length: FILE_LIMITS.maxClientFiles }, (_, index) => ({
+      key: `k${index}`,
+      file: makeFile(`f${index}.jpg`, "image/jpeg"),
+      name: `f${index}.jpg`,
+      size: 1,
+      mime: "image/jpeg",
+    }));
+    const { rejected } = stageOrderFiles(full, [makeFile("extra.jpg", "image/jpeg")], {
+      isAdmin: true,
+    });
     expect(rejected[0].reason).toMatch(/Limit reached/);
   });
 });

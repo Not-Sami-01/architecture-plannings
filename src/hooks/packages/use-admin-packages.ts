@@ -17,6 +17,8 @@ export type AdminPackage = {
   deliverables: string[];
   active: boolean;
   sortOrder: number;
+  /** Storage key of the cropped card image (null when none). */
+  imageKey: string | null;
   createdAt: string;
   updatedAt: string;
 };

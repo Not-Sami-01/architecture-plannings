@@ -16,6 +16,7 @@ export async function listActivePackages() {
       price: true,
       revisionLimit: true,
       deliverables: true,
+      imageKey: true,
     },
   });
 }
@@ -76,4 +77,28 @@ export async function deactivatePackage(id: string) {
     throw ApiError.notFound("Package not found.");
   }
   return prisma.package.update({ where: { id }, data: { active: false } });
+}
+
+/** Returns the current image key (or null) — used by the upload route to clean up. */
+export async function getPackageImageKey(id: string): Promise<string | null> {
+  const existing = await prisma.package.findUnique({
+    where: { id },
+    select: { imageKey: true },
+  });
+  if (!existing) {
+    throw ApiError.notFound("Package not found.");
+  }
+  return existing.imageKey;
+}
+
+/** Points the package at a freshly stored image; the previous object is deleted by the caller. */
+export async function setPackageImage(id: string, imageKey: string) {
+  await getPackageImageKey(id); // 404 when the package is gone
+  return prisma.package.update({ where: { id }, data: { imageKey } });
+}
+
+/** Removes the card image (object deletion is handled by the caller). */
+export async function clearPackageImage(id: string) {
+  await getPackageImageKey(id);
+  return prisma.package.update({ where: { id }, data: { imageKey: null } });
 }

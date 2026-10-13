@@ -9,12 +9,18 @@ import { adminStatsKeys } from "./admin-stats-keys";
 
 export type AdminStatsData = {
   statusCounts: Record<string, number>;
+  // Grouped per currency — orders snapshot their own (plan 5 B).
   revenue: {
-    totalPaid: number;
-    advancePaid: number;
-    finalPaid: number;
-    extraRevisionPaid: number;
-    thisMonthPaid: number;
+    byCurrency: Record<
+      string,
+      {
+        totalPaid: number;
+        advancePaid: number;
+        finalPaid: number;
+        extraRevisionPaid: number;
+        thisMonthPaid: number;
+      }
+    >;
   };
   needsAttention: {
     submitted: number;

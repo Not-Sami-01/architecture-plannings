@@ -41,6 +41,24 @@ export function buildStorageKey(input: {orderId: string; kind: string; fileId: s
   return `orders/${input.orderId}/${input.kind.toLowerCase()}/${input.fileId}-${safe}`;
 }
 
+/** Builds the storage key for a pricing-card image. Keys never leave the server. */
+export function buildPackageImageKey(input: {packageId: string; fileId: string; filename: string}) {
+  const safe = input.filename.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-80);
+  return `packages/${input.packageId}/${input.fileId}-${safe}`;
+}
+
+/**
+ * Direct server-side write for admin uploads that never touch the client
+ * (pricing-card images). S3/R2 PutObject, or the local filesystem fallback.
+ */
+export async function putObject(key: string, body: Buffer, mime: string): Promise<void> {
+  if (s3) {
+    await s3.send(new PutObjectCommand({Bucket: config.storage.bucket, Key: key, Body: body, ContentType: mime}));
+    return;
+  }
+  await putLocalObject(key, body);
+}
+
 export type PresignResult = {uploadUrl: string; method: "PUT" | "LOCAL"};
 
 /** Returns a short-lived upload URL the client PUTs the file to directly. */

@@ -24,6 +24,24 @@ import { Skeleton } from "@/components/ui/skeleton";
  * attention items and the ten most recent orders — one live query.
  */
 
+type Revenue = import("@/lib/admin-stats").AdminStats["revenue"];
+type RevenueField = keyof Revenue["byCurrency"][string];
+
+/**
+ * Money is grouped per currency (orders snapshot their own); show every
+ * involved code, site currency first, e.g. "PKR 50,000 · USD 145".
+ */
+function formatRevenue(revenue: Revenue, field: RevenueField, siteCurrency: string): string {
+  const entries = Object.entries(revenue.byCurrency);
+  if (entries.length === 0) return formatMoney(0, siteCurrency);
+  entries.sort(([a], [b]) =>
+    a === siteCurrency ? -1 : b === siteCurrency ? 1 : a.localeCompare(b)
+  );
+  return entries
+    .map(([currency, totals]) => formatMoney(totals[field], currency))
+    .join(" · ");
+}
+
 function KpiCard({
   label,
   value,
@@ -93,22 +111,22 @@ export function StatsOverview() {
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <KpiCard
           label="Total revenue (paid)"
-          value={formatMoney(stats.revenue.totalPaid, currency)}
+          value={formatRevenue(stats.revenue, "totalPaid", currency)}
           icon={BanknoteIcon}
         />
         <KpiCard
           label="Revenue this month"
-          value={formatMoney(stats.revenue.thisMonthPaid, currency)}
+          value={formatRevenue(stats.revenue, "thisMonthPaid", currency)}
           icon={FileClockIcon}
         />
         <KpiCard
           label="Advance payments received"
-          value={formatMoney(stats.revenue.advancePaid, currency)}
+          value={formatRevenue(stats.revenue, "advancePaid", currency)}
           icon={WalletIcon}
         />
         <KpiCard
           label="Extra revision charges"
-          value={formatMoney(stats.revenue.extraRevisionPaid, currency)}
+          value={formatRevenue(stats.revenue, "extraRevisionPaid", currency)}
           icon={ReceiptTextIcon}
         />
       </div>

@@ -50,6 +50,10 @@ export function realtimeEventQueries(
     case REALTIME_EVENTS.paymentCreated:
     case REALTIME_EVENTS.paymentUpdated:
       return [paymentKeys.all, orderKeys.all, adminOrderKeys.all, adminStatsKeys.all];
+    // The client downloaded a deliverable: only the admin order detail shows
+    // the "Seen by client" badge (refId is the order id).
+    case REALTIME_EVENTS.fileSeen:
+      return event.refId ? [adminOrderKeys.detail(event.refId)] : [];
     // Deliverables & revisions (plan 3): order screens + dashboard counters.
     case REALTIME_EVENTS.revisionRequested:
     case REALTIME_EVENTS.revisionAccepted:

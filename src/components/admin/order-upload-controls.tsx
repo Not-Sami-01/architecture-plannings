@@ -4,9 +4,10 @@ import { useRef, useState } from "react";
 
 import { FILE_KINDS, FILE_LIMITS } from "@/config/constants";
 import type { FileKind } from "@/config/constants";
-import { useAdminOrderUpload } from "@/hooks/orders/use-admin-order-upload";
+import { useStagedAdminUpload } from "@/hooks/orders/use-staged-admin-upload";
 import { useQueryClient } from "@tanstack/react-query";
 import { adminOrderKeys } from "@/hooks/orders/admin-order-keys";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -16,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { StagedFileList } from "@/components/admin/staged-file-list";
 
 type OrderUploadControlsProps = {
   orderId: string;
@@ -29,21 +31,32 @@ const UPLOAD_KINDS: FileKind[] = [
   FILE_KINDS.PAYMENT_PROOF,
 ] as FileKind[];
 
-/** Admin upload to an order (plan Phase D4): kind picker, per-file progress. */
+/**
+ * Admin upload to an order (plan 5 C): files are staged into a queue first —
+ * review, remove, then press Upload (N). Nothing is stored until then.
+ */
 export function OrderUploadControls({ orderId }: OrderUploadControlsProps) {
-  const upload = useAdminOrderUpload(orderId);
+  const upload = useStagedAdminUpload(orderId);
   const queryClient = useQueryClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const [kind, setKind] = useState<FileKind>(FILE_KINDS.DRAFT_PREVIEW as FileKind);
+  const { staged, rejected, progress } = upload.data;
+  const uploading = upload.loadings.uploading;
 
-  const handleFiles = async (files: FileList) => {
+  const handlePicked = (files: FileList | null) => {
+    upload.actions.stage(files);
+    if (inputRef.current) inputRef.current.value = "";
+  };
+
+  const handleUpload = async () => {
     try {
-      await upload.actions.uploadFiles(Array.from(files), kind);
-      queryClient.invalidateQueries({ queryKey: adminOrderKeys.detail(orderId) });
+      const uploaded = await upload.actions.uploadAll(kind);
+      if (uploaded.length) {
+        await queryClient.invalidateQueries({ queryKey: adminOrderKeys.detail(orderId) });
+      }
     } catch {
-      // Upload errors already surfaced via toasts in uploadToStorage callers.
-    } finally {
-      if (inputRef.current) inputRef.current.value = "";
+      // uploadToStorage already toasts failures; the queue is preserved
+      // so the admin can retry without re-picking files.
     }
   };
 
@@ -71,23 +84,27 @@ export function OrderUploadControls({ orderId }: OrderUploadControlsProps) {
         type="file"
         multiple
         className="text-xs"
-        aria-label="Upload files to this order"
-        disabled={upload.loadings.uploading}
-        onChange={(event) => {
-          if (event.target.files?.length) {
-            void handleFiles(event.target.files);
-          }
-        }}
+        aria-label="Stage files for this order"
+        disabled={uploading}
+        onChange={(event) => handlePicked(event.target.files)}
       />
-      {upload.loadings.uploading ? (
-        <ul className="flex flex-col gap-1 text-xs text-muted-foreground">
-          {Object.entries(upload.data).map(([name, percent]) => (
-            <li key={name} className="flex items-center gap-2">
-              <span className="max-w-32 truncate">{name}</span>
-              <span className="tabular-nums">{percent}%</span>
-            </li>
-          ))}
-        </ul>
+      <StagedFileList
+        staged={staged}
+        rejected={rejected}
+        progress={uploading ? progress : undefined}
+        onRemove={upload.actions.remove}
+        disabled={uploading}
+      />
+      {staged.length ? (
+        <Button
+          type="button"
+          size="sm"
+          className="w-full"
+          disabled={uploading}
+          onClick={() => void handleUpload()}
+        >
+          {uploading ? "Uploading…" : `Upload (${staged.length})`}
+        </Button>
       ) : (
         <p className="text-xs text-muted-foreground">
           Up to {FILE_LIMITS.maxClientFiles} files per batch · drawings, zips and CAD formats

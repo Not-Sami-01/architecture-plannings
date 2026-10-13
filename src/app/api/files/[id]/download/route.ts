@@ -1,9 +1,11 @@
-import { FILE_KINDS, FILE_LIMITS } from "@/config/constants";
+import { FILE_KINDS, FILE_LIMITS, REALTIME_EVENTS, ROLES } from "@/config/constants";
 import { withMiddleware } from "@/lib/api/with-middleware";
 import { authenticate } from "@/lib/api/middlewares";
 import { getParam, getUser } from "@/lib/api/request";
 import { ApiError } from "@/lib/api/response";
 import { getFileForUser } from "@/lib/files";
+import { prisma } from "@/lib/db";
+import { publishAdminsEvent } from "@/lib/realtime";
 import type { Handler } from "@/lib/api/types";
 
 /**
@@ -28,6 +30,19 @@ const getHandler: Handler = async (req) => {
   // DRAFT_ORIGINAL never goes to clients; admins use the admin file route.
   if (file.kind === FILE_KINDS.DRAFT_ORIGINAL && user.role !== "ADMIN") {
     throw ApiError.notFound();
+  }
+
+  // "Seen by client" (plan 5 C): a download by the order owner (not the
+  // uploader — clients never "see" their own payment proofs) stamps seenAt
+  // once and pings the admin dashboard live.
+  const isOrderOwner =
+    user.role !== ROLES.ADMIN && file.order?.userId === user.id && file.uploadedById !== user.id;
+  if (isOrderOwner && !file.seenAt && file.orderId) {
+    await prisma.orderFile.update({
+      where: { id: file.id },
+      data: { seenAt: new Date() },
+    });
+    void publishAdminsEvent({ type: REALTIME_EVENTS.fileSeen, refId: file.orderId });
   }
 
   // Local backend serves through this route; S3 issues a real signed URL.

@@ -3,6 +3,7 @@
 - **Plan 1** (below): Role Separation + Full Admin Panel Expansion — ✅ executed (see `PLAN.md` step 24).
 - **Plan 2** (middle): Proceed Order Page, Chat UX, Read Receipts & Charge User — ✅ executed (see `PLAN.md` step 25).
 - **Plan 3** (bottom): Deliverables, Revisions, Dashboard & Configurable Currency — ✅ executed (see `PLAN.md` step 26).
+- **Plans 4–5**: visual identity redesign + card images/drafts UX/client tracker/stats fix — live in `PLAN.md` (rows 28–30, sections "Plan 4/Plan 5").
 
 ---
 

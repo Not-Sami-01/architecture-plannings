@@ -150,6 +150,9 @@ No local auth endpoints: Clerk owns credentials and session cookies (`/sign-in`,
 | POST | `/api/admin/packages` | admin | Create package |
 | PATCH | `/api/admin/packages/:id` | admin | Update package (content, price, active flag) |
 | DELETE | `/api/admin/packages/:id` | admin | Deactivate package |
+| POST | `/api/admin/packages/:id/image` | admin | Upload the card image (**multipart form-data**, field `image`; server re-validates mime + size, crops client-side to 4:3). Replaces any previous image (old storage object deleted). Returns the package with `imageKey`. |
+| DELETE | `/api/admin/packages/:id/image` | admin | Remove the card image (`imageKey: null`) |
+| GET | `/api/packages/:id/image` | public | Stream the card image (`Cache-Control: public, max-age=3600, stale-while-revalidate=86400`). 404 when none. |
 
 ```json
 // GET /api/packages
@@ -161,7 +164,8 @@ No local auth endpoints: Clerk owns credentials and session cookies (`/sign-in`,
     "description": "Floor plan with front elevation.",
     "price": 25000,
     "revisionLimit": 2,
-    "deliverables": ["Floor plan", "Front elevation"]
+    "deliverables": ["Floor plan", "Front elevation"],
+    "imageKey": "packages/pkg_1/abc123-plan.jpg"   // null until an image is uploaded; never a URL — the browser loads /api/packages/:id/image
   }]
 }
 
@@ -285,6 +289,7 @@ Uploads go **directly to storage** using presigned URLs, then are registered.
 - `CHAT_ATTACHMENT` kind is allowed for both roles and must later be bound to a message by the same sender.
 - `FINAL` download returns `402 PAYMENT_REQUIRED` unless final payment is verified.
 - Signed URL lifetime: 60 seconds.
+- **Seen tracking (plan 5 C):** a download by the *order owner* (not the uploader — clients never "see" their own payment proofs) stamps `OrderFile.seenAt` once and publishes the `file.seen` realtime ping; the admin order detail shows a "Seen by client" badge from it. Admin downloads never stamp it.
 
 ---
 
@@ -416,12 +421,14 @@ Rules:
 { "totalPrice": 25000, "advancePercent": 40, "message": "Delivery in 7 days after advance." }
 ```
 
+Revenue is **grouped per currency** (orders snapshot their own `currency`; sums are never mixed — the UI formats each entry with its own code). `thisMonthPaid` keys off `Payment.updatedAt` (when it flipped to PAID), and `avgRevisionsPerCompletedOrder` counts DONE revisions on completed orders only.
+
 ```json
-// GET /api/admin/stats (plan 3 §8b)
+// GET /api/admin/stats (plan 3 §8b; revenue shape as of plan 5 B)
 {
   "data": {
     "statusCounts": { "SUBMITTED": 3, "IN_DESIGN": 5, "DRAFT_DELIVERED": 2, "CANCELLED": 0 },
-    "revenue": { "totalPaid": 940000, "advancePaid": 300000, "finalPaid": 515000, "extraRevisionPaid": 125000, "thisMonthPaid": 180000 },
+    "revenue": { "byCurrency": { "PKR": { "totalPaid": 940000, "advancePaid": 300000, "finalPaid": 515000, "extraRevisionPaid": 125000, "thisMonthPaid": 180000 } } },
     "needsAttention": { "submitted": 3, "awaitingAdvance": 1, "inDesign": 5, "draftDelivered": 2, "awaitingFinalPayment": 1, "pendingPayments": 2, "openRevisions": 1 },
     "recentOrders": [{ "id": "ord_1", "number": "AP-2026-0009", "status": "SUBMITTED", "createdAt": "2026-10-07T10:00:00.000Z", "clientName": "Sami", "clientEmail": "sami@example.com", "packagePrice": 10000, "currency": "PKR" }],
     "avgRevisionsPerCompletedOrder": 1.3

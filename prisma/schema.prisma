@@ -13,24 +13,24 @@ datasource db {
 // ---------- Users (auth handled by Clerk; roles are ours) ----------
 
 model User {
-  id            String    @id @default(cuid())
-  clerkId       String?   @unique
-  name          String
-  email         String    @unique
-  phone         String?
-  role          Role      @default(CLIENT)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id        String   @id @default(cuid())
+  clerkId   String?  @unique
+  name      String
+  email     String   @unique
+  phone     String?
+  role      Role     @default(CLIENT)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  orders       Order[]
-  assignedOrders Order[]   @relation("AssignedOrders")
-  uploadedFiles OrderFile[] @relation("UploadedFiles")
-  events       OrderEvent[]
-  verifiedPayments Payment[] @relation("VerifiedPayments")
-  messages     Message[]
-  messageReads MessageRead[]
-  acceptedRevisions Revision[] @relation("AcceptedRevisions")
-  testimonials Testimonial[]
+  orders            Order[]
+  assignedOrders    Order[]       @relation("AssignedOrders")
+  uploadedFiles     OrderFile[]   @relation("UploadedFiles")
+  events            OrderEvent[]
+  verifiedPayments  Payment[]     @relation("VerifiedPayments")
+  messages          Message[]
+  messageReads      MessageRead[]
+  acceptedRevisions Revision[]    @relation("AcceptedRevisions")
+  testimonials      Testimonial[]
 
   @@index([role])
 }
@@ -47,6 +47,8 @@ model Package {
   deliverables  String[]
   active        Boolean  @default(true)
   sortOrder     Int      @default(0)
+  // Storage key of the cropped card image (packages/{id}/...), never a URL.
+  imageKey      String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
@@ -85,11 +87,11 @@ model PortfolioProject {
 // ---------- Orders ----------
 
 model Order {
-  id            String      @id @default(cuid())
-  number        String      @unique
-  userId        String
-  packageId     String
-  status        OrderStatus @default(SUBMITTED)
+  id        String      @id @default(cuid())
+  number    String      @unique
+  userId    String
+  packageId String
+  status    OrderStatus @default(SUBMITTED)
 
   // Plot details (FR-7)
   plotWidth  Float
@@ -115,7 +117,7 @@ model Order {
 
   // Quote (FR-22: advance default 40%, configurable per quote)
   totalPrice     Int?
-  advancePercent Int     @default(40)
+  advancePercent Int       @default(40)
   quoteMessage   String?
   quotedAt       DateTime?
 
@@ -149,11 +151,11 @@ model Order {
 }
 
 model OrderFile {
-  id           String   @id @default(cuid())
+  id           String    @id @default(cuid())
   // Null until the file is attached to an order (order creation links fileIds;
   // revision refs and payment proofs are uploaded with the order known).
   orderId      String?
-  key          String   @unique
+  key          String    @unique
   filename     String
   mime         String
   size         Int
@@ -162,13 +164,16 @@ model OrderFile {
   revisionId   String?
   messageId    String?
   confirmedAt  DateTime?
-  createdAt    DateTime @default(now())
+  // Set when the client fetched this deliverable (downloads route); drives the
+  // admin "Seen by client" badge.
+  seenAt       DateTime?
+  createdAt    DateTime  @default(now())
 
-  order      Order?     @relation(fields: [orderId], references: [id])
-  uploadedBy User       @relation("UploadedFiles", fields: [uploadedById], references: [id])
-  revision   Revision?  @relation(fields: [revisionId], references: [id])
-  paymentProof Payment? @relation("PaymentProof")
-  message    Message?   @relation(fields: [messageId], references: [id])
+  order        Order?    @relation(fields: [orderId], references: [id])
+  uploadedBy   User      @relation("UploadedFiles", fields: [uploadedById], references: [id])
+  revision     Revision? @relation(fields: [revisionId], references: [id])
+  paymentProof Payment?  @relation("PaymentProof")
+  message      Message?  @relation(fields: [messageId], references: [id])
 
   @@index([orderId])
   @@index([kind])
@@ -192,41 +197,41 @@ model OrderEvent {
 }
 
 model Revision {
-  id        String         @id @default(cuid())
-  orderId   String
-  number    Int
-  message   String
-  status    RevisionStatus @default(OPEN)
+  id               String         @id @default(cuid())
+  orderId          String
+  number           Int
+  message          String
+  status           RevisionStatus @default(OPEN)
   // Beyond the package's free limit: admin quotes an EXTRA_REVISION charge;
   // acceptRevision refuses until that payment is PAID (plan 3, PRD FR-21).
-  extraFeeRequired Boolean   @default(false)
+  extraFeeRequired Boolean        @default(false)
   acceptedAt       DateTime?
   acceptedById     String?
-  createdAt        DateTime  @default(now())
+  createdAt        DateTime       @default(now())
 
-  order       Order  @relation(fields: [orderId], references: [id])
-  acceptedBy  User?  @relation("AcceptedRevisions", fields: [acceptedById], references: [id])
-  files       OrderFile[]
+  order      Order       @relation(fields: [orderId], references: [id])
+  acceptedBy User?       @relation("AcceptedRevisions", fields: [acceptedById], references: [id])
+  files      OrderFile[]
 
   @@unique([orderId, number])
   @@index([orderId])
 }
 
 model Payment {
-  id              String         @id @default(cuid())
+  id              String        @id @default(cuid())
   orderId         String
   type            PaymentType
   amount          Int
   method          PaymentMethod
-  status          PaymentStatus  @default(PENDING)
+  status          PaymentStatus @default(PENDING)
   // Admin's charge note shown to the client ("Pay at branch X before Friday").
   note            String?
   reference       String?
-  proofFileId     String?        @unique
+  proofFileId     String?       @unique
   verifiedById    String?
-  providerEventId String?        @unique
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  providerEventId String?       @unique
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   order      Order      @relation(fields: [orderId], references: [id])
   proofFile  OrderFile? @relation("PaymentProof", fields: [proofFileId], references: [id])
@@ -244,8 +249,8 @@ model Message {
   editedAt  DateTime?
   createdAt DateTime  @default(now())
 
-  order       Order        @relation(fields: [orderId], references: [id])
-  sender      User         @relation(fields: [senderId], references: [id])
+  order       Order         @relation(fields: [orderId], references: [id])
+  sender      User          @relation(fields: [senderId], references: [id])
   attachments OrderFile[]
   reads       MessageRead[]
 

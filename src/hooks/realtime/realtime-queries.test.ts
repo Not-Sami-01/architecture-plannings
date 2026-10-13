@@ -89,6 +89,13 @@ describe("realtimeEventQueries", () => {
     }
   });
 
+  it("a seen-by-client ping refreshes only that admin order detail", () => {
+    expect(realtimeEventQueries({ type: REALTIME_EVENTS.fileSeen, refId: "ord_9" })).toEqual([
+      adminOrderKeys.detail("ord_9"),
+    ]);
+    expect(realtimeEventQueries({ type: REALTIME_EVENTS.fileSeen })).toEqual([]);
+  });
+
   it("a settings update refreshes money labels everywhere, not just settings", () => {
     expect(realtimeEventQueries({ type: REALTIME_EVENTS.settingsUpdated, refId: "currency" })).toEqual(
       [settingsKeys.detail(), orderKeys.all, adminOrderKeys.all, adminStatsKeys.all],

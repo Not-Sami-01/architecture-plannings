@@ -16,6 +16,8 @@ type PackageCardPackage = {
   price: number;
   revisionLimit: number;
   deliverables: string[];
+  /** Storage key of the cropped card image (null → placeholder). */
+  imageKey?: string | null;
 };
 
 type PackageCardProps = {
@@ -42,7 +44,7 @@ export function PackageCard({
       )}
     >
       <Image
-        src={PLACEHOLDER_IMAGE}
+        src={pkg.imageKey ? `/api/packages/${pkg.id}/image` : PLACEHOLDER_IMAGE}
         alt=""
         width={400}
         height={300}

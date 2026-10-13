@@ -287,6 +287,26 @@ export const ADMIN_EXTRA_MIME_TYPES = [
   "image/vnd.dwg",
 ] as const;
 
+/**
+ * Pricing-card image — the file schema for admin uploads. The crop dialog
+ * always exports exactly these fixed dimensions (4:3, matching the card
+ * header), so every card in the grid has an identical image band.
+ */
+export const PACKAGE_IMAGE = {
+  /** Fixed crop output, in px. */
+  width: 1200,
+  height: 900,
+  /** Locked crop aspect ratio (width / height). */
+  aspect: 4 / 3,
+  /** Accepted source and output formats. */
+  mimeTypes: ["image/jpeg", "image/png", "image/webp"] as const,
+  /** Max source upload before crop, in bytes (5 MB). */
+  maxSourceBytes: 5 * 1024 * 1024,
+  /** Shown next to the upload control so admins prepare the right file. */
+  recommended: "Recommended: 1200 × 900 px (4:3), JPG or PNG, up to 5 MB",
+  label: "Card image",
+} as const;
+
 export const PAGINATION = {
   defaultPage: 1,
   defaultPageSize: 20,
@@ -317,6 +337,8 @@ export const REALTIME_EVENTS = {
   /** A charge was created / verified (refId = order id). */
   paymentCreated: "payment.created",
   paymentUpdated: "payment.updated",
+  /** A client fetched a deliverable (refId = order id) — "Seen by client". */
+  fileSeen: "file.seen",
   /** Deliverables & revisions (plan 3; refId = order id). */
   revisionRequested: "revision.requested",
   revisionAccepted: "revision.accepted",

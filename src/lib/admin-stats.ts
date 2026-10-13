@@ -10,12 +10,19 @@ import type { ApiUser } from "@/lib/api/types";
 
 export type AdminStats = {
   statusCounts: Record<OrderStatusKey, number>;
+  // Per currency: orders snapshot their own currency (plan 3), so sums are
+  // never mixed — the UI formats each entry with its own currency code.
   revenue: {
-    totalPaid: number;
-    advancePaid: number;
-    finalPaid: number;
-    extraRevisionPaid: number;
-    thisMonthPaid: number;
+    byCurrency: Record<
+      string,
+      {
+        totalPaid: number;
+        advancePaid: number;
+        finalPaid: number;
+        extraRevisionPaid: number;
+        thisMonthPaid: number;
+      }
+    >;
   };
   needsAttention: {
     submitted: number;
@@ -57,7 +64,14 @@ export async function getAdminStats(user: ApiUser): Promise<AdminStats> {
     await prisma.$transaction([
       prisma.payment.findMany({
         where: { status: PAYMENT_STATUSES.PAID },
-        select: { type: true, amount: true, createdAt: true },
+        select: {
+          type: true,
+          amount: true,
+          // @updatedAt bumps when the payment is verified to PAID — the
+          // closest thing to a "paid at" (createdAt is the charge row).
+          updatedAt: true,
+          order: { select: { currency: true } },
+        },
       }),
       prisma.order.groupBy({
         by: ["status"],
@@ -85,26 +99,31 @@ export async function getAdminStats(user: ApiUser): Promise<AdminStats> {
         },
       }),
       prisma.order.count({ where: { status: ORDER_STATUSES.COMPLETED } }),
-      prisma.revision.groupBy({
-        by: [],
-        _count: { status: true },
-        where: { status: REVISION_STATUSES.DONE },
-        orderBy: [],
+      // NB: groupBy({ by: [] }) is invalid in Prisma 7 and used to 500 the
+      // whole transaction (plan 5 B). Count done revisions on completed
+      // orders only, so the average is actually scoped.
+      prisma.revision.count({
+        where: { status: REVISION_STATUSES.DONE, order: { status: ORDER_STATUSES.COMPLETED } },
       }),
     ]);
 
-  const revenue = { totalPaid: 0, advancePaid: 0, finalPaid: 0, extraRevisionPaid: 0, thisMonthPaid: 0 };
+  const byCurrency: AdminStats["revenue"]["byCurrency"] = {};
   for (const payment of payments) {
-    revenue.totalPaid += payment.amount;
-    if (payment.type === PAYMENT_TYPES.ADVANCE) revenue.advancePaid += payment.amount;
-    if (payment.type === PAYMENT_TYPES.FINAL) revenue.finalPaid += payment.amount;
-    if (payment.type === PAYMENT_TYPES.EXTRA_REVISION) revenue.extraRevisionPaid += payment.amount;
-    if (payment.createdAt >= monthStart) revenue.thisMonthPaid += payment.amount;
+    const currency = payment.order.currency;
+    const entry = (byCurrency[currency] ??= {
+      totalPaid: 0,
+      advancePaid: 0,
+      finalPaid: 0,
+      extraRevisionPaid: 0,
+      thisMonthPaid: 0,
+    });
+    entry.totalPaid += payment.amount;
+    if (payment.type === PAYMENT_TYPES.ADVANCE) entry.advancePaid += payment.amount;
+    if (payment.type === PAYMENT_TYPES.FINAL) entry.finalPaid += payment.amount;
+    if (payment.type === PAYMENT_TYPES.EXTRA_REVISION) entry.extraRevisionPaid += payment.amount;
+    if (payment.updatedAt >= monthStart) entry.thisMonthPaid += payment.amount;
   }
-
-  // NB: currencies are not mixed in revenue math — the site setting is
-  // relabel-only, and payments were issued in the currency of their order's
-  // snapshot. Display uses the current setting (plan decision 4).
+  const revenue = { byCurrency };
   const statusCounts = Object.fromEntries(
     STATUS_ORDER.map((status) => [status, 0]),
   ) as Record<OrderStatusKey, number>;
@@ -123,8 +142,7 @@ export async function getAdminStats(user: ApiUser): Promise<AdminStats> {
     openRevisions,
   };
 
-  const totalDoneRevisions =
-    (revisionAgg[0]?._count as { status?: number } | undefined)?.status ?? 0;
+  const totalDoneRevisions = revisionAgg; // done revisions on completed orders
 
   return {
     statusCounts,

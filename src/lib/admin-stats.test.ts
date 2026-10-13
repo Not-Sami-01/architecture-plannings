@@ -14,7 +14,6 @@ vi.mock("@/lib/db", () => ({
     },
     revision: {
       count: vi.fn(),
-      groupBy: vi.fn(),
     },
   },
 }));
@@ -29,11 +28,17 @@ const admin: ApiUser = { id: "admin-1", role: "ADMIN" } as ApiUser;
 const client: ApiUser = { id: "user-1", role: "CLIENT" } as ApiUser;
 
 function mockBase() {
+  // Dates are relative to the real clock so assertions never rot (the old
+  // hardcoded October 2026 fixtures broke after 2026-11-01).
+  const now = new Date();
+  const thisMonth = (day: number) => new Date(now.getFullYear(), now.getMonth(), day);
+  const monthsAgo = (months: number, day: number) =>
+    new Date(now.getFullYear(), now.getMonth() - months, day);
   vi.mocked(prisma.payment.findMany).mockResolvedValue([
-    { type: PAYMENT_TYPES.ADVANCE, amount: 4000, createdAt: new Date("2026-10-05") },
-    { type: PAYMENT_TYPES.ADVANCE, amount: 1000, createdAt: new Date("2026-08-05") },
-    { type: PAYMENT_TYPES.FINAL, amount: 6000, createdAt: new Date("2026-10-07") },
-    { type: PAYMENT_TYPES.EXTRA_REVISION, amount: 2500, createdAt: new Date("2026-10-07") },
+    { type: PAYMENT_TYPES.ADVANCE, amount: 4000, updatedAt: thisMonth(5), order: { currency: "PKR" } },
+    { type: PAYMENT_TYPES.ADVANCE, amount: 1000, updatedAt: monthsAgo(2, 5), order: { currency: "PKR" } },
+    { type: PAYMENT_TYPES.FINAL, amount: 6000, updatedAt: thisMonth(7), order: { currency: "PKR" } },
+    { type: PAYMENT_TYPES.EXTRA_REVISION, amount: 2500, updatedAt: thisMonth(7), order: { currency: "USD" } },
   ] as never);
   vi.mocked(prisma.order.groupBy).mockResolvedValue([
     { status: ORDER_STATUSES.SUBMITTED, _count: { status: 2 } },
@@ -41,7 +46,10 @@ function mockBase() {
     { status: ORDER_STATUSES.REVISION_REQUESTED, _count: { status: 1 } },
   ] as never);
   vi.mocked(prisma.payment.count).mockResolvedValue(2);
-  vi.mocked(prisma.revision.count).mockResolvedValue(1);
+  // Two counts run: open revisions (1) and done-on-completed (4).
+  vi.mocked(prisma.revision.count).mockImplementation((async (args: {
+    where?: { status?: string };
+  }) => (args.where?.status === REVISION_STATUSES.DONE ? 4 : 1)) as never);
   vi.mocked(prisma.order.findMany).mockResolvedValue([
     {
       id: "o1",
@@ -54,9 +62,6 @@ function mockBase() {
     },
   ] as never);
   vi.mocked(prisma.order.count).mockResolvedValue(3);
-  vi.mocked(prisma.revision.groupBy).mockResolvedValue([
-    { _count: { status: 4 } },
-  ] as never);
 }
 
 beforeEach(() => {
@@ -71,15 +76,20 @@ describe("getAdminStats", () => {
     });
   });
 
-  it("aggregates revenue by type and month", async () => {
+  it("aggregates revenue per currency and per month", async () => {
     const stats = await getAdminStats(admin);
-    // ADVANCE 4000+1000, FINAL 6000, EXTRA 2500 — grand total 13500.
-    expect(stats.revenue.totalPaid).toBe(13500);
-    expect(stats.revenue.advancePaid).toBe(5000);
-    expect(stats.revenue.finalPaid).toBe(6000);
-    expect(stats.revenue.extraRevisionPaid).toBe(2500);
-    // October 2026 only: 4000 + 6000 + 2500 (August's 1000 excluded).
-    expect(stats.revenue.thisMonthPaid).toBe(12500);
+    const pkr = stats.revenue.byCurrency.PKR;
+    // PKR: ADVANCE 4000+1000, FINAL 6000 (this month: 4000+6000, August's 1000 excluded).
+    expect(pkr.totalPaid).toBe(11000);
+    expect(pkr.advancePaid).toBe(5000);
+    expect(pkr.finalPaid).toBe(6000);
+    expect(pkr.thisMonthPaid).toBe(10000);
+    // USD never mixes into the PKR sums.
+    const usd = stats.revenue.byCurrency.USD;
+    expect(usd.totalPaid).toBe(2500);
+    expect(usd.extraRevisionPaid).toBe(2500);
+    expect(usd.thisMonthPaid).toBe(2500);
+    expect(Object.keys(stats.revenue.byCurrency).sort()).toEqual(["PKR", "USD"]);
   });
 
   it("zero-fills statuses with no orders and fills the funnel", async () => {
@@ -104,9 +114,18 @@ describe("getAdminStats", () => {
     expect(typeof stats.recentOrders[0].createdAt).toBe("string");
   });
 
-  it("averages done revisions over completed orders", async () => {
+  it("averages done revisions over completed orders, scoped to them", async () => {
     const stats = await getAdminStats(admin);
     expect(stats.avgRevisionsPerCompletedOrder).toBeCloseTo(4 / 3);
+    // The done-revision count must be restricted to completed orders.
+    expect(vi.mocked(prisma.revision.count)).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          status: REVISION_STATUSES.DONE,
+          order: { status: ORDER_STATUSES.COMPLETED },
+        }),
+      }),
+    );
   });
 
   it("averages zero when there are no completed orders", async () => {

@@ -6,6 +6,7 @@ import { useOrder } from "@/hooks/orders/use-order";
 import { formatMoney } from "@/lib/format";
 import { ORDER_STATUS_DETAIL, type OrderStatus } from "@/config/constants";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
+import { OrderSteps } from "@/components/orders/order-steps";
 import { OrderActions } from "@/components/orders/order-actions";
 import { OrderRevisionsCard } from "@/components/orders/order-revisions-card";
 import { OrderDeliverables } from "@/components/orders/order-deliverables";
@@ -91,6 +92,8 @@ export function OrderDetailView({ orderId }: OrderDetailViewProps) {
         </div>
         <OrderStatusBadge status={order.status} />
       </header>
+
+      <OrderSteps status={order.status} />
 
       <OrderActions
         orderId={order.id}

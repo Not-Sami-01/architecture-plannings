@@ -76,7 +76,15 @@ export async function getOrderForAdmin(user: ApiUser, orderId: string) {
       user: { select: { id: true, name: true, email: true } },
       assignedTo: { select: { id: true, name: true, email: true } },
       files: {
-        select: { id: true, filename: true, mime: true, size: true, kind: true, createdAt: true },
+        select: {
+          id: true,
+          filename: true,
+          mime: true,
+          size: true,
+          kind: true,
+          createdAt: true,
+          seenAt: true,
+        },
         orderBy: { createdAt: "asc" },
       },
       events: { orderBy: { createdAt: "desc" } },

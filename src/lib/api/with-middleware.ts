@@ -42,8 +42,13 @@ export function withMiddleware(
       user: null,
     };
 
-    if (["POST", "PATCH", "PUT", "DELETE"].includes(req.method)) {
-      // Webhooks and multipart uploads read the raw request instead.
+    const contentType = req.headers.get("content-type") ?? "";
+    if (
+      ["POST", "PATCH", "PUT", "DELETE"].includes(req.method) &&
+      // Webhooks and multipart uploads read the raw request instead — a
+      // premature req.json() would consume the stream and break formData().
+      !contentType.includes("multipart/form-data")
+    ) {
       req.ctx.body = await req.json().catch(() => undefined);
     }
 

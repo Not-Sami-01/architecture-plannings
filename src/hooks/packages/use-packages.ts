@@ -15,6 +15,8 @@ export type PackageSummary = {
   price: number;
   revisionLimit: number;
   deliverables: string[];
+  /** Storage key of the cropped card image (null when none). */
+  imageKey: string | null;
 };
 
 /** GET /api/packages — active packages for the order form and pricing UI. */
