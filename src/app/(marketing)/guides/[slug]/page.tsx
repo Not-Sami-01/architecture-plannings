@@ -80,6 +80,20 @@ export default async function GuidePage({ params }: GuidePageProps) {
           </div>
         )}
 
+        {/* Guides ↔ blog cross-link (plan 6). */}
+        <div className="mt-10 rounded-xl border p-5">
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            Want shorter, frequently updated reads?{" "}
+            <Link
+              href={ROUTES.blog}
+              className="font-medium text-primary underline underline-offset-4"
+            >
+              Visit the blog
+            </Link>{" "}
+            for cost breakdowns, process notes and design tips.
+          </p>
+        </div>
+
         <div className="mt-12">
           <SiteDisclaimer />
         </div>

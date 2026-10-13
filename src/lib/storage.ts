@@ -41,6 +41,12 @@ export function buildStorageKey(input: {orderId: string; kind: string; fileId: s
   return `orders/${input.orderId}/${input.kind.toLowerCase()}/${input.fileId}-${safe}`;
 }
 
+/** Builds the storage key for a blog image (plan 6). Keys never leave the server. */
+export function buildPostImageKey(input: {fileId: string; filename: string}) {
+  const safe = input.filename.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-80);
+  return `posts/images/${input.fileId}-${safe}`;
+}
+
 /** Builds the storage key for a pricing-card image. Keys never leave the server. */
 export function buildPackageImageKey(input: {packageId: string; fileId: string; filename: string}) {
   const safe = input.filename.replace(/[^a-zA-Z0-9._-]/g, "_").slice(-80);

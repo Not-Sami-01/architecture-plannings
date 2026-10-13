@@ -110,6 +110,11 @@ export const ROUTES = {
   contact: "/contact",
   guides: "/guides",
   guide: (slug: string) => `/guides/${slug}`,
+  /** DB-driven blog (plan 6) — separate from the static /guides. */
+  blog: "/blog",
+  blogPost: (slug: string) => `/blog/${slug}`,
+  blogTag: (tag: string) => `/blog/tag/${tag}`,
+  blogRss: "/blog/rss.xml",
   /** One landing page per package (CONTENT.md keyword map). */
   packagePages: {
     floorPlan: "/services/floor-plan-design",
@@ -144,6 +149,9 @@ export const ROUTES = {
     packages: "/admin/packages",
     settings: "/admin/settings",
     portfolio: "/admin/portfolio",
+    blog: "/admin/blog",
+    blogNew: "/admin/blog/new",
+    blogEdit: (id: string) => `/admin/blog/${id}`,
   },
 } as const;
 
@@ -197,6 +205,8 @@ export const FILE_KINDS = {
   PAYMENT_PROOF: "PAYMENT_PROOF",
   REVISION_REF: "REVISION_REF",
   CHAT_ATTACHMENT: "CHAT_ATTACHMENT",
+  // Blog covers + in-content images (plan 6). Admin-only; never on an order.
+  POST_IMAGE: "POST_IMAGE",
 } as const;
 
 export type FileKind = (typeof FILE_KINDS)[keyof typeof FILE_KINDS];
@@ -208,6 +218,18 @@ export const PAYMENT_TYPES = {
 } as const;
 
 export type PaymentType = (typeof PAYMENT_TYPES)[keyof typeof PAYMENT_TYPES];
+
+export const POST_STATUSES = {
+  DRAFT: "DRAFT",
+  PUBLISHED: "PUBLISHED",
+} as const;
+
+export type PostStatus = (typeof POST_STATUSES)[keyof typeof POST_STATUSES];
+
+export const POST_STATUS_LABELS: Record<PostStatus, string> = {
+  DRAFT: "Draft",
+  PUBLISHED: "Published",
+};
 
 export const PAYMENT_STATUSES = {
   PENDING: "PENDING",
@@ -306,6 +328,23 @@ export const PACKAGE_IMAGE = {
   recommended: "Recommended: 1200 × 900 px (4:3), JPG or PNG, up to 5 MB",
   label: "Card image",
 } as const;
+
+/** Blog cover spec (plan 6): 16:9 crop doubles as the OG/Twitter image. */
+export const BLOG_COVER = {
+  width: 1200,
+  height: 630,
+  aspect: 1200 / 630,
+  mimeTypes: ["image/jpeg", "image/png", "image/webp"] as const,
+  maxSourceBytes: 5 * 1024 * 1024,
+  recommended: "Recommended: 1200 × 630 px (16:9), JPG or PNG, up to 5 MB",
+  label: "Cover image",
+} as const;
+
+/** Reading time = ceil(words / this), minimum 1 minute (plan 6). */
+export const READING_TIME = { wordsPerMinute: 200 } as const;
+
+/** Cache tag for every public blog read — revalidateTag'd on each write. */
+export const POSTS_CACHE_TAG = "posts";
 
 export const PAGINATION = {
   defaultPage: 1,
@@ -449,6 +488,7 @@ export const NAV_LINKS = [
   { label: "Portfolio", href: ROUTES.portfolio },
   { label: "How It Works", href: ROUTES.howItWorks },
   { label: "Guides", href: ROUTES.guides },
+  { label: "Blog", href: ROUTES.blog },
   { label: "About", href: ROUTES.about },
   { label: "Contact", href: ROUTES.contact },
 ] as const;
@@ -509,4 +549,9 @@ export const API_ROUTES = {
   adminPortfolio: "/api/admin/portfolio",
   adminPortfolioReorder: "/api/admin/portfolio/reorder",
   contact: "/api/contact",
+  adminPosts: "/api/admin/posts",
+  adminPost: (id: string) => `/api/admin/posts/${id}`,
+  adminPostPublish: (id: string) => `/api/admin/posts/${id}/publish`,
+  adminPostImages: "/api/admin/posts/images",
+  postImage: (id: string) => `/api/posts/images/${id}`,
 } as const;

@@ -127,3 +127,32 @@ export function collectionPageSchema(input: {
     isPartOf: { "@type": "WebSite", name: APP.name, url: absoluteUrl(ROUTES.home) },
   };
 }
+
+/** BlogPosting JSON-LD for a published post (plan 6, index/search rich results). */
+export function blogPostingSchema(input: {
+  title: string;
+  description: string;
+  path: string;
+  publishedAt: Date | string | null;
+  updatedAt?: Date | string;
+  authorName?: string | null;
+  coverImageId?: string | null;
+}): JsonLdNode {
+  return {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: input.title,
+    description: input.description,
+    url: absoluteUrl(input.path),
+    mainEntityOfPage: { "@type": "WebPage", "@id": absoluteUrl(input.path) },
+    publisher: { "@type": "Organization", name: APP.name, url: absoluteUrl(ROUTES.home) },
+    ...(input.authorName ? { author: { "@type": "Person", name: input.authorName } } : {}),
+    ...(input.publishedAt
+      ? { datePublished: new Date(input.publishedAt).toISOString() }
+      : {}),
+    ...(input.updatedAt ? { dateModified: new Date(input.updatedAt).toISOString() } : {}),
+    ...(input.coverImageId
+      ? { image: absoluteUrl(`/api/posts/images/${input.coverImageId}`) }
+      : {}),
+  };
+}

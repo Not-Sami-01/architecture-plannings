@@ -13,6 +13,7 @@ import {
   homeTrust,
 } from "@/content/home";
 import { listActivePackages } from "@/lib/packages";
+import { listRecentPublishedPosts } from "@/lib/posts";
 import { getSiteSettings } from "@/lib/settings";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { organizationSchema } from "@/lib/seo/schema";
@@ -25,13 +26,15 @@ import { ImageBanner } from "@/components/marketing/image-banner";
 import { NumberedCards } from "@/components/marketing/numbered-cards";
 import { PackageCard } from "@/components/marketing/package-card";
 import { PlotSizeChips } from "@/components/marketing/plot-size-chips";
+import { BlogCard } from "@/components/marketing/blog-card";
 
 export const metadata: Metadata = buildMetadata(homeSeo);
 
 export default async function HomePage() {
-  const [packages, { currency }] = await Promise.all([
+  const [packages, { currency }, posts] = await Promise.all([
     listActivePackages().catch(() => []),
     getSiteSettings(),
+    listRecentPublishedPosts(3).catch(() => []),
   ]);
 
   return (
@@ -159,6 +162,37 @@ export default async function HomePage() {
           <FaqSection items={homeQuickAnswers} heading="Quick answers" id="quick-answers" />
         </div>
       </section>
+
+      {posts.length > 0 ? (
+        <section className="py-16 md:py-24" aria-labelledby="blog-heading">
+          <div className="mx-auto w-full max-w-6xl px-4">
+            <div className="flex flex-wrap items-end justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-foreground">
+                  From the blog
+                </p>
+                <h2
+                  id="blog-heading"
+                  className="mt-2 font-display text-3xl font-medium tracking-tight"
+                >
+                  Recent articles
+                </h2>
+              </div>
+              <Link
+                href={ROUTES.blog}
+                className="font-medium text-primary underline underline-offset-4"
+              >
+                All articles
+              </Link>
+            </div>
+            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {posts.map((post) => (
+                <BlogCard key={post.id} post={post} />
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       <JsonLd data={organizationSchema()} />
 

@@ -37,6 +37,7 @@ Derived from `PRD.md`, `API.md`, `RULES.md`, `AGENTS.md`, `README.md`. Follows t
 | 28. Full visual redesign (identity system + mockup) | ✅ Done | Whole-app restyle to the **ArchiPlan-Studio identity**: Chalk `#F3F1EB` / Graphite `#202723` / Limestone `#DAD7CC` / Paper `#FAF9F5` / Patina `#28665F` tokens (+ dark-mode graphite set, glass tokens `--glass*`), **DM Serif Display + Inter** via `next/font/google`, floating glass navbar + glass hero panel (brand §03 recipe), Graphite footer/dark bands, Limestone closing band, new `Logo` (supplied brick-A mark + serif wordmark, `src/app/icon.svg` favicon), home page rebuilt to the mock (serif hero + photo band with featured-package glass card, packages with placeholder images, Limestone plot band, Graphite process band, trust + Quick answers + closing band), shared blocks (`page-header`, `closing-cta`, `faq-section`, `content-sections`, `numbered-cards` w/ dark tone, `process-steps`, `package-card`, `image-banner`, chips) restyled once so every marketing page + both shells inherit. `PLACEHOLDER_IMAGE` constant + `next.config.ts` `remotePatterns` for placehold.net; `THEME_SCHEMES` default = Patina. `docs/DESIGN.md` rewritten to the identity. Content untouched (only added hero `imageAlt`). Gates: lint 0 errors (3 pre-existing warnings), typecheck clean, 216/216 tests, prod build green, all marketing routes 200 |
 | 29. Typography + hero refinement, brand-kit wiring | ✅ Done | Per client feedback on the identity pass: **Space Grotesk (display, weight 500) + Inter** replace DM Serif Display (`--font-display` via `next/font/google`; Space Grotesk has no italics — hierarchy from scale/color), home hero rebuilt as one **full-bleed image band** (dusk render + graphite scrims, oversized headline, Patina CTA, 4-step strip on the photo's bottom edge; featured-package glass card removed), brand kit wired in: favicon from `favicon-32px.svg` (`src/app/icon.svg`), `mark-dark.svg` + `Logo tone` prop (white A on black for the footer band), logo added to auth pages, 404 and error pages. Default palette confirmed as the identity sheet colors (Graphite/Chalk/Paper/Limestone/Patina); other palettes stay in the scheme settings. Also pinned `prisma` CLI back to **7.10.0** (client 7.10.0): `8.0.0-rc.22` is the platform-CLI rewrite without `generate`/`migrate`, breaking builds. Gates: lint 0 errors, typecheck clean, 216/216 tests, prod build green |
 | 30. Card images + crop, drafts UX, client tracker, stats fix | ✅ Done | **Packages:** `imageKey` column + admin upload with **fixed-dimension crop** (4:3, 1200×900, recommended size shown), shared `packageImageSchema` file schema, public `GET /api/packages/:id/image`, `PackageCard` renders it. **Stats:** fix `revision.groupBy({by: []})` P2019 that 500s the whole `/api/admin/stats` transaction (+ currency/avg fixes). **Drafts:** stage-then-submit uploads (no instant PUT), per-file **Delete** (existing admin file API), **client-seen** badge (`OrderFile.seenAt` set on client download + realtime ping). **Client:** ordered status step tracker on the order detail page. **Fix:** `/order/new` cards flush against `PageHeader` hairline → top padding. Docs: API.md + this row. |
+| 31. Blog & CMS section (CKEditor→TipTap, SEO-first) | ✅ Shipped | Admin-authored **blog**: **TipTap 3 (MIT)** rich-text editor (custom toolbar on design tokens, image upload through a new admin media endpoint), draft/publish workflow with **slug lock after publish** + stamp-once `publishedAt`, cover image 1200×630 via the shared crop dialog, tags, SEO override fields with SERP preview. Content stored as **sanitized HTML** (`sanitize-html` allowlist, defense-in-depth re-sanitize on render; `.blog-prose` styles shared by editor + public pages). Public: `/blog` index, `/blog/[slug]` (full `generateMetadata` — canonical, OG article, twitter card — + `BlogPosting`/`BreadcrumbList` JSON-LD), `/blog/tag/[tag]`, `/blog/rss.xml` (RSS 2.0), home "From the blog" strip, guides↔blog cross-links, sitemap extension. Cached public reads (`unstable_cache` + `revalidateTag`). No comments. |
 **Environment notes:**
 
 - Local PostgreSQL 18 (pgdg, data at /var/lib/pgsql/18/data) runs on 5432 but password auth fails for every tested role (`postgres`, `user/password` from .env.local) — pg_hba.conf is root/postgres-owned and sudo needs a password. To unblock, run in a terminal:
@@ -203,3 +204,53 @@ Constraints while executing: follow `docs/RULES.md` (TanStack Query hook per API
 ### F. Docs, gates, ship
 - [x] `API.md`: package-image endpoints, `seenAt`, stats revenue shape. `AGENTS.md` component list (image-crop-dialog, order-steps). Row 30 ticks above as phases land.
 - [x] `pnpm lint && pnpm typecheck && pnpm test && pnpm build`, local `migrate dev`, smoke (home card image, package form, admin stats, order detail, `/order/new`), then commit + push.
+
+## Plan 6 — Blog & CMS section (step 31)
+
+**Goal:** admin-authored, SEO-first blog: TipTap 3 rich-text editor (MIT), draft/publish workflow,
+sanitized HTML storage, full metadata + structured data + sitemap + RSS + tag pages, cross-linked
+with the existing static `/guides` (kept separate). No comments — WhatsApp + order CTA is the
+response path. CKEditor was dropped: its free self-hosted option is GPL-2+ (badge + copyleft
+strings on a proprietary codebase); TipTap is MIT — free for any production use, no key/badge.
+
+### Confirmed decisions
+1. **Editor: TipTap 3 (MIT)** — `@tiptap/react`, `@tiptap/pm`, `@tiptap/starter-kit`, `@tiptap/extensions`, `@tiptap/extension-image`, `@tiptap/extension-table`, `@floating-ui/dom`. Headless: custom toolbar on shadcn Buttons + design tokens.
+2. Content = **sanitized HTML** (`editor.getHTML()` → `sanitize-html` allowlist on save; re-sanitize on render).
+3. `/guides` stays static; `/blog` is DB-driven; cross-link both ways.
+4. No comments. RSS at `/blog/rss.xml`.
+5. Cover image **1200×630 (16:9)** via the shared crop dialog — doubles as OG/Twitter image.
+6. **Slug locks after first publish** (409 on change); `publishedAt` stamps once, survives unpublish/republish.
+7. Tags = `String[]` on Post + indexed `/blog/tag/[tag]` pages.
+8. Public reads: `unstable_cache` + `revalidateTag(POSTS_CACHE_TAG, { expire: 0 })` (settings.ts pattern). Marketing Server Components call the service layer directly.
+9. Images reuse `OrderFile` with new `FileKind.POST_IMAGE` (`orderId` already nullable).
+10. New deps: TipTap set + `sanitize-html`. `.blog-prose` in `globals.css` styles both the editable area and the public render (tokens only).
+
+### A. Schema + constants
+- [x] Migration `blog_posts`: `Post` (slug @unique, title, excerpt, contentHtml @db.Text, coverImageId → OrderFile POST_IMAGE, tags String[], status DRAFT|PUBLISHED, seoTitle/seoDescription, readingMinutes, authorId → User, publishedAt, timestamps; indexes `[status, publishedAt]`, `[authorId]`) + `User.posts` back-relation + `FileKind.POST_IMAGE`.
+- [x] `constants.ts`: `POST_STATUSES`/`POST_STATUS_LABELS`, `BLOG_COVER` image spec (1200×630, ≤5MB, jpeg/png/webp), `ROUTES.blog/blogPost/blogTag/blogRss` + admin blog routes, `API_ROUTES.adminPosts/adminPost/adminPostPublish/adminPostImages/postImage`, `NAV_LINKS` += Blog, `POSTS_CACHE_TAG`, reading-time divisor.
+
+### B. Validators + sanitization + pure helpers
+- [x] `src/lib/validators/admin-posts.ts` (+ tests): slug regex, title 3–120, excerpt 20–160, contentHtml ≤500KB, tags ≤5, seo ≤60/≤160, create/update (partial+refine), publish schema, list query.
+- [x] `src/lib/posts/sanitize.ts` (+ XSS tests): TipTap-output allowlist, external-link rel/target, img src gated to `/api/posts/images/`.
+- [x] `src/lib/posts/reading-time.ts` (+ tests): words ÷ 200, min 1.
+
+### C. Services + API
+- [x] `src/lib/posts.ts` (+ tests): cached public reads (`listPublishedPosts`, `getPublishedPostBySlug`, `listPublishedTags`, `listRecentPublishedPosts`), admin CRUD (auto-slug, assertSlugFree, **409 published-slug-change**, stamp-once publish, delete purges cover), `createPostImage`/`getPostImageFile`.
+- [x] Routes: `GET/POST /api/admin/posts`, `GET/PATCH/DELETE /api/admin/posts/[id]`, `POST /api/admin/posts/[id]/publish`, `POST /api/admin/posts/images` (multipart → `{ url }`), public `GET /api/posts/images/[fileId]` (immutable cache).
+
+### D. Admin UI (TipTap)
+- [x] `admin/blog-editor.tsx` (`useEditor({ immediatelyRender: false })`, StarterKit h2/h3 + Link + Image upload handler + TableKit + Placeholder + CharacterCount, shadcn toolbar, `.blog-prose` editable area, `setValue("contentHtml", …)`) + `blog-editor-loader.tsx` dynamic ssr:false wrapper.
+- [x] `admin/post-form.tsx` (RHF+Zod: title, auto-slug, excerpt counter, tags chips, cover crop+upload, SEO panel with SERP preview, Save / Save & publish), `admin/posts-table.tsx` (status, typed-slug delete confirm), pages `/admin/blog`, `/admin/blog/new`, `/admin/blog/[id]`, hooks `use-admin-posts`/`use-admin-post`/`use-admin-post-mutations`, nav "Blog".
+
+### E. Public pages (SEO core)
+- [x] `/blog` (breadcrumbs, PageHeader, tag chips, card grid, ClosingCta, Blog JSON-LD), `/blog/[slug]` (`generateMetadata` canonical/OG article/twitter, BlogPosting+BreadcrumbList, `.blog-prose` render, latest-3 strip + CTA), `/blog/tag/[tag]`, `/blog/rss.xml/route.ts` (RSS 2.0 latest 20).
+- [x] Home "From the blog" strip (hidden when empty); guides ↔ blog cross-link blocks.
+
+### F. Sitemap + docs
+- [x] `sitemap.ts` appends blog index, tag pages, published posts (`lastModified: updatedAt`).
+- [x] `API.md` §10 Blog; `AGENTS.md` component list; `DESIGN.md` `.blog-prose` + card spec; README roadmap row 31; this section's boxes.
+
+### G. Tests, gates, ship
+- [x] Unit: sanitize XSS vectors, reading time, slug auto-gen + publish-lock 409, stamp-once publish, validators, sitemap excludes drafts, image route serves only POST_IMAGE.
+- [x] `pnpm lint && pnpm typecheck && pnpm test && pnpm build`, smoke (create → crop cover → TipTap edit + image upload → publish → public meta/JSON-LD, RSS + sitemap, tag page, unpublish), commit + push.
+

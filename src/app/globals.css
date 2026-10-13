@@ -305,3 +305,84 @@
     @apply font-sans;
   }
 }
+
+/* ── Blog prose (plan 6) ──────────────────────────────────────────────────
+   Shared by the TipTap editable area and the public render, so what the
+   admin sees matches what ships. Hairline-ruled, tokens only (DESIGN.md). */
+
+.blog-prose {
+  @apply text-base leading-relaxed;
+}
+
+.blog-prose > * + * {
+  @apply mt-4;
+}
+
+.blog-prose h2 {
+  @apply mt-8 font-display text-2xl font-medium tracking-tight;
+}
+
+.blog-prose h3 {
+  @apply mt-6 font-display text-xl font-medium tracking-tight;
+}
+
+.blog-prose h4 {
+  @apply mt-5 font-display text-lg font-medium tracking-tight;
+}
+
+.blog-prose a {
+  @apply text-primary underline underline-offset-4;
+}
+
+.blog-prose ul {
+  @apply list-disc pl-5;
+}
+
+.blog-prose ol {
+  @apply list-decimal pl-5;
+}
+
+.blog-prose blockquote {
+  @apply border-l-2 border-border pl-4 text-muted-foreground;
+}
+
+.blog-prose pre {
+  @apply overflow-x-auto rounded-lg bg-muted p-4 font-mono text-sm;
+}
+
+.blog-prose code {
+  @apply rounded bg-muted px-1 py-0.5 font-mono text-sm;
+}
+
+.blog-prose pre code {
+  @apply rounded-none bg-transparent p-0;
+}
+
+.blog-prose img {
+  @apply rounded-lg;
+}
+
+.blog-prose figure {
+  @apply my-6;
+}
+
+.blog-prose figcaption {
+  @apply mt-2 text-center text-sm text-muted-foreground;
+}
+
+.blog-prose table {
+  @apply w-full border-collapse text-sm;
+}
+
+.blog-prose th,
+.blog-prose td {
+  @apply border border-border px-3 py-2 text-left;
+}
+
+.blog-prose th {
+  @apply bg-muted font-medium;
+}
+
+.blog-prose hr {
+  @apply border-border;
+}

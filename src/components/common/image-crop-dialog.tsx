@@ -16,14 +16,24 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 
+/** Output size/aspect config — PACKAGE_IMAGE today, BLOG_COVER for blog covers. */
+export type CropDialogConfig = {
+  width: number;
+  height: number;
+  aspect: number;
+  recommended: string;
+};
+
 type ImageCropDialogProps = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Object URL of the source image the user picked. */
   src: string;
-  /** Receives the cropped image at the fixed PACKAGE_IMAGE dimensions. */
+  /** Receives the cropped image at the config's dimensions. */
   onCropped: (blob: Blob) => void | Promise<void>;
   title?: string;
+  /** Defaults to the pricing-card config (4:3, 1200×900). */
+  config?: CropDialogConfig;
 };
 
 function loadImage(src: string): Promise<HTMLImageElement> {
@@ -35,12 +45,12 @@ function loadImage(src: string): Promise<HTMLImageElement> {
   });
 }
 
-/** Draws exactly the cropped region at the fixed output size (JPEG q0.92). */
-async function cropToBlob(src: string, pixels: Area): Promise<Blob> {
+/** Draws exactly the cropped region at the given output size (JPEG q0.92). */
+async function cropToBlob(src: string, pixels: Area, config: CropDialogConfig): Promise<Blob> {
   const image = await loadImage(src);
   const canvas = document.createElement("canvas");
-  canvas.width = PACKAGE_IMAGE.width;
-  canvas.height = PACKAGE_IMAGE.height;
+  canvas.width = config.width;
+  canvas.height = config.height;
   const ctx = canvas.getContext("2d");
   if (!ctx) throw new Error("Canvas is not supported in this browser.");
   ctx.drawImage(
@@ -63,9 +73,9 @@ async function cropToBlob(src: string, pixels: Area): Promise<Blob> {
 
 /**
  * Fixed-aspect crop step between "file picked" and "upload" (plan 5 A). The
- * aspect is locked to 4:3 and the output is always PACKAGE_IMAGE's 1200×900,
- * so every pricing card has an identical image band; the recommended size is
- * shown so admins can prepare the right source file.
+ * config locks the aspect and output size so every card/cover has an
+ * identical image band; the recommended size is shown so admins can prepare
+ * the right source file.
  */
 export function ImageCropDialog({
   open,
@@ -73,6 +83,7 @@ export function ImageCropDialog({
   src,
   onCropped,
   title = "Crop image",
+  config = PACKAGE_IMAGE,
 }: ImageCropDialogProps) {
   const [crop, setCrop] = useState({ x: 0, y: 0 });
   const [zoom, setZoom] = useState(1);
@@ -92,7 +103,7 @@ export function ImageCropDialog({
     setApplying(true);
     setError(null);
     try {
-      const blob = await cropToBlob(src, croppedAreaPixels);
+      const blob = await cropToBlob(src, croppedAreaPixels, config);
       await onCropped(blob);
       onOpenChange(false);
     } catch (err) {
@@ -109,7 +120,7 @@ export function ImageCropDialog({
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
             Drag to reposition, then zoom until the subject fits. Output is fixed at{" "}
-            {PACKAGE_IMAGE.width} × {PACKAGE_IMAGE.height} px (4:3).
+            {config.width} × {config.height} px.
           </DialogDescription>
         </DialogHeader>
 
@@ -119,7 +130,7 @@ export function ImageCropDialog({
               image={src}
               crop={crop}
               zoom={zoom}
-              aspect={PACKAGE_IMAGE.aspect}
+              aspect={config.aspect}
               onCropChange={setCrop}
               onZoomChange={setZoom}
               onCropComplete={onCropComplete}
@@ -141,7 +152,7 @@ export function ImageCropDialog({
           />
         </label>
 
-        <p className="text-xs text-muted-foreground">{PACKAGE_IMAGE.recommended}</p>
+        <p className="text-xs text-muted-foreground">{config.recommended}</p>
         {error ? <p className="text-xs text-destructive">{error}</p> : null}
 
         <DialogFooter>

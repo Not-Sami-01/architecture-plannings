@@ -493,6 +493,25 @@ Open a thread at `/admin/chats/[orderId]`; the per-order messages endpoints abov
 
 ---
 
+## 10b. Blog (plan 6)
+
+Admin-authored blog. Content is TipTap HTML, sanitized on write (`sanitize-html` allowlist) and re-sanitized on read before render. Public reads go through `unstable_cache` tagged `POSTS_CACHE_TAG`; every write revalidates it.
+
+| Method | Path | Access | Description |
+|--------|------|--------|-------------|
+| GET | `/api/admin/posts` | admin | Filtered list (`q`, `status`, `page`, `pageSize`) |
+| POST | `/api/admin/posts` | admin | Create draft (auto-slug from title when `slug` blank; 409 on taken slug) |
+| GET | `/api/admin/posts/:id` | admin | Full record for the edit form |
+| PATCH | `/api/admin/posts/:id` | admin | Partial update; **409 if slug changes while PUBLISHED**; re-sanitizes `contentHtml` + recomputes `readingMinutes` |
+| DELETE | `/api/admin/posts/:id` | admin | Hard delete; purges the cover object + row |
+| POST | `/api/admin/posts/:id/publish` | admin | `{ publish: true\|false }` — stamps `publishedAt` on the first publish only; validates title/excerpt/content before publish |
+| POST | `/api/admin/posts/images` | admin | Multipart image upload (field `image`); re-validates mime + size; returns `{ data: { id, url } }` where `url` = `/api/posts/images/:id` |
+| GET | `/api/posts/images/:fileId` | public | Serves `OrderFile` rows of kind `POST_IMAGE` only; immutable cache |
+
+Cover images use the shared crop dialog at 1200×630 (`BLOG_COVER` in `constants.ts`) and double as the OG/Twitter image. Tag pages live at `/blog/tag/:tag`; the RSS feed at `/blog/rss.xml`.
+
+---
+
 ## 11. Contact
 
 | Method | Path | Access | Description |

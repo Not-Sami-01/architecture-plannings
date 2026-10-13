@@ -67,6 +67,27 @@ export default function GuidesPage() {
         })}
       </div>
 
+      {/* Guides ↔ blog cross-link (plan 6): guides stay static, blog is DB-driven. */}
+      <div className="mx-auto w-full max-w-6xl px-4 pb-12">
+        <div className="rounded-xl border p-5">
+          <p className="font-display text-xl font-medium tracking-tight">
+            Prefer shorter reads?
+          </p>
+          <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+            The blog covers the same ground in article-sized pieces — costs, process notes and
+            design tips as we publish them.
+          </p>
+          <p className="mt-3 text-sm">
+            <Link
+              href={ROUTES.blog}
+              className="font-medium text-primary underline underline-offset-4"
+            >
+              Read the blog
+            </Link>
+          </p>
+        </div>
+      </div>
+
       <ClosingCta
         heading="Prefer a direct answer?"
         text="Ask us about your plot and requirements — we will tell you honestly what you need."

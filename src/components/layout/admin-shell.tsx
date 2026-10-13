@@ -8,6 +8,7 @@ import {
   LayoutDashboardIcon,
   LogOutIcon,
   MessageSquareIcon,
+  NewspaperIcon,
   SettingsIcon,
   TagsIcon,
   UsersIcon,
@@ -30,6 +31,7 @@ const NAV = [
   { href: ROUTES.admin.files, label: "Files", icon: FileIcon },
   { href: ROUTES.admin.users, label: "Users", icon: UsersIcon },
   { href: ROUTES.admin.packages, label: "Pricing", icon: TagsIcon },
+  { href: ROUTES.admin.blog, label: "Blog", icon: NewspaperIcon },
   { href: ROUTES.admin.settings, label: "Settings", icon: SettingsIcon },
 ];
 

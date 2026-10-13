@@ -31,6 +31,7 @@ model User {
   messageReads      MessageRead[]
   acceptedRevisions Revision[]    @relation("AcceptedRevisions")
   testimonials      Testimonial[]
+  posts             Post[]
 
   @@index([role])
 }
@@ -55,6 +56,42 @@ model Package {
   orders Order[]
 
   @@index([active, sortOrder])
+}
+
+// ---------- Blog (plan 6) ----------
+
+model Post {
+  id             String     @id @default(cuid())
+  slug           String     @unique
+  title          String
+  // Meta description + card blurb (≤160 chars, validated in admin-posts schema).
+  excerpt        String
+  // Sanitized TipTap HTML (sanitize-html allowlist on write and render).
+  contentHtml    String     @db.Text
+  // Cropped 1200x630 cover (kind POST_IMAGE); doubles as the OG image.
+  coverImageId   String?
+  tags           String[]   @default([])
+  status         PostStatus @default(DRAFT)
+  // SEO overrides; fall back to title/excerpt when null.
+  seoTitle       String?
+  seoDescription String?
+  readingMinutes Int        @default(0)
+  authorId       String
+  // Stamped on the FIRST publish only — survives unpublish/republish.
+  publishedAt    DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  coverImage OrderFile? @relation("PostCoverImage", fields: [coverImageId], references: [id])
+  author     User       @relation(fields: [authorId], references: [id])
+
+  @@index([status, publishedAt])
+  @@index([authorId])
+}
+
+enum PostStatus {
+  DRAFT
+  PUBLISHED
 }
 
 // ---------- App settings (plan 3) ----------
@@ -174,6 +211,7 @@ model OrderFile {
   revision     Revision? @relation(fields: [revisionId], references: [id])
   paymentProof Payment?  @relation("PaymentProof")
   message      Message?  @relation(fields: [messageId], references: [id])
+  coverPosts   Post[]    @relation("PostCoverImage")
 
   @@index([orderId])
   @@index([kind])
@@ -314,6 +352,9 @@ enum FileKind {
   PAYMENT_PROOF
   REVISION_REF
   CHAT_ATTACHMENT
+  // Blog cover images and images embedded in post content (plan 6). Admin-only;
+  // orderId stays null (the row belongs to a post, not an order).
+  POST_IMAGE
 }
 
 enum PaymentType {

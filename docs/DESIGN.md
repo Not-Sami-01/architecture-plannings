@@ -92,3 +92,9 @@ The supplied brick **A** keeps its light field and original proportions — no r
 - **Status badge:** `order-status-badge.tsx` maps statuses to badge variants — do not improvise colors per status.
 - **Images:** real renders live in `public/images/`; any section that needs a photo we do not have yet uses `PLACEHOLDER_IMAGE` (`https://placehold.net/400x400.png`, allowed in `next.config.ts` `images.remotePatterns`). Decorative photos get `alt=""` + `aria-hidden`; meaningful ones get copy from `src/content/*`.
 - Every list: loading skeleton + empty state; every form: inline validation + pending state. Mobile first — verify at 375px. Touch targets ≥ 44px (`min-h-11` on inline links/chips).
+
+### Blog prose & cards (plan 6)
+
+- **`.blog-prose`** (in `globals.css`): shared by the TipTap editable area and the public render so what the admin sees matches what ships. Tokens only — headings use `font-display font-medium`, links `text-primary underline underline-offset-4`, code/pre `bg-muted`, tables get hairline `border-border` cells with a `bg-muted` header row, blockquotes get `border-l-2`. Images are rounded (`rounded-lg`); figures get a muted caption.
+- **Blog cover:** always 1200×630 (16:9, `BLOG_COVER` in `constants.ts`), cropped via the shared `ImageCropDialog` (pass the `config` prop). Doubles as the OG/Twitter image.
+- **`blog-card.tsx`:** cover band (`aspect-[16/9]`, hidden when no cover) → meta line (date · reading time · author, muted `text-xs`) → title (`font-display text-xl font-medium`) → excerpt → tag chips (`rounded-full bg-muted`). Used by `/blog`, tag pages and the home "From the blog" strip.
