@@ -141,6 +141,17 @@ No local auth endpoints: Clerk owns credentials and session cookies (`/sign-in`,
 
 ---
 
+## 1b. Account page & UserButton (Clerk-managed UI)
+
+No custom endpoints — the account page embeds Clerk's `<UserProfile />` at a **catch-all route** (`src/app/(marketing)/account/[[...account]]/page.tsx`):
+
+- **Gate:** the page itself calls `auth()` server-side and redirects signed-out visitors to `/sign-in?next=/account` (Clerk middleware does not cover `/account`).
+- **Access:** any signed-in role (CLIENT **and** ADMIN). It lives outside the `(client)` group on purpose — the `/dashboard` layout redirects admins away, `/account` must not.
+- **Discovery:** every `<UserButton />` (navbar, client shell) uses `userProfileMode="navigation"` + `userProfileUrl="/account"`, so "Manage account" navigates here; sign out stays in the Clerk menu. The navbar also shows a role-aware **Dashboard** link (ADMIN → `/admin`, CLIENT → `/dashboard`).
+- **SEO:** `robots: { index: false, follow: false }`; title "Account".
+
+---
+
 ## 2. Packages
 
 | Method | Path | Access | Description |
