@@ -142,68 +142,66 @@ export function BlogEditor({ value, onChange }: BlogEditorProps) {
     );
   }
 
-  const { isActive } = editor;
-
   return (
     <div className="flex flex-col gap-2">
       <div className="flex flex-wrap items-center gap-0.5 rounded-md border p-1">
         <ToolbarButton
           label="Bold"
-          active={isActive("bold")}
+          active={editor.isActive("bold")}
           onClick={() => editor.chain().focus().toggleBold().run()}
         >
           <BoldIcon />
         </ToolbarButton>
         <ToolbarButton
           label="Italic"
-          active={isActive("italic")}
+          active={editor.isActive("italic")}
           onClick={() => editor.chain().focus().toggleItalic().run()}
         >
           <ItalicIcon />
         </ToolbarButton>
         <ToolbarButton
           label="Inline code"
-          active={isActive("code")}
+          active={editor.isActive("code")}
           onClick={() => editor.chain().focus().toggleCode().run()}
         >
           <CodeIcon />
         </ToolbarButton>
         <ToolbarButton
           label="Heading 2"
-          active={isActive("heading", { level: 2 })}
+          active={editor.isActive("heading", { level: 2 })}
           onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
         >
           <Heading2Icon />
         </ToolbarButton>
         <ToolbarButton
           label="Heading 3"
-          active={isActive("heading", { level: 3 })}
+          active={editor.isActive("heading", { level: 3 })}
           onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
         >
           <Heading3Icon />
         </ToolbarButton>
         <ToolbarButton
           label="Bullet list"
-          active={isActive("bulletList")}
+          active={editor.isActive("bulletList")}
           onClick={() => editor.chain().focus().toggleBulletList().run()}
         >
           <ListIcon />
         </ToolbarButton>
         <ToolbarButton
           label="Numbered list"
-          active={isActive("orderedList")}
+          active={editor.isActive("orderedList")}
           onClick={() => editor.chain().focus().toggleOrderedList().run()}
         >
           <ListOrderedIcon />
         </ToolbarButton>
         <ToolbarButton
           label="Quote"
-          active={isActive("blockquote")}
+          active={editor.isActive("blockquote")}
           onClick={() => editor.chain().focus().toggleBlockquote().run()}
         >
           <QuoteIcon />
         </ToolbarButton>
-        <ToolbarButton label="Link" active={isActive("link")} onClick={setLink}>
+        <ToolbarButton label="Link" active={editor.isActive("link")} onClick={setLink}>
           <Link2Icon />
         </ToolbarButton>
         <ToolbarButton label="Image" onClick={pickImage} disabled={uploadLoadings.uploading}>
@@ -211,7 +209,7 @@ export function BlogEditor({ value, onChange }: BlogEditorProps) {
         </ToolbarButton>
         <ToolbarButton
           label="Table"
-          active={isActive("table")}
+          active={editor.isActive("table")}
           onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3 }).run()}
         >
           <TableIcon />
