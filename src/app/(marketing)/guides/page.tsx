@@ -2,11 +2,13 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { CTA, ROUTES } from "@/config/constants";
+import { banners } from "@/content/banners";
 import { GUIDES, GUIDE_CATEGORIES, guidesIndexSeo } from "@/content/guides";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { Breadcrumbs } from "@/components/common/breadcrumbs";
 import { ClosingCta } from "@/components/common/closing-cta";
 import { PageHeader } from "@/components/common/page-header";
+import { ImageBanner } from "@/components/marketing/image-banner";
 
 export const metadata: Metadata = buildMetadata(guidesIndexSeo);
 
@@ -26,6 +28,8 @@ export default function GuidesPage() {
         }
         links={[{ label: CTA.primary, href: ROUTES.newOrder }]}
       />
+
+      <ImageBanner {...banners.guides} />
 
       <div className="mx-auto w-full max-w-6xl px-4 pb-16">
         {GUIDE_CATEGORIES.map((category) => {

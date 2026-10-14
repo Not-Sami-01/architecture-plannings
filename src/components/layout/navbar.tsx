@@ -73,7 +73,7 @@ export function Navbar() {
   );
 
   return (
-    <header className="sticky top-3 z-40 mx-auto w-[calc(100%-1.5rem)] max-w-5xl rounded-[20px] border border-glass-edge bg-glass/85 shadow-glass backdrop-blur-[18px]">
+    <header className="liquid-glass sticky top-3 z-40 mx-auto w-[calc(100%-1.5rem)] max-w-5xl rounded-[20px]">
       <div className="flex h-14 items-center justify-between gap-4 px-4">
         <Logo />
 
@@ -94,7 +94,7 @@ export function Navbar() {
           >
             {open ? <XIcon className="size-5" /> : <MenuIcon className="size-5" />}
           </SheetTrigger>
-          <SheetContent side="right" className="w-72">
+          <SheetContent side="right" className="liquid-glass w-72 bg-transparent">
             <SheetTitle className="sr-only">Menu</SheetTitle>
             <nav className="flex flex-col gap-1 pt-4" aria-label="Mobile">
               {links}

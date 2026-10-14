@@ -6,6 +6,7 @@ import { ClosingCta } from "@/components/common/closing-cta";
 import { EmptyState } from "@/components/common/empty-state";
 import { PageHeader } from "@/components/common/page-header";
 import { Button } from "@/components/ui/button";
+import { ImageBanner } from "@/components/marketing/image-banner";
 import { ImageOffIcon } from "lucide-react";
 
 type PlotLandingStubProps = {
@@ -14,13 +15,23 @@ type PlotLandingStubProps = {
   portfolioHref: string;
   /** Short label for the last breadcrumb. */
   crumbLabel: string;
+  /** Public path of the full-bleed banner image below the header. */
+  bannerImageSrc: string;
+  banner: { eyebrow: string; heading: string; text: string };
 };
 
 /**
  * Short version of a plot-size landing page while the full 800+ word article
  * is being written (CONTENT.md §4). Keeps the route live and linkable.
  */
-export function PlotLandingStub({ title, lead, portfolioHref, crumbLabel }: PlotLandingStubProps) {
+export function PlotLandingStub({
+  title,
+  lead,
+  portfolioHref,
+  crumbLabel,
+  bannerImageSrc,
+  banner,
+}: PlotLandingStubProps) {
   return (
     <>
       <Breadcrumbs
@@ -30,6 +41,12 @@ export function PlotLandingStub({ title, lead, portfolioHref, crumbLabel }: Plot
         ]}
       />
       <PageHeader title={title} description={lead} />
+      <ImageBanner
+        imageSrc={bannerImageSrc}
+        eyebrow={banner.eyebrow}
+        heading={banner.heading}
+        text={banner.text}
+      />
       <div className="mx-auto w-full max-w-6xl px-4 pb-16">
         <EmptyState
           icon={ImageOffIcon}

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { CTA, ROUTES } from "@/config/constants";
+import { banners } from "@/content/banners";
 import { SITE_FACTS } from "@/content/site-facts";
 import {
   serviceChoice,
@@ -21,6 +22,7 @@ import { ClosingCta } from "@/components/common/closing-cta";
 import { ContentSections } from "@/components/common/content-sections";
 import { FaqSection } from "@/components/common/faq-section";
 import { PageHeader } from "@/components/common/page-header";
+import { ImageBanner } from "@/components/marketing/image-banner";
 
 export const metadata: Metadata = buildMetadata(servicesSeo);
 
@@ -53,6 +55,8 @@ export default async function ServicesPage() {
         description={servicesLead}
         links={[{ label: CTA.primary, href: ROUTES.newOrder }]}
       />
+
+      <ImageBanner {...banners.services} />
 
       <section className="mx-auto w-full max-w-6xl px-4 pb-12" aria-labelledby="compare">
         <h2 id="compare" className="font-display font-medium text-3xl leading-snug tracking-tight">

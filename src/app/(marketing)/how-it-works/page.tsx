@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { ROUTES } from "@/config/constants";
+import { banners } from "@/content/banners";
 import {
   howItWorksBlocks,
   howItWorksFaq,
@@ -16,6 +17,7 @@ import { ContentSections } from "@/components/common/content-sections";
 import { FaqSection } from "@/components/common/faq-section";
 import { JsonLd } from "@/components/common/json-ld";
 import { PageHeader } from "@/components/common/page-header";
+import { ImageBanner } from "@/components/marketing/image-banner";
 import { ProcessSteps } from "@/components/marketing/process-steps";
 
 export const metadata: Metadata = buildMetadata(howItWorksSeo);
@@ -34,6 +36,8 @@ export default function HowItWorksPage() {
         description={howItWorksLead}
         links={[{ label: "Start your order", href: ROUTES.newOrder }]}
       />
+
+      <ImageBanner {...banners.howItWorks} />
 
       <section className="pb-16" aria-labelledby="steps-heading">
         <div className="mx-auto mb-8 w-full max-w-6xl px-4">

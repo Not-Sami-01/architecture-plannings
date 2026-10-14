@@ -204,6 +204,41 @@ export const GET = withMiddleware(getHandler, [authenticate]);
 
 A middleware is `(req, res) => { success, message, req, res, status }`. See `API.md` and `AGENTS.md` for the full pattern.
 
+## Images needed
+
+Drop the site's photos into `public/images/` (WebP, as listed). Banner bands render
+as a dark glass surface until the file exists — no broken-image icons. All banner
+images lazy-load (`next/image` default); the home hero uses `priority`.
+
+### Static files — `public/images/` (9 missing + 2 existing)
+
+| File | Size (px) | Used on | Status |
+|------|-----------|---------|--------|
+| `hero-main.webp` | 1920 × 1080 | Home hero (full-bleed) | ✅ exists |
+| `second-banner.webp` | 1920 × 900 | Home photo band | ✅ exists |
+| `banner-services.webp` | 1920 × 900 | `/services` | ⬜ needed |
+| `banner-how-it-works.webp` | 1920 × 900 | `/how-it-works` | ⬜ needed |
+| `banner-about.webp` | 1920 × 900 | `/about` | ⬜ needed |
+| `banner-contact.webp` | 1920 × 900 | `/contact` | ⬜ needed |
+| `banner-guides.webp` | 1920 × 900 | `/guides` | ⬜ needed |
+| `banner-10-marla.webp` | 1920 × 900 | `/10-marla-house-plan` | ⬜ needed |
+| `banner-5-marla.webp` | 1920 × 900 | `/5-marla-house-design` | ⬜ needed |
+| `banner-1-kanal.webp` | 1920 × 900 | `/1-kanal-house-design` | ⬜ needed |
+
+Plus the optional external fallback `placehold.net` package card (only shown until
+a real image is uploaded).
+
+### Uploaded via admin (exact crop enforced by the dialog)
+
+| Image | Size (px) | Where to upload |
+|-------|-----------|-----------------|
+| Package card ×3 | 1200 × 900 (4:3) | Admin → Pricing → each package |
+| Portfolio gallery ×N | 1200 × 900 (4:3) | Admin → Portfolio → project form |
+| Blog cover ×N | 1200 × 630 (16:9) | Admin → Blog → post form |
+
+**Total needed: 9 static WebPs + 3 package cards minimum** (portfolio/blog only if
+you have projects/posts to publish).
+
 ## Core Concepts
 
 ### Order Status Flow

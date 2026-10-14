@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { ROUTES } from "@/config/constants";
+import { banners } from "@/content/banners";
 import { PLOT_STUBS } from "@/content/plot-pages";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { SiteDisclaimer } from "@/components/common/site-disclaimer";
@@ -18,6 +19,8 @@ export default function Marla5Page() {
         lead={content.lead}
         portfolioHref={`${ROUTES.portfolio}?plot=5-marla`}
         crumbLabel="5 Marla House Design"
+        bannerImageSrc={banners.marla5.imageSrc}
+        banner={banners.marla5}
       />
       <div className="mx-auto w-full max-w-6xl px-4 pb-12">
         <SiteDisclaimer />

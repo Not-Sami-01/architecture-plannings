@@ -234,6 +234,74 @@
   --glass-shadow: 0 14px 34px -14px rgb(0 0 0 / 0.45);
 }
 
+/* ── Liquid glass ───────────────────────────────────────────────────────
+   Apple-style navigation surfaces: translucent gradient tint, backdrop
+   blur + saturate, a bright specular top edge with softer rim lights on
+   the other sides, and a diagonal sheen (mix-blend screen). Only over
+   busy/colourful backdrops does the blur read as glass; over flat fills
+   it still gives the lit-rim depth. Unlayered on purpose — it wins over
+   component bg utilities like bg-popover. */
+
+.liquid-glass {
+  position: relative;
+  isolation: isolate;
+  background: linear-gradient(135deg, rgb(255 255 255 / 0.14), rgb(255 255 255 / 0.04));
+  backdrop-filter: blur(16px) saturate(160%) brightness(1.06);
+  -webkit-backdrop-filter: blur(16px) saturate(160%) brightness(1.06);
+  border: 1px solid rgb(255 255 255 / 0.18);
+  box-shadow:
+    0 8px 32px rgb(0 0 0 / 0.22),
+    inset 0 1px 1px rgb(255 255 255 / 0.45),
+    inset 0 -1px 1px rgb(255 255 255 / 0.2),
+    inset 1px 0 1px rgb(255 255 255 / 0.14),
+    inset -1px 0 1px rgb(255 255 255 / 0.14);
+}
+
+.liquid-glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: linear-gradient(
+    135deg,
+    rgb(255 255 255 / 0.32),
+    rgb(255 255 255 / 0.05) 30%,
+    transparent 60%
+  );
+  mix-blend-mode: screen;
+  pointer-events: none;
+}
+
+/* On graphite bands (hero imagery, dark sidebars): darker tint + chalk rim
+   so contrast holds while the material still reads as glass. */
+.liquid-glass-dark {
+  background: linear-gradient(135deg, rgb(20 25 23 / 0.55), rgb(20 25 23 / 0.35));
+  border-color: rgb(243 241 235 / 0.14);
+  box-shadow:
+    0 8px 32px rgb(0 0 0 / 0.4),
+    inset 0 1px 1px rgb(243 241 235 / 0.28),
+    inset 0 -1px 1px rgb(243 241 235 / 0.1),
+    inset 1px 0 1px rgb(243 241 235 / 0.08),
+    inset -1px 0 1px rgb(243 241 235 / 0.08);
+}
+
+.liquid-glass-dark::after {
+  background: linear-gradient(
+    135deg,
+    rgb(243 241 235 / 0.14),
+    rgb(243 241 235 / 0.03) 30%,
+    transparent 60%
+  );
+}
+
+/* Sidebar rail variant: only the inner edge is a glass rim. */
+.liquid-glass.liquid-glass-rail {
+  border-top: 0;
+  border-left: 0;
+  border-radius: 0;
+}
+
 /* ── Color schemes (dark) ─────────────────────────────────────────────────
    Higher specificity than `.dark`, so `class="dark scheme-ocean"` picks up
    the scheme's dark hues while keeping the dark surface tokens. */

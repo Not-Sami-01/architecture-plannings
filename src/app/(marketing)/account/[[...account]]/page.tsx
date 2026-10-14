@@ -36,7 +36,7 @@ export default async function AccountPage() {
           { label: "Account" },
         ]}
       />
-      <div className="mx-auto w-full max-w-6xl border-b px-4 pb-10 pt-10 md:pb-14 md:pt-16">
+      <div className="mx-auto w-full max-w-6xl border-b px-4 pb-14 pt-12 md:pb-20 md:pt-20">
         <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-accent-foreground">
           Your account
         </p>

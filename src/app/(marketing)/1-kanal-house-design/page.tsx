@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 
 import { ROUTES } from "@/config/constants";
+import { banners } from "@/content/banners";
 import { PLOT_STUBS } from "@/content/plot-pages";
 import { buildMetadata } from "@/lib/seo/metadata";
 import { SiteDisclaimer } from "@/components/common/site-disclaimer";
@@ -18,6 +19,8 @@ export default function Kanal1Page() {
         lead={content.lead}
         portfolioHref={`${ROUTES.portfolio}?plot=1-kanal`}
         crumbLabel="1 Kanal House Design"
+        bannerImageSrc={banners.kanal1.imageSrc}
+        banner={banners.kanal1}
       />
       <div className="mx-auto w-full max-w-6xl px-4 pb-12">
         <SiteDisclaimer />

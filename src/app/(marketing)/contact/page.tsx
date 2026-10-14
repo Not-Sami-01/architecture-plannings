@@ -3,6 +3,7 @@ import Link from "next/link";
 import { ClockIcon, MessageCircleIcon, MessagesSquareIcon } from "lucide-react";
 
 import { CTA, ROUTES, WHATSAPP } from "@/config/constants";
+import { banners } from "@/content/banners";
 import { publicConfig } from "@/config/public-config";
 import {
   contactDescription,
@@ -21,6 +22,7 @@ import { FaqSection } from "@/components/common/faq-section";
 import { JsonLd } from "@/components/common/json-ld";
 import { PageHeader } from "@/components/common/page-header";
 import { Button } from "@/components/ui/button";
+import { ImageBanner } from "@/components/marketing/image-banner";
 
 export const metadata: Metadata = buildMetadata({
   ...contactSeo,
@@ -45,6 +47,8 @@ export default function ContactPage() {
         description={contactLead}
         links={[{ label: CTA.primary, href: ROUTES.newOrder }]}
       />
+
+      <ImageBanner {...banners.contact} />
 
       <div className="mx-auto w-full max-w-6xl px-4 pb-12">
         <section aria-labelledby="ways" className="grid gap-6 md:grid-cols-3">

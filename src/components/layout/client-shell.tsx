@@ -17,7 +17,7 @@ type ClientShellProps = {
 export function ClientShell({ name, children }: ClientShellProps) {
   return (
     <div className="flex min-h-svh flex-col">
-      <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
+      <header className="liquid-glass sticky top-0 z-40 border-b border-white/15">
         <div className="mx-auto flex h-16 w-full max-w-5xl items-center justify-between gap-4 px-4">
           <div className="flex min-w-0 items-center gap-6">
             <Logo href={ROUTES.dashboard} />

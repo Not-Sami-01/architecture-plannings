@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { ROUTES } from "@/config/constants";
+import { banners } from "@/content/banners";
 import {
   aboutBeliefs,
   aboutFaq,
@@ -19,6 +20,7 @@ import { FaqSection } from "@/components/common/faq-section";
 import { InlineText } from "@/components/common/inline-text";
 import { JsonLd } from "@/components/common/json-ld";
 import { PageHeader } from "@/components/common/page-header";
+import { ImageBanner } from "@/components/marketing/image-banner";
 
 export const metadata: Metadata = buildMetadata(aboutSeo);
 
@@ -42,6 +44,8 @@ export default function AboutPage() {
         description={aboutLead}
         links={[{ label: "Start your order", href: ROUTES.newOrder }]}
       />
+
+      <ImageBanner {...banners.about} />
 
       <div className="mx-auto w-full max-w-3xl px-4 pb-12">
         {/* TODO(owner): fill `story` in src/content/site-facts.ts — the main trust signal on this page. */}
